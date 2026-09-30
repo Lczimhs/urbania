@@ -1,6 +1,7 @@
+import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Users, UserSquare2, Building2, Calendar, Handshake, FileText, DollarSign, BarChart3, Settings, Bell, ChevronDown } from 'lucide-react';
+import { Home, Users, UserSquare2, Building2, Calendar, BadgeCheck, Handshake, FileText, DollarSign, BarChart3, Settings, Bell, ChevronDown, Menu } from 'lucide-react';
 
 const mainModules = [
   { path: '/', label: 'Dashboard', icon: <Home size={20} /> },
@@ -8,7 +9,11 @@ const mainModules = [
   { path: '/proprietarios', label: 'Proprietários', icon: <UserSquare2 size={20} /> },
   { path: '/imoveis', label: 'Imóveis', icon: <Building2 size={20} /> },
   { path: '/visitas', label: 'Visitas', icon: <Calendar size={20} /> },
+  { path: '/funcionarios', label: 'Funcionários', icon: <BadgeCheck size={20} /> },
 ];
+
+// Módulo ativo também nas subpáginas (ex.: /clientes/3/editar)
+const isActive = (path: string, current: string) => (path === '/' ? current === '/' : current === path || current.startsWith(path + '/'));
 
 const upcomingModules = [
   { label: 'Negociações', icon: <Handshake size={20} /> },
@@ -20,12 +25,18 @@ const upcomingModules = [
 
 export default function Layout({ children }: { children: ReactNode }) {
   const loc = useLocation();
+  const currentModule = mainModules.find(x => isActive(x.path, loc.pathname));
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // No celular o menu fecha sozinho ao trocar de página
+  useEffect(() => setMenuOpen(false), [loc.pathname]);
   
   return (
     <div className="flex h-screen bg-[#F0F4F8] font-sans text-slate-800">
       
-      {/* SIDEBAR */}
-      <aside className="w-64 bg-[#0a2540] text-slate-300 flex flex-col justify-between overflow-y-auto">
+      {/* SIDEBAR (gaveta no celular, fixa a partir de telas médias) */}
+      {menuOpen && <div className="fixed inset-0 bg-slate-900/40 z-30 md:hidden" onClick={() => setMenuOpen(false)} />}
+      <aside className={`fixed md:static inset-y-0 left-0 z-40 w-64 shrink-0 bg-[#0a2540] text-slate-300 flex flex-col justify-between overflow-y-auto transition-transform ${menuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}>
         <div>
           {/* Logo */}
           <div className="h-16 flex items-center gap-3 px-6 text-white font-bold text-xl tracking-wide mb-4">
@@ -40,7 +51,7 @@ export default function Layout({ children }: { children: ReactNode }) {
             <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-3 ml-2">Módulos</p>
             <nav className="space-y-1">
               {mainModules.map(item => {
-                const active = loc.pathname === item.path;
+                const active = isActive(item.path, loc.pathname);
                 return (
                   <Link 
                     key={item.path} 
@@ -82,19 +93,20 @@ export default function Layout({ children }: { children: ReactNode }) {
       </aside>
 
       {/* MAIN CONTENT */}
-      <main className="flex-1 flex flex-col overflow-hidden">
+      <main className="flex-1 min-w-0 flex flex-col overflow-hidden">
         
         {/* HEADER */}
-        <header className="h-16 bg-white flex items-center justify-between px-8 shadow-sm z-10">
-          <div className="text-sky-600 font-medium text-sm">
-            Urbânia {mainModules.find(x => x.path === loc.pathname) ? ` / ${mainModules.find(x => x.path === loc.pathname)?.label}` : ''}
+        <header className="h-16 bg-white flex items-center justify-between px-4 md:px-8 shadow-sm z-10">
+          <div className="text-sky-600 font-medium text-sm flex items-center gap-3">
+            <button onClick={() => setMenuOpen(true)} className="md:hidden p-1 -ml-1 text-slate-600" title="Menu"><Menu size={24} /></button>
+            Urbânia {currentModule && currentModule.path !== '/' ? ` / ${currentModule.label}` : ''}
           </div>
           <div className="flex items-center gap-6">
             <button className="relative text-slate-400 hover:text-sky-600 transition">
               <Bell size={22} />
               <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
             </button>
-            <div className="flex items-center gap-3 cursor-pointer">
+            <div className="hidden sm:flex items-center gap-3 cursor-pointer">
               <div className="w-9 h-9 rounded-full bg-[#0a2540] flex items-center justify-center text-white font-bold text-sm">
                 CM
               </div>
@@ -108,7 +120,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         </header>
 
         {/* PAGE CONTENT */}
-        <div className="flex-1 overflow-auto p-8">
+        <div className="flex-1 overflow-auto p-4 md:p-8">
           {children}
         </div>
       </main>

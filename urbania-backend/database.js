@@ -1,4 +1,3 @@
-
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
@@ -8,85 +7,72 @@ const db = new sqlite3.Database(dbPath, (err) => {
   else console.log('SQLite conectado.');
 });
 
+// Colunas de cada tabela (além do id, que é sempre automático).
+// Para adicionar um campo novo, basta incluí-lo aqui: bancos já existentes
+// recebem a coluna automaticamente na próxima vez que o servidor subir.
+const schema = {
+  clientes: {
+    nome: 'TEXT', email: 'TEXT', telefone: 'TEXT', tipo: 'TEXT', origem: 'TEXT', foto: 'TEXT', rg: 'TEXT',
+    cpfCnpj: 'TEXT', dataNascimento: 'TEXT', sexo: 'TEXT', profissao: 'TEXT', renda: 'REAL', estadoCivil: 'TEXT',
+    cep: 'TEXT', logradouro: 'TEXT', numero: 'TEXT', bairro: 'TEXT', cidade: 'TEXT', uf: 'TEXT', complemento: 'TEXT',
+    finalidade: 'TEXT', areaMinima: 'REAL', tipoImovelBusca: 'TEXT', faixaMin: 'REAL', faixaMax: 'REAL',
+    quartosBusca: 'INTEGER', banheirosBusca: 'INTEGER', bairroBusca: 'TEXT', observacoes: 'TEXT',
+  },
+  proprietarios: {
+    nome: 'TEXT', email: 'TEXT', telefone: 'TEXT', tipo: 'TEXT', foto: 'TEXT', rg: 'TEXT', cnpj: 'TEXT', razaoSocial: 'TEXT',
+    cpfCnpj: 'TEXT', dataNascimento: 'TEXT', sexo: 'TEXT', estadoCivil: 'TEXT', profissao: 'TEXT',
+    cep: 'TEXT', logradouro: 'TEXT', numero: 'TEXT', bairro: 'TEXT', cidade: 'TEXT', uf: 'TEXT', complemento: 'TEXT',
+    banco: 'TEXT', agencia: 'TEXT', conta: 'TEXT', tipoConta: 'TEXT', chavePix: 'TEXT', titularConta: 'TEXT',
+  },
+  imoveis: {
+    tipo: 'TEXT', finalidade: 'TEXT', proprietarioId: 'INTEGER', responsavelId: 'INTEGER', responsavel: 'TEXT',
+    titulo: 'TEXT', descricao: 'TEXT', cep: 'TEXT', logradouro: 'TEXT', numero: 'TEXT', bairro: 'TEXT', cidade: 'TEXT',
+    uf: 'TEXT', complemento: 'TEXT', precoVenda: 'REAL', precoAluguel: 'REAL', condominio: 'REAL', iptu: 'REAL',
+    areaTotal: 'REAL', areaTerreno: 'REAL', quartos: 'INTEGER', suites: 'INTEGER', banheiros: 'INTEGER', vagas: 'INTEGER',
+    fotos: 'TEXT',
+  },
+  visitas: {
+    clienteId: 'INTEGER', clienteNome: 'TEXT', imovelId: 'INTEGER', imovelTitulo: 'TEXT', corretorId: 'INTEGER',
+    corretor: 'TEXT', data: 'TEXT', hora: 'TEXT', status: 'TEXT', descricao: 'TEXT',
+  },
+  funcionarios: {
+    nome: 'TEXT', cpf: 'TEXT', dataNascimento: 'TEXT', telefone: 'TEXT', telefoneFixo: 'TEXT', email: 'TEXT',
+    cargo: 'TEXT', creci: 'TEXT', foto: 'TEXT', rg: 'TEXT', orgaoEmissor: 'TEXT',
+    cep: 'TEXT', logradouro: 'TEXT', numero: 'TEXT', bairro: 'TEXT', cidade: 'TEXT', uf: 'TEXT', complemento: 'TEXT',
+    observacoes: 'TEXT', status: 'TEXT', dataAdmissao: 'TEXT', salario: 'REAL', perfilId: 'INTEGER',
+  },
+  negociacoes: {
+    clienteId: 'INTEGER', imovelId: 'INTEGER', data: 'TEXT', valor: 'REAL', status: 'TEXT', observacoes: 'TEXT',
+  },
+  contratos: {
+    clienteId: 'INTEGER', imovelId: 'INTEGER', tipo: 'TEXT', dataInicio: 'TEXT', dataFim: 'TEXT', valor: 'REAL', status: 'TEXT',
+  },
+  perfis: { nome: 'TEXT', descricao: 'TEXT', permissoes: 'TEXT' },
+  notificacoes: { titulo: 'TEXT', mensagem: 'TEXT', destinatario: 'TEXT', canal: 'TEXT', dataEnvio: 'TEXT', status: 'TEXT' },
+  prestadores: { nome: 'TEXT', especialidade: 'TEXT', telefone: 'TEXT', cpfCnpj: 'TEXT', avaliacao: 'REAL' },
+  reparos: { imovelId: 'INTEGER', prestadorId: 'INTEGER', descricao: 'TEXT', dataSolicitacao: 'TEXT', status: 'TEXT', valor: 'REAL' },
+  anuncios: { imovelId: 'INTEGER', canal: 'TEXT', dataPublicacao: 'TEXT', status: 'TEXT', cliques: 'INTEGER', contatos: 'INTEGER' },
+  despesas: { descricao: 'TEXT', valor: 'REAL', dataVencimento: 'TEXT', status: 'TEXT', categoria: 'TEXT' },
+  multas: { contratoId: 'INTEGER', motivo: 'TEXT', valor: 'REAL', dataAplicacao: 'TEXT', status: 'TEXT' },
+  financeiro: { tipo: 'TEXT', valor: 'REAL', data: 'TEXT', descricao: 'TEXT', status: 'TEXT' },
+  auditoria: { usuario: 'TEXT', acao: 'TEXT', entidade: 'TEXT', entidadeId: 'INTEGER', data: 'TEXT', ip: 'TEXT' },
+};
+
 db.serialize(() => {
-  // 1. Clientes
-  db.run(`CREATE TABLE IF NOT EXISTS clientes (
-    id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT, email TEXT, telefone TEXT, tipo TEXT, origem TEXT,
-    cpfCnpj TEXT, rg TEXT, dataNascimento TEXT, sexo TEXT, profissao TEXT, renda REAL, estadoCivil TEXT,
-    cep TEXT, logradouro TEXT, numero TEXT, bairro TEXT, cidade TEXT, uf TEXT, complemento TEXT,
-    finalidade TEXT, tipoImovelBusca TEXT, faixaMin REAL, faixaMax REAL, quartosBusca INTEGER, banheirosBusca INTEGER, bairroBusca TEXT, observacoes TEXT
-  )`);
+  Object.entries(schema).forEach(([table, columns]) => {
+    const cols = Object.entries(columns).map(([name, type]) => `${name} ${type}`).join(', ');
+    db.run(`CREATE TABLE IF NOT EXISTS ${table} (id INTEGER PRIMARY KEY AUTOINCREMENT, ${cols})`);
 
-  // 2. Proprietarios
-  db.run(`CREATE TABLE IF NOT EXISTS proprietarios (
-    id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT, email TEXT, telefone TEXT, tipo TEXT, cpfCnpj TEXT,
-    rg TEXT, dataNascimento TEXT, sexo TEXT, estadoCivil TEXT, profissao TEXT, cep TEXT, logradouro TEXT,
-    numero TEXT, bairro TEXT, cidade TEXT, uf TEXT, complemento TEXT, banco TEXT, agencia TEXT, conta TEXT, tipoConta TEXT, chavePix TEXT, titularConta TEXT
-  )`);
-
-  // 3. Imoveis
-  db.run(`CREATE TABLE IF NOT EXISTS imoveis (
-    id INTEGER PRIMARY KEY AUTOINCREMENT, tipo TEXT, finalidade TEXT, proprietarioId INTEGER, responsavel TEXT,
-    titulo TEXT, descricao TEXT, cep TEXT, logradouro TEXT, numero TEXT, bairro TEXT, cidade TEXT, uf TEXT, complemento TEXT,
-    precoVenda REAL, precoAluguel REAL, condominio REAL, iptu REAL, areaTotal REAL, areaTerreno REAL, quartos INTEGER, suites INTEGER, banheiros INTEGER, vagas INTEGER
-  )`);
-
-  // 4. Visitas
-  db.run(`CREATE TABLE IF NOT EXISTS visitas (
-    id INTEGER PRIMARY KEY AUTOINCREMENT, clienteId INTEGER, clienteNome TEXT, imovelId INTEGER, imovelTitulo TEXT,
-    corretor TEXT, data TEXT, hora TEXT, status TEXT, descricao TEXT
-  )`);
-
-  // 5. Funcionarios
-  db.run(`CREATE TABLE IF NOT EXISTS funcionarios (
-    id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT, email TEXT, telefone TEXT, cpf TEXT,
-    cargo TEXT, creci TEXT, dataAdmissao TEXT, salario REAL, status TEXT, perfilId INTEGER
-  )`);
-
-  // 6. Perfis (Permissões)
-  db.run(`CREATE TABLE IF NOT EXISTS perfis (
-    id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT, descricao TEXT, permissoes TEXT
-  )`);
-
-  // 7. Notificacoes
-  db.run(`CREATE TABLE IF NOT EXISTS notificacoes (
-    id INTEGER PRIMARY KEY AUTOINCREMENT, titulo TEXT, mensagem TEXT, destinatario TEXT, canal TEXT, dataEnvio TEXT, status TEXT
-  )`);
-
-  // 8. Prestadores
-  db.run(`CREATE TABLE IF NOT EXISTS prestadores (
-    id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT, especialidade TEXT, telefone TEXT, cpfCnpj TEXT, avaliacao REAL
-  )`);
-
-  // 9. Reparos
-  db.run(`CREATE TABLE IF NOT EXISTS reparos (
-    id INTEGER PRIMARY KEY AUTOINCREMENT, imovelId INTEGER, prestadorId INTEGER, descricao TEXT, dataSolicitacao TEXT, status TEXT, valor REAL
-  )`);
-
-  // 10. Canais / Anuncios
-  db.run(`CREATE TABLE IF NOT EXISTS anuncios (
-    id INTEGER PRIMARY KEY AUTOINCREMENT, imovelId INTEGER, canal TEXT, dataPublicacao TEXT, status TEXT, cliques INTEGER, contatos INTEGER
-  )`);
-
-  // 11. Despesas
-  db.run(`CREATE TABLE IF NOT EXISTS despesas (
-    id INTEGER PRIMARY KEY AUTOINCREMENT, descricao TEXT, valor REAL, dataVencimento TEXT, status TEXT, categoria TEXT
-  )`);
-
-  // 12. Multas
-  db.run(`CREATE TABLE IF NOT EXISTS multas (
-    id INTEGER PRIMARY KEY AUTOINCREMENT, contratoId INTEGER, motivo TEXT, valor REAL, dataAplicacao TEXT, status TEXT
-  )`);
-
-  // 13. Financeiro
-  db.run(`CREATE TABLE IF NOT EXISTS financeiro (
-    id INTEGER PRIMARY KEY AUTOINCREMENT, tipo TEXT, valor REAL, data TEXT, descricao TEXT, status TEXT
-  )`);
-
-  // 14. Auditoria
-  db.run(`CREATE TABLE IF NOT EXISTS auditoria (
-    id INTEGER PRIMARY KEY AUTOINCREMENT, usuario TEXT, acao TEXT, entidade TEXT, entidadeId INTEGER, data TEXT, ip TEXT
-  )`);
+    // Adiciona colunas que faltarem em bancos criados por versões anteriores
+    db.all(`PRAGMA table_info(${table})`, [], (err, rows) => {
+      if (err) return console.error(err.message);
+      const existing = rows.map(r => r.name);
+      Object.entries(columns)
+        .filter(([name]) => !existing.includes(name))
+        .forEach(([name, type]) => db.run(`ALTER TABLE ${table} ADD COLUMN ${name} ${type}`));
+    });
+  });
 });
 
+db.schema = schema;
 module.exports = db;
