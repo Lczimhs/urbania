@@ -6,10 +6,9 @@ import { Link } from 'react-router-dom';
 export default function Dashboard() {
   const [stats, setStats] = useState({ totalClientes: 14, totalImoveis: 9, receitaMes: 9220000, totalProprietarios: 8 });
 
-  // Uncomment to fetch real stats when ready
-  // useEffect(() => {
-  //   api.get('/dashboard').then(r => setStats(r.data)).catch(console.error);
-  // }, []);
+  useEffect(() => {
+    api.get('/dashboard').then(r => setStats(s => ({ ...s, ...r.data }))).catch(console.error);
+  }, []);
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
