@@ -1,0 +1,18 @@
+# Dependências (cada um roda npm install)
+node_modules/
+
+# Build e deploy
+dist/
+.vercel/
+
+# Banco local (é recriado automaticamente pelo database.js)
+urbania-backend/database.sqlite
+
+# Variáveis de ambiente / segredos
+.env
+.env.*
+
+# Logs e lixo de sistema
+*.log
+.DS_Store
+Thumbs.db
