@@ -45,15 +45,14 @@ export function ClientesList() {
           rows={filtered} loading={loading}
           onRowClick={r => navigate(`/clientes/${r.id}`)}
           columns={[
-            { key: 'nome', label: 'Nome / E-mail / Telefone', render: r => (
+            { key: 'nome', label: 'Nome', render: r => (
               <div className="flex items-center gap-3">
                 <Avatar src={r.foto} name={r.nome} size="sm" />
-                <div>
-                  <p className="font-semibold text-slate-800">{r.nome}</p>
-                  <p className="text-xs text-slate-500">{[r.email, r.telefone].filter(Boolean).join(' · ')}</p>
-                </div>
+                <span className="font-semibold text-slate-800">{r.nome}</span>
               </div>
             ) },
+            { key: 'email', label: 'E-mail', render: r => <span className="text-slate-600">{r.email || '-'}</span> },
+            { key: 'telefone', label: 'Telefone', render: r => <span className="text-slate-600 font-medium">{r.telefone || '-'}</span> },
             { key: 'tipo', label: 'Tipo', render: r => r.tipo && <Badge className={tipoColor(r.tipo)}>{r.tipo}</Badge> },
             { key: 'origem', label: 'Origem', className: 'text-slate-500' },
           ]}
@@ -111,6 +110,7 @@ function ClienteHistorico({ clienteId }: { clienteId: number }) {
     <>
       <RelatedGrid title="Histórico de Visitas">
         <DataTable
+          compact
           rows={visitas.rows} loading={visitas.loading} empty="Nenhuma visita registrada."
           columns={[
             { key: 'id', label: 'ID da Visita', render: r => `#${r.id}`, className: 'font-mono text-slate-500' },
@@ -124,6 +124,7 @@ function ClienteHistorico({ clienteId }: { clienteId: number }) {
       </RelatedGrid>
       <RelatedGrid title="Histórico de Negociações">
         <DataTable
+          compact
           rows={negociacoes.rows} loading={negociacoes.loading} empty="Nenhuma negociação registrada."
           columns={[
             { key: 'id', label: 'ID da Proposta', render: r => `#${r.id}`, className: 'font-mono text-slate-500' },

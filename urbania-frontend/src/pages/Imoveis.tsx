@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bath, BedDouble, Building2, Car, Edit2, Eye, Maximize, Plus, Trash2 } from 'lucide-react';
-import { Badge, Card, DataTable, FilterSelect, PageHeader, Pager, SearchInput, Toolbar, matches } from '../components/DataTable';
+import { Bath, BedDouble, Building2, Car, Edit2, Eye, LayoutGrid, LayoutList, Maximize, Plus, Trash2 } from 'lucide-react';
+import { Badge, Card, DataTable, FilterSelect, PageHeader, Pager, RowActions, SearchInput, Toolbar, matches } from '../components/DataTable';
 import type { Mode, TabDef } from '../components/EntityForm';
 import { EntityPage, RelatedGrid } from '../components/EntityPage';
 import { SearchSelect } from '../components/SearchSelect';
@@ -23,7 +23,7 @@ export const precoImovel = (i: Record<string, any>) =>
 export const enderecoCurto = (i: Record<string, any>) =>
   [[i.logradouro, i.numero].filter(Boolean).join(', '), i.bairro, [i.cidade, i.uf].filter(Boolean).join('/')].filter(Boolean).join(' - ');
 
-// Consultar Imóveis (em cards)
+// Consultar Imóveis
 export function ImoveisList() {
   const navigate = useNavigate();
   const { rows, loading, reload } = useList('imoveis');
@@ -34,18 +34,87 @@ export function ImoveisList() {
   const [bairro, setBairro] = useState('');
   const [quartos, setQuartos] = useState('');
   const [proprietario, setProprietario] = useState<string | number | null>(null);
+  const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
   const [page, setPage] = useState(1);
   const del = useDelete('imoveis', 'Imóvel', reload);
 
   const bairros = [...new Set(rows.map(i => i.bairro).filter(Boolean))].sort();
   const filtered = rows.filter(i =>
-    matches(term, i.titulo, i.id, i.cidade) &&
+    matches(term, i.titulo, i.id, i.cidade, i.bairro) &&
     (!finalidade || i.finalidade === finalidade) && (!tipo || i.tipo === tipo) && (!bairro || i.bairro === bairro) &&
     (!quartos || Number(i.quartos || 0) >= Number(quartos)) &&
     (!proprietario || String(i.proprietarioId) === String(proprietario)));
 
   useEffect(() => setPage(1), [filtered.length]);
-  const current = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const currentCards = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  const columns = [
+    {
+      key: 'id',
+      label: 'Código',
+      render: (r: any) => <span className="font-mono text-slate-500 font-medium">#{r.id}</span>,
+      className: 'w-20',
+    },
+    {
+      key: 'titulo',
+      label: 'Imóvel',
+      render: (r: any) => {
+        const foto = parsePhotos(r.fotos)[0];
+        return (
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-10 rounded-lg overflow-hidden bg-slate-100 shrink-0 border border-slate-200/60 flex items-center justify-center">
+              {foto ? (
+                <img src={foto} alt={r.titulo} className="w-full h-full object-cover" />
+              ) : (
+                <Building2 size={20} className="text-slate-400" />
+              )}
+            </div>
+            <div>
+              <p className="font-semibold text-slate-800 leading-snug">{r.titulo}</p>
+              <p className="text-xs text-slate-400">{r.bairro ? `${r.bairro} · ` : ''}{r.cidade || ''}</p>
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      key: 'tipo',
+      label: 'Tipo',
+      render: (r: any) => r.tipo && <Badge className="bg-[#0a2540]/10 text-[#0a2540]">{r.tipo}</Badge>,
+    },
+    {
+      key: 'finalidade',
+      label: 'Finalidade',
+      render: (r: any) => r.finalidade && (
+        <Badge className={r.finalidade === 'Venda' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}>
+          {r.finalidade}
+        </Badge>
+      ),
+    },
+    {
+      key: 'endereco',
+      label: 'Endereço',
+      render: (r: any) => <span className="text-slate-600 text-xs">{enderecoCurto(r) || '-'}</span>,
+    },
+    {
+      key: 'detalhes',
+      label: 'Características',
+      render: (r: any) => {
+        const parts = [
+          r.quartos ? `${r.quartos} qtos` : null,
+          r.banheiros ? `${r.banheiros} banh` : null,
+          r.vagas ? `${r.vagas} vg` : null,
+          r.areaTotal ? `${r.areaTotal} m²` : null,
+        ].filter(Boolean);
+        return <span className="text-xs text-slate-500">{parts.join(' · ') || '-'}</span>;
+      },
+    },
+    {
+      key: 'preco',
+      label: 'Preço',
+      render: (r: any) => <span className="font-bold text-teal-700 text-sm whitespace-nowrap">{precoImovel(r)}</span>,
+    },
+  ];
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -64,47 +133,94 @@ export function ImoveisList() {
             <SearchSelect value={proprietario} onChange={setProprietario} placeholder="Todos os proprietários"
               options={proprietarios.rows.map(p => ({ value: p.id, label: p.nome }))} />
           </div>
+
+          <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden bg-white md:ml-auto">
+            <button
+              type="button"
+              onClick={() => setViewMode('table')}
+              className={`p-2 transition ${viewMode === 'table' ? 'bg-[#0a2540] text-white' : 'text-slate-500 hover:bg-slate-50'}`}
+              title="Visualização em Tabela"
+            >
+              <LayoutList size={18} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('grid')}
+              className={`p-2 transition ${viewMode === 'grid' ? 'bg-[#0a2540] text-white' : 'text-slate-500 hover:bg-slate-50'}`}
+              title="Visualização em Cards"
+            >
+              <LayoutGrid size={18} />
+            </button>
+          </div>
         </Toolbar>
 
-        {loading ? <p className="p-8 text-center text-slate-400">Carregando...</p>
-          : !filtered.length ? <p className="p-8 text-center text-slate-400">Nenhum imóvel encontrado.</p>
-          : (
-            <div className="p-4 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-              {current.map(i => {
-                const foto = parsePhotos(i.fotos)[0];
-                return (
-                  <div key={i.id} onClick={() => navigate(`/imoveis/${i.id}`)} className="group border rounded-xl overflow-hidden bg-white hover:shadow-md transition cursor-pointer">
-                    <div className="h-44 bg-slate-100 relative overflow-hidden">
-                      {foto
-                        ? <img src={foto} alt={i.titulo} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
-                        : <div className="w-full h-full flex items-center justify-center text-slate-300"><Building2 size={48} /></div>}
-                      <div className="absolute left-3 top-3 flex gap-2">
-                        {i.finalidade && <Badge className="bg-white/90 text-slate-700">{i.finalidade}</Badge>}
-                        {i.tipo && <Badge className="bg-[#0a2540]/90 text-white">{i.tipo}</Badge>}
+        {viewMode === 'table' ? (
+          <DataTable
+            rows={filtered}
+            loading={loading}
+            onRowClick={r => navigate(`/imoveis/${r.id}`)}
+            columns={columns}
+            actions={r => (
+              <RowActions
+                onView={() => navigate(`/imoveis/${r.id}`)}
+                onEdit={() => navigate(`/imoveis/${r.id}/editar`)}
+                onDelete={() => del.ask(r.id, r.titulo)}
+              />
+            )}
+          />
+        ) : (
+          <div className="flex flex-col justify-between min-h-[560px] lg:min-h-[calc(100vh-250px)]">
+            <div className="flex-1 p-5">
+              {loading ? (
+                <p className="p-12 text-center text-slate-400">Carregando...</p>
+              ) : !filtered.length ? (
+                <p className="p-12 text-center text-slate-400">Nenhum imóvel encontrado.</p>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+                  {currentCards.map(i => {
+                    const foto = parsePhotos(i.fotos)[0];
+                    return (
+                      <div key={i.id} onClick={() => navigate(`/imoveis/${i.id}`)} className="group border rounded-xl overflow-hidden bg-white hover:shadow-md transition cursor-pointer flex flex-col justify-between">
+                        <div>
+                          <div className="h-44 bg-slate-100 relative overflow-hidden">
+                            {foto ? (
+                              <img src={foto} alt={i.titulo} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-slate-300"><Building2 size={48} /></div>
+                            )}
+                            <div className="absolute left-3 top-3 flex gap-2">
+                              {i.finalidade && <Badge className="bg-white/90 text-slate-700">{i.finalidade}</Badge>}
+                              {i.tipo && <Badge className="bg-[#0a2540]/90 text-white">{i.tipo}</Badge>}
+                            </div>
+                            <div className="absolute right-2 top-2 flex gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition" onClick={e => e.stopPropagation()}>
+                              <button title="Editar" onClick={() => navigate(`/imoveis/${i.id}/editar`)} className="p-1.5 rounded-lg bg-white/90 text-slate-600 hover:text-amber-600"><Edit2 size={16} /></button>
+                              <button title="Excluir" onClick={() => del.ask(i.id, i.titulo)} className="p-1.5 rounded-lg bg-white/90 text-slate-600 hover:text-red-600"><Trash2 size={16} /></button>
+                            </div>
+                          </div>
+                          <div className="p-4">
+                            <p className="text-[11px] font-mono text-slate-400">#{i.id}</p>
+                            <h3 className="font-bold text-slate-800 leading-snug">{i.titulo}</h3>
+                            <p className="text-xs text-slate-500 mt-1 line-clamp-1">{enderecoCurto(i) || 'Endereço não informado'}</p>
+                            <div className="flex gap-3 text-xs text-slate-500 mt-3">
+                              {!!i.quartos && <span className="flex items-center gap-1"><BedDouble size={14} />{i.quartos}</span>}
+                              {!!i.banheiros && <span className="flex items-center gap-1"><Bath size={14} />{i.banheiros}</span>}
+                              {!!i.vagas && <span className="flex items-center gap-1"><Car size={14} />{i.vagas}</span>}
+                              {!!i.areaTotal && <span className="flex items-center gap-1"><Maximize size={14} />{i.areaTotal} m²</span>}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="px-4 pb-4">
+                          <p className="text-lg font-bold text-teal-600">{precoImovel(i)}</p>
+                        </div>
                       </div>
-                      <div className="absolute right-2 top-2 flex gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition" onClick={e => e.stopPropagation()}>
-                        <button title="Editar" onClick={() => navigate(`/imoveis/${i.id}/editar`)} className="p-1.5 rounded-lg bg-white/90 text-slate-600 hover:text-amber-600"><Edit2 size={16} /></button>
-                        <button title="Excluir" onClick={() => del.ask(i.id, i.titulo)} className="p-1.5 rounded-lg bg-white/90 text-slate-600 hover:text-red-600"><Trash2 size={16} /></button>
-                      </div>
-                    </div>
-                    <div className="p-4">
-                      <p className="text-[11px] font-mono text-slate-400">#{i.id}</p>
-                      <h3 className="font-bold text-slate-800 leading-snug">{i.titulo}</h3>
-                      <p className="text-xs text-slate-500 mt-1 line-clamp-1">{enderecoCurto(i) || 'Endereço não informado'}</p>
-                      <div className="flex gap-3 text-xs text-slate-500 mt-3">
-                        {!!i.quartos && <span className="flex items-center gap-1"><BedDouble size={14} />{i.quartos}</span>}
-                        {!!i.banheiros && <span className="flex items-center gap-1"><Bath size={14} />{i.banheiros}</span>}
-                        {!!i.vagas && <span className="flex items-center gap-1"><Car size={14} />{i.vagas}</span>}
-                        {!!i.areaTotal && <span className="flex items-center gap-1"><Maximize size={14} />{i.areaTotal} m²</span>}
-                      </div>
-                      <p className="text-lg font-bold text-teal-600 mt-3">{precoImovel(i)}</p>
-                    </div>
-                  </div>
-                );
-              })}
+                    );
+                  })}
+                </div>
+              )}
             </div>
-          )}
-        <Pager page={page} setPage={setPage} total={filtered.length} pageSize={PAGE_SIZE} />
+            <Pager page={page} setPage={setPage} total={filtered.length} pageSize={PAGE_SIZE} />
+          </div>
+        )}
       </Card>
       {del.modal}
     </div>
@@ -123,6 +239,7 @@ function ImovelRelacionamentos({ imovelId }: { imovelId: number }) {
     <>
       <RelatedGrid title="Visitas">
         <DataTable
+          compact
           rows={visitas.rows} loading={visitas.loading} empty="Nenhuma visita registrada."
           columns={[
             { key: 'id', label: 'ID da Visita', render: r => `#${r.id}`, className: 'font-mono text-slate-500' },
@@ -135,6 +252,7 @@ function ImovelRelacionamentos({ imovelId }: { imovelId: number }) {
       </RelatedGrid>
       <RelatedGrid title="Negociações">
         <DataTable
+          compact
           rows={negociacoes.rows} loading={negociacoes.loading} empty="Nenhuma negociação registrada."
           columns={[
             { key: 'id', label: 'ID da Proposta', render: r => `#${r.id}`, className: 'font-mono text-slate-500' },

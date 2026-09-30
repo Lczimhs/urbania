@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
-import { ArrowLeft, Camera, ImagePlus, Loader2, X } from 'lucide-react';
+import { ArrowLeft, Camera, Check, ChevronLeft, ChevronRight, ImagePlus, Loader2, X } from 'lucide-react';
 import { formatCurrency, formatDate, initials, parseCurrencyInput } from '../lib/format';
 import { imageToDataUrl, parsePhotos } from '../lib/files';
 import { buscarCep } from '../lib/cep';
@@ -96,6 +96,22 @@ export function EntityForm({ title, mode, initial, tabs, defaults = {}, onSubmit
     } finally {
       setSaving(false);
     }
+  };
+
+  const goNext = () => {
+    const currentFields = (tabs[tab]?.fields || []).filter(
+      f => !f.hidden?.(form) && isRequired(f, form) && isEmpty(form[f.key])
+    );
+    if (currentFields.length > 0) {
+      setErrors(prev => ({ ...prev, ...Object.fromEntries(currentFields.map(f => [f.key, true])) }));
+      toast.error('Preencha os campos obrigatórios desta etapa: ' + currentFields.map(f => f.label).join(', ') + '.');
+      return;
+    }
+    setTab(cur => Math.min(cur + 1, tabs.length - 1));
+  };
+
+  const goPrev = () => {
+    setTab(cur => Math.max(cur - 1, 0));
   };
 
   const renderField = (f: FieldDef) => {
@@ -206,23 +222,101 @@ export function EntityForm({ title, mode, initial, tabs, defaults = {}, onSubmit
           {current.render?.(form, mode)}
         </div>
 
-        <div className="px-4 sm:px-6 py-4 border-t bg-white flex flex-wrap justify-between gap-3">
+        <div className="px-4 sm:px-6 py-4 border-t bg-white flex flex-wrap items-center justify-between gap-3">
           {view ? (
             <>
-              <button type="button" onClick={onBack} className="px-6 py-2.5 bg-[#0a2540] text-white rounded-lg font-bold hover:bg-[#06182c]">Voltar</button>
-              {onEdit && <button type="button" onClick={onEdit} className="px-5 py-2.5 border rounded-lg font-semibold text-slate-700 hover:bg-slate-50">{editLabel}</button>}
+              <div className="flex flex-wrap items-center gap-3">
+                <button type="button" onClick={onBack} className="px-6 py-2.5 bg-[#0a2540] text-white rounded-lg font-bold hover:bg-[#06182c] transition">
+                  Voltar
+                </button>
+                {tabs.length > 1 && tab > 0 && (
+                  <button type="button" onClick={goPrev} className="px-4 py-2.5 border border-slate-300 rounded-lg font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-1.5 transition">
+                    <ChevronLeft size={18} /> Etapa Anterior
+                  </button>
+                )}
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                {tabs.length > 1 && tab < tabs.length - 1 && (
+                  <button type="button" onClick={goNext} className="px-5 py-2.5 border border-slate-300 rounded-lg font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-1.5 transition">
+                    Próxima Etapa <ChevronRight size={18} />
+                  </button>
+                )}
+                {onEdit && (
+                  <button type="button" onClick={onEdit} className="px-5 py-2.5 border border-slate-300 rounded-lg font-semibold text-slate-700 hover:bg-slate-50 transition">
+                    {editLabel}
+                  </button>
+                )}
+              </div>
             </>
           ) : (
             <>
-              <div className="flex gap-3">
-                <button type="button" onClick={() => (cancelConfirm ? setConfirmCancel(true) : onBack())} className="px-5 py-2.5 border rounded-lg font-semibold text-slate-600 hover:bg-slate-50">Cancelar</button>
+              {/* Lado Esquerdo: Ações Auxiliares (Cancelar e Limpar) */}
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => (cancelConfirm ? setConfirmCancel(true) : onBack())}
+                  className="px-5 py-2.5 border border-slate-300 rounded-lg font-semibold text-slate-600 hover:bg-slate-50 transition"
+                >
+                  Cancelar
+                </button>
                 {showClear && mode === 'create' && (
-                  <button type="button" onClick={() => { setForm({ ...defaults }); setErrors({}); setTab(0); }} className="px-5 py-2.5 border rounded-lg font-semibold text-slate-600 hover:bg-slate-50">Limpar Formulário</button>
+                  <button
+                    type="button"
+                    onClick={() => { setForm({ ...defaults }); setErrors({}); setTab(0); }}
+                    className="px-5 py-2.5 border border-slate-300 rounded-lg font-semibold text-slate-600 hover:bg-slate-50 transition"
+                  >
+                    Limpar Formulário
+                  </button>
                 )}
               </div>
-              <button type="submit" disabled={saving} className="px-6 py-2.5 bg-emerald-600 text-white rounded-lg font-bold hover:bg-emerald-700 disabled:opacity-60 flex items-center gap-2">
-                {saving && <Loader2 size={16} className="animate-spin" />}{submitLabel}
-              </button>
+
+              {/* Lado Direito: Navegação (Voltar, Próximo) e Ação Principal (Salvar) */}
+              <div className="flex flex-wrap items-center gap-3">
+                {/* Botão Voltar (entre abas a partir da segunda aba) */}
+                {tabs.length > 1 && tab > 0 && (
+                  <button
+                    type="button"
+                    onClick={goPrev}
+                    className="px-5 py-2.5 border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg font-semibold flex items-center gap-1.5 transition"
+                  >
+                    <ChevronLeft size={18} /> Voltar
+                  </button>
+                )}
+
+                {/* Botão Próximo no cadastro (se houver próxima aba) */}
+                {mode === 'create' && tabs.length > 1 && tab < tabs.length - 1 && (
+                  <button
+                    type="button"
+                    onClick={goNext}
+                    className="px-6 py-2.5 bg-[#0a2540] text-white rounded-lg font-bold hover:bg-[#06182c] flex items-center gap-2 transition shadow-sm"
+                  >
+                    Próximo <ChevronRight size={18} />
+                  </button>
+                )}
+
+                {/* Botão Próximo na edição (para alternar abas sem submeter) */}
+                {mode === 'edit' && tabs.length > 1 && tab < tabs.length - 1 && (
+                  <button
+                    type="button"
+                    onClick={goNext}
+                    className="px-5 py-2.5 border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg font-semibold flex items-center gap-1.5 transition"
+                  >
+                    Próximo <ChevronRight size={18} />
+                  </button>
+                )}
+
+                {/* Botão Salvar: No cadastro apenas na última aba (ou aba única); Na edição SEMPRE em todas as abas */}
+                {(mode === 'edit' || tab === tabs.length - 1 || tabs.length <= 1) && (
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="px-6 py-2.5 bg-emerald-600 text-white rounded-lg font-bold hover:bg-emerald-700 disabled:opacity-60 flex items-center gap-2 transition shadow-sm"
+                  >
+                    {saving ? <Loader2 size={16} className="animate-spin" /> : <Check size={18} />}
+                    {submitLabel}
+                  </button>
+                )}
+              </div>
             </>
           )}
         </div>

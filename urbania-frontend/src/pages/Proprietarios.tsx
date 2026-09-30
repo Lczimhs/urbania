@@ -47,12 +47,16 @@ export function ProprietariosList() {
           rows={filtered} loading={loading}
           onRowClick={r => navigate(`/proprietarios/${r.id}`)}
           columns={[
-            { key: 'id', label: 'ID', render: r => `#${r.id}`, className: 'font-mono text-slate-500' },
             { key: 'nome', label: 'Nome', render: r => (
-              <div className="flex items-center gap-3"><Avatar src={r.foto} name={r.nome} size="sm" /><span className="font-semibold text-slate-800">{r.nome}</span></div>
+              <div className="flex items-center gap-3">
+                <Avatar src={r.foto} name={r.nome} size="sm" />
+                <span className="font-semibold text-slate-800">{r.nome}</span>
+              </div>
             ) },
+            { key: 'email', label: 'E-mail', render: r => <span className="text-slate-600">{r.email || '-'}</span> },
+            { key: 'telefone', label: 'Telefone', render: r => <span className="text-slate-600 font-medium">{r.telefone || '-'}</span> },
             { key: 'documento', label: 'CPF/CNPJ', render: documento },
-            { key: 'tipo', label: 'Tipo de Pessoa', render: r => r.tipo && <Badge className={r.tipo === 'Jurídica' ? 'bg-indigo-100 text-indigo-700' : 'bg-sky-100 text-sky-700'}>{r.tipo}</Badge> },
+            { key: 'tipo', label: 'Tipo', render: r => r.tipo && <Badge className={r.tipo === 'Jurídica' ? 'bg-indigo-100 text-indigo-700' : 'bg-sky-100 text-sky-700'}>{r.tipo}</Badge> },
           ]}
           actions={r => (
             <RowActions onView={() => navigate(`/proprietarios/${r.id}`)} onEdit={() => navigate(`/proprietarios/${r.id}/editar`)} onDelete={() => del.ask(r.id, r.nome)} />
@@ -110,6 +114,7 @@ function ProprietarioVinculos({ proprietarioId }: { proprietarioId: number }) {
     <>
       <RelatedGrid title="Imóveis">
         <DataTable
+          compact
           rows={imoveis.rows} loading={imoveis.loading} empty="Nenhum imóvel vinculado."
           columns={[
             { key: 'id', label: 'ID', render: r => `#${r.id}`, className: 'font-mono text-slate-500' },
@@ -123,6 +128,7 @@ function ProprietarioVinculos({ proprietarioId }: { proprietarioId: number }) {
       </RelatedGrid>
       <RelatedGrid title="Negociações">
         <DataTable
+          compact
           rows={minhasNegociacoes} loading={negociacoes.loading} empty="Nenhuma negociação registrada."
           columns={[
             { key: 'id', label: 'ID da Proposta', render: r => `#${r.id}`, className: 'font-mono text-slate-500' },

@@ -4,14 +4,15 @@ import { ChevronLeft, ChevronRight, Edit2, Eye, Search, Trash2 } from 'lucide-re
 
 export type Column<T> = { key: string; label: string; render?: (row: T) => ReactNode; className?: string };
 
-// Grid de listagem com paginação automática a partir de 10 registros (RNF 1.6 das consultas)
-export function DataTable<T extends { id: number }>({ columns, rows, loading, onRowClick, empty, pageSize = 10, actions }: {
+// Grid de listagem com altura estruturada e paginação permanente (RNF 1.6 das consultas)
+export function DataTable<T extends { id: number }>({ columns, rows, loading, onRowClick, empty, pageSize = 10, compact = false, actions }: {
   columns: Column<T>[];
   rows: T[];
   loading?: boolean;
   onRowClick?: (row: T) => void;
   empty?: ReactNode;
   pageSize?: number;
+  compact?: boolean;
   actions?: (row: T) => ReactNode;
 }) {
   const [page, setPage] = useState(1);
@@ -23,29 +24,29 @@ export function DataTable<T extends { id: number }>({ columns, rows, loading, on
   const colSpan = columns.length + (actions ? 1 : 0);
 
   return (
-    <div>
-      <div className="overflow-x-auto">
+    <div className={`flex flex-col justify-between ${compact ? 'min-h-0' : 'min-h-[560px] lg:min-h-[calc(100vh-250px)]'}`}>
+      <div className="overflow-x-auto flex-1">
         <table className="w-full text-sm text-left">
-          <thead className="bg-white border-b text-slate-500 text-[11px] font-bold uppercase tracking-wider">
+          <thead className="bg-white border-b border-slate-100 text-slate-500 text-[11px] font-bold uppercase tracking-wider">
             <tr>
-              {columns.map(c => <th key={c.key} className="px-5 py-3 whitespace-nowrap">{c.label}</th>)}
-              {actions && <th className="px-5 py-3 text-right">Ações</th>}
+              {columns.map(c => <th key={c.key} className="px-6 py-4 whitespace-nowrap">{c.label}</th>)}
+              {actions && <th className="px-6 py-4 text-right">Ações</th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {loading ? (
-              <tr><td colSpan={colSpan} className="p-8 text-center text-slate-400">Carregando...</td></tr>
+              <tr><td colSpan={colSpan} className="p-12 text-center text-slate-400">Carregando...</td></tr>
             ) : rows.length === 0 ? (
-              <tr><td colSpan={colSpan} className="p-8 text-center text-slate-400">{empty || 'Nenhum registro encontrado.'}</td></tr>
+              <tr><td colSpan={colSpan} className="p-12 text-center text-slate-400">{empty || 'Nenhum registro encontrado.'}</td></tr>
             ) : current.map(row => (
               <tr key={row.id} onClick={() => onRowClick?.(row)} className={`hover:bg-slate-50/80 transition-colors ${onRowClick ? 'cursor-pointer' : ''}`}>
                 {columns.map(c => (
-                  <td key={c.key} className={`px-5 py-3.5 ${c.className || 'text-slate-700'}`}>
+                  <td key={c.key} className={`px-6 py-3.5 ${c.className || 'text-slate-700'}`}>
                     {c.render ? c.render(row) : String((row as any)[c.key] ?? '')}
                   </td>
                 ))}
                 {actions && (
-                  <td className="px-5 py-3.5 text-right whitespace-nowrap" onClick={e => e.stopPropagation()}>{actions(row)}</td>
+                  <td className="px-6 py-3.5 text-right whitespace-nowrap" onClick={e => e.stopPropagation()}>{actions(row)}</td>
                 )}
               </tr>
             ))}
@@ -58,19 +59,50 @@ export function DataTable<T extends { id: number }>({ columns, rows, loading, on
   );
 }
 
-// Paginação exibida quando há mais registros que o tamanho da página
+// Paginação com contagem e controles de navegação sempre presentes
 export function Pager({ page, setPage, total, pageSize }: { page: number; setPage: (p: number) => void; total: number; pageSize: number }) {
-  if (total <= pageSize) return null;
-  const pages = Math.ceil(total / pageSize);
+  const pages = Math.max(1, Math.ceil(total / pageSize));
+  const start = total === 0 ? 0 : (page - 1) * pageSize + 1;
+  const end = Math.min(page * pageSize, total);
+
   return (
-    <div className="px-5 py-3 border-t border-slate-100 flex justify-between items-center text-sm text-slate-500">
-      <span>Mostrando {(page - 1) * pageSize + 1}-{Math.min(page * pageSize, total)} de {total}</span>
-      <div className="flex items-center gap-1">
-        <button disabled={page === 1} onClick={() => setPage(page - 1)} className="p-1 disabled:opacity-30 hover:text-slate-800"><ChevronLeft size={20} /></button>
+    <div className="px-6 py-4 border-t border-slate-100 flex flex-wrap justify-between items-center text-sm text-slate-500 bg-white select-none">
+      <span>
+        {total === 0 ? 'Nenhum registro encontrado' : `Mostrando ${start}–${end} de ${total}`}
+      </span>
+      <div className="flex items-center gap-1.5">
+        <button
+          type="button"
+          disabled={page <= 1}
+          onClick={() => setPage(page - 1)}
+          className="p-1 text-slate-400 hover:text-slate-800 disabled:opacity-30 disabled:hover:text-slate-400 transition"
+          title="Página anterior"
+        >
+          <ChevronLeft size={20} />
+        </button>
+
         {Array.from({ length: pages }, (_, i) => i + 1).map(n => (
-          <button key={n} onClick={() => setPage(n)} className={`w-7 h-7 rounded font-bold ${n === page ? 'bg-[#0a2540] text-white' : 'hover:bg-slate-100 text-slate-600'}`}>{n}</button>
+          <button
+            key={n}
+            type="button"
+            onClick={() => setPage(n)}
+            className={`w-8 h-8 rounded-lg font-bold text-xs flex items-center justify-center transition ${
+              n === page ? 'bg-[#0a2540] text-white shadow-sm' : 'hover:bg-slate-100 text-slate-600'
+            }`}
+          >
+            {n}
+          </button>
         ))}
-        <button disabled={page === pages} onClick={() => setPage(page + 1)} className="p-1 disabled:opacity-30 hover:text-slate-800"><ChevronRight size={20} /></button>
+
+        <button
+          type="button"
+          disabled={page >= pages}
+          onClick={() => setPage(page + 1)}
+          className="p-1 text-slate-400 hover:text-slate-800 disabled:opacity-30 disabled:hover:text-slate-400 transition"
+          title="Próxima página"
+        >
+          <ChevronRight size={20} />
+        </button>
       </div>
     </div>
   );
@@ -79,10 +111,10 @@ export function Pager({ page, setPage, total, pageSize }: { page: number; setPag
 // Botões Visualizar / Editar / Excluir de cada linha
 export function RowActions({ onView, onEdit, onDelete }: { onView?: () => void; onEdit?: () => void; onDelete?: () => void }) {
   return (
-    <div className="inline-flex items-center gap-1 text-slate-400">
-      {onView && <button title="Visualizar" onClick={onView} className="p-1.5 rounded hover:bg-sky-50 hover:text-sky-600"><Eye size={16} /></button>}
-      {onEdit && <button title="Editar" onClick={onEdit} className="p-1.5 rounded hover:bg-amber-50 hover:text-amber-600"><Edit2 size={16} /></button>}
-      {onDelete && <button title="Excluir" onClick={onDelete} className="p-1.5 rounded hover:bg-red-50 hover:text-red-600"><Trash2 size={16} /></button>}
+    <div className="inline-flex items-center gap-2 text-slate-400">
+      {onView && <button type="button" title="Visualizar" onClick={onView} className="p-1 rounded hover:text-sky-600 transition"><Eye size={17} /></button>}
+      {onEdit && <button type="button" title="Editar" onClick={onEdit} className="p-1 rounded hover:text-sky-600 transition"><Edit2 size={17} /></button>}
+      {onDelete && <button type="button" title="Excluir" onClick={onDelete} className="p-1 rounded hover:text-red-500 transition"><Trash2 size={17} /></button>}
     </div>
   );
 }
