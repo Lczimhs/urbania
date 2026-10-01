@@ -110,9 +110,9 @@ export function Pager({ page, setPage, total, pageSize }: { page: number; setPag
 
 // Cores dos botões de ação: só o ícone colorido; escurece e cresce um pouco ao passar o mouse
 const ACTION_TONES = {
-  view: 'text-sky-500 hover:text-sky-700',
-  edit: 'text-amber-500 hover:text-amber-600',
-  delete: 'text-rose-500 hover:text-rose-700',
+  view: 'text-sky-700 hover:text-sky-900',
+  edit: 'text-amber-600 hover:text-amber-800',
+  delete: 'text-red-600 hover:text-red-800',
 };
 
 export function ActionButton({ tone, title, onClick, children }: { tone: keyof typeof ACTION_TONES; title: string; onClick: () => void; children: ReactNode }) {
