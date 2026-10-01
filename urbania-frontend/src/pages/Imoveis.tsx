@@ -192,7 +192,7 @@ export function ImoveisList() {
                               {i.finalidade && <Badge className="bg-white/90 text-slate-700">{i.finalidade}</Badge>}
                               {i.tipo && <Badge className="bg-[#0a2540]/90 text-white">{i.tipo}</Badge>}
                             </div>
-                            <div className="absolute right-2 top-2 flex gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition" onClick={e => e.stopPropagation()}>
+                            <div className="absolute right-2 top-2 flex gap-0.5 p-0.5 rounded-lg bg-white/90 shadow-sm opacity-100 sm:opacity-0 group-hover:opacity-100 transition" onClick={e => e.stopPropagation()}>
                               <ActionButton tone="edit" title="Editar" onClick={() => navigate(`/imoveis/${i.id}/editar`)}><Edit2 size={15} /></ActionButton>
                               <ActionButton tone="delete" title="Excluir" onClick={() => del.ask(i.id, i.titulo)}><Trash2 size={15} /></ActionButton>
                             </div>

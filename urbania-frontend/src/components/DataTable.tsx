@@ -108,11 +108,11 @@ export function Pager({ page, setPage, total, pageSize }: { page: number; setPag
   );
 }
 
-// Cores dos botões de ação: fundo suave em repouso, cor cheia ao passar o mouse
+// Cores dos botões de ação: só o ícone colorido; escurece e cresce um pouco ao passar o mouse
 const ACTION_TONES = {
-  view: 'bg-sky-50 text-sky-600 ring-sky-100 hover:bg-sky-600 hover:text-white hover:ring-sky-600',
-  edit: 'bg-amber-50 text-amber-600 ring-amber-100 hover:bg-amber-500 hover:text-white hover:ring-amber-500',
-  delete: 'bg-rose-50 text-rose-600 ring-rose-100 hover:bg-rose-600 hover:text-white hover:ring-rose-600',
+  view: 'text-sky-500 hover:text-sky-700',
+  edit: 'text-amber-500 hover:text-amber-600',
+  delete: 'text-rose-500 hover:text-rose-700',
 };
 
 export function ActionButton({ tone, title, onClick, children }: { tone: keyof typeof ACTION_TONES; title: string; onClick: () => void; children: ReactNode }) {
@@ -120,7 +120,7 @@ export function ActionButton({ tone, title, onClick, children }: { tone: keyof t
     <button
       type="button" title={title} aria-label={title}
       onClick={e => { e.stopPropagation(); onClick(); }}
-      className={`w-8 h-8 inline-flex items-center justify-center rounded-lg ring-1 transition-all duration-150 hover:shadow-md hover:-translate-y-px active:translate-y-0 ${ACTION_TONES[tone]}`}
+      className={`w-8 h-8 inline-flex items-center justify-center rounded-lg transition-all duration-150 hover:scale-115 active:scale-95 ${ACTION_TONES[tone]}`}
     >
       {children}
     </button>
