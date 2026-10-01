@@ -26,6 +26,7 @@ import {
   Wrench,
 } from 'lucide-react';
 import { useAuth } from '../lib/auth';
+import { useConfig } from '../lib/config';
 import logoImg from '../assets/logo.png';
 
 const mainModules = [
@@ -56,15 +57,16 @@ const maintenanceModules = [
   { path: '/anuncios', label: 'Anúncios', icon: <Megaphone size={20} /> },
 ];
 
-const upcomingModules = [
-  { label: 'Configurações', icon: <Settings size={20} /> },
+const systemModules = [
+  { path: '/configuracoes', label: 'Configurações', icon: <Settings size={20} /> },
 ];
 
 export default function Layout({ children }: { children: ReactNode }) {
   const loc = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const currentModule = [...mainModules, ...maintenanceModules].find(x => isActive(x.path, loc.pathname));
+  const { config } = useConfig();
+  const currentModule = [...mainModules, ...maintenanceModules, ...systemModules].find(x => isActive(x.path, loc.pathname));
   const [menuOpen, setMenuOpen] = useState(false);
 
   // No celular o menu fecha sozinho ao trocar de página
@@ -95,10 +97,10 @@ export default function Layout({ children }: { children: ReactNode }) {
           {/* Logo Urbânia Oficial */}
           <div className="p-3.5 mx-3 my-3 bg-[#06182c]/90 border border-slate-700/60 rounded-2xl flex items-center gap-3 shadow-inner">
             <div className="bg-white p-1 rounded-xl shadow flex items-center justify-center shrink-0">
-              <img src={logoImg} alt="Urbânia Logotipo" className="h-10 w-10 object-contain" />
+              <img src={config.logo || logoImg} alt={`${config.nomeFantasia || 'Urbânia'} Logotipo`} className="h-10 w-10 object-contain" />
             </div>
             <div className="flex flex-col min-w-0">
-              <span className="text-white font-extrabold text-base tracking-wide leading-tight truncate">Urbânia</span>
+              <span className="text-white font-extrabold text-base tracking-wide leading-tight truncate">{config.nomeFantasia || 'Urbânia'}</span>
               <span className="text-[10px] text-teal-400 font-bold tracking-wider uppercase truncate">Imobiliária</span>
             </div>
           </div>
@@ -140,15 +142,19 @@ export default function Layout({ children }: { children: ReactNode }) {
             </nav>
           </div>
 
-          {/* Em Breve */}
+          {/* Sistema */}
           <div className="px-4 mt-8">
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3 ml-2">Em Breve</p>
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3 ml-2">Sistema</p>
             <nav className="space-y-1">
-              {upcomingModules.map(item => (
-                <div key={item.label} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-500/50 cursor-not-allowed">
+              {systemModules.map(item => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${isActive(item.path, loc.pathname) ? 'bg-sky-600 text-white shadow-md' : 'hover:bg-white/10 hover:text-white'}`}
+                >
                   {item.icon}
                   {item.label}
-                </div>
+                </Link>
               ))}
             </nav>
           </div>

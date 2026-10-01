@@ -102,6 +102,13 @@ const schema = {
     usuario: 'TEXT', acao: 'TEXT', entidade: 'TEXT', entidadeId: 'INTEGER',
     detalhes: 'TEXT', data: 'TEXT', hora: 'TEXT', ip: 'TEXT',
   },
+  // Configurações gerais da imobiliária (um único registro)
+  configuracoes: {
+    nomeFantasia: 'TEXT', razaoSocial: 'TEXT', cnpj: 'TEXT', creci: 'TEXT', telefone: 'TEXT', email: 'TEXT', site: 'TEXT', logo: 'TEXT',
+    cep: 'TEXT', logradouro: 'TEXT', numero: 'TEXT', bairro: 'TEXT', cidade: 'TEXT', uf: 'TEXT', complemento: 'TEXT',
+    taxaAdministracao: 'REAL', comissaoVenda: 'REAL', multaAtraso: 'REAL', jurosDia: 'REAL',
+    diaVencimento: 'INTEGER', indiceReajuste: 'TEXT', prazoRepasse: 'INTEGER',
+  },
 };
 
 db.serialize(() => {

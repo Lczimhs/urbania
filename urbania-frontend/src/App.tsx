@@ -24,6 +24,8 @@ import { PerfilPage, PerfisList } from './pages/Perfis';
 import { MultaPage, MultasList } from './pages/Multas';
 import { DespesaPage, DespesasList } from './pages/Despesas';
 import Relatorios from './pages/Relatorios';
+import Configuracoes from './pages/Configuracoes';
+import { ConfigProvider } from './lib/config';
 import GenericCrud from './pages/GenericCrud';
 
 // Gera as 4 rotas de um módulo: consultar, cadastrar, visualizar e editar
@@ -60,7 +62,7 @@ function AppShell({ children }: { children: ReactNode }) {
   }
 
   // Usuário autenticado da imobiliária acessa com Layout
-  return <Layout>{children}</Layout>;
+  return <ConfigProvider><Layout>{children}</Layout></ConfigProvider>;
 }
 
 export default function App() {
@@ -101,6 +103,9 @@ export default function App() {
 
               {/* Administração e Perfis de Acesso */}
               {crudRoutes('/perfis', PerfisList, PerfilPage)}
+
+              {/* Sistema */}
+              <Route path="/configuracoes" element={<Configuracoes />} />
 
               {/* Auditoria de Acessos e Logs */}
               <Route path="/auditoria" element={<GenericCrud entity="auditoria" title="Auditoria de Acessos" fields={[{key:'usuario',label:'Usuário'},{key:'acao',label:'Ação'},{key:'data',label:'Data'}]} />} />

@@ -46,7 +46,7 @@ const inputClass = (invalid: boolean) =>
   `w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-[#0a2540] disabled:bg-slate-100 disabled:text-slate-500 ${invalid ? 'border-red-500 bg-red-50' : 'bg-white'}`;
 
 // Formulário em abas reaproveitado nas telas de Cadastrar, Editar e Visualizar
-export function EntityForm({ title, mode, initial, tabs, defaults = {}, onSubmit, onBack, onEdit, validate, showClear = true, cancelConfirm, submitLabel = 'Salvar', editLabel = 'Editar' }: {
+export function EntityForm({ title, mode, initial, tabs, defaults = {}, onSubmit, onBack, onEdit, validate, showClear = true, cancelConfirm, submitLabel = 'Salvar', editLabel = 'Editar', hideId = false }: {
   title: string;
   mode: Mode;
   initial: Form;
@@ -60,6 +60,7 @@ export function EntityForm({ title, mode, initial, tabs, defaults = {}, onSubmit
   cancelConfirm?: string;   // mensagem do modal ao cancelar (ex.: edição de visita)
   submitLabel?: string;
   editLabel?: string;
+  hideId?: boolean;         // telas sem ID visível (ex.: Configurações)
 }) {
   const [form, setForm] = useState<Form>(initial);
   const [tab, setTab] = useState(0);
@@ -222,7 +223,7 @@ export function EntityForm({ title, mode, initial, tabs, defaults = {}, onSubmit
         )}
 
         <div className="p-4 sm:p-6 bg-slate-50/60 min-h-[18rem]">
-          {tab === 0 && (
+          {tab === 0 && !hideId && (
             <div className="mb-4 max-w-[12rem]">
               <label className="block text-xs font-semibold uppercase mb-1 text-slate-500">ID</label>
               {view
