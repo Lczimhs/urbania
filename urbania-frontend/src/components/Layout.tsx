@@ -1,7 +1,30 @@
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Users, UserSquare2, Building2, Calendar, BadgeCheck, Handshake, FileText, DollarSign, BarChart3, Settings, Bell, ChevronDown, Menu, ClipboardList, HardHat, Wrench, Radio, Megaphone } from 'lucide-react';
+import {
+  AlertTriangle,
+  BadgeCheck,
+  BarChart3,
+  Bell,
+  Building2,
+  Calendar,
+  ChevronDown,
+  ClipboardList,
+  DollarSign,
+  FileText,
+  Handshake,
+  HardHat,
+  Home,
+  Megaphone,
+  Menu,
+  Radio,
+  Receipt,
+  Settings,
+  ShieldCheck,
+  Users,
+  UserSquare2,
+  Wrench,
+} from 'lucide-react';
 
 const mainModules = [
   { path: '/', label: 'Dashboard', icon: <Home size={20} /> },
@@ -11,7 +34,13 @@ const mainModules = [
   { path: '/visitas', label: 'Visitas', icon: <Calendar size={20} /> },
   { path: '/negociacoes', label: 'Negociações', icon: <Handshake size={20} /> },
   { path: '/contratos', label: 'Contratos', icon: <FileText size={20} /> },
+  { path: '/multas', label: 'Multas', icon: <AlertTriangle size={20} /> },
+  { path: '/financeiro', label: 'Financeiro', icon: <DollarSign size={20} /> },
+  { path: '/despesas', label: 'Despesas', icon: <Receipt size={20} /> },
+  { path: '/relatorios', label: 'Relatórios', icon: <BarChart3 size={20} /> },
+  { path: '/notificacoes', label: 'Notificações', icon: <Bell size={20} /> },
   { path: '/funcionarios', label: 'Funcionários', icon: <BadgeCheck size={20} /> },
+  { path: '/perfis', label: 'Perfis de Acesso', icon: <ShieldCheck size={20} /> },
 ];
 
 // Módulo ativo também nas subpáginas (ex.: /clientes/3/editar)
@@ -26,8 +55,6 @@ const maintenanceModules = [
 ];
 
 const upcomingModules = [
-  { label: 'Financeiro', icon: <DollarSign size={20} /> },
-  { label: 'Relatórios', icon: <BarChart3 size={20} /> },
   { label: 'Configurações', icon: <Settings size={20} /> },
 ];
 

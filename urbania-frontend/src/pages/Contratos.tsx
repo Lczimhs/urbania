@@ -561,6 +561,16 @@ function ContratoHistoricoERelacionamentos({ record }: { record: Record<string, 
 
       {/* Histórico de Multas do Contrato (RF Cadastrar Multa - pág. 15 e 27) */}
       <RelatedGrid title="Multas e Ocorrências Vinculadas ao Contrato">
+        <div className="p-3 bg-slate-50/50 border-b flex justify-between items-center">
+          <p className="text-xs text-slate-500">Penalidades, juros por atraso ou danos registrados para este contrato.</p>
+          <button
+            type="button"
+            onClick={() => navigate('/multas/novo', { state: { contratoId: record.id } })}
+            className="text-xs font-semibold text-rose-700 bg-white hover:bg-rose-50 border border-rose-200 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition shadow-sm"
+          >
+            <Plus size={14} /> Aplicar Multa
+          </button>
+        </div>
         <DataTable
           compact
           rows={multas.rows}

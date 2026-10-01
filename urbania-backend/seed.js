@@ -178,6 +178,144 @@ async function seed() {
     `);
   }
 
+  // 13. Notificações (Templates e Regras)
+  const notifCount = (await get('SELECT COUNT(*) as c FROM notificacoes')).c;
+  if (notifCount === 0) {
+    console.log('Criando regras de notificações automáticas...');
+    await run(`
+      INSERT INTO notificacoes (nome, gatilho, canais, canal, titulo, mensagem, destinatario, status, dataCriacao)
+      VALUES
+        ('Boas-vindas ao Cliente', 'Novo Cliente Cadastrado', '["WhatsApp","E-mail"]', 'WhatsApp', 'Bem-vindo à Urbânia', 'Olá, {NomeCliente}! Seja bem-vindo à Urbânia Imóveis. Estamos prontos para encontrar o imóvel ideal para você!', 'Cliente', 'Ativo', '2026-09-01'),
+        ('Confirmação de Visita', 'Visita Agendada', '["WhatsApp","SMS"]', 'WhatsApp', 'Visita Confirmada', 'Olá {NomeCliente}, sua visita ao imóvel {Imovel} está confirmada para {Data} às {Hora} com o corretor {Corretor}.', 'Cliente', 'Ativo', '2026-09-02'),
+        ('Aviso de Nova Proposta', 'Proposta/Negociação Recebida', '["E-mail","WhatsApp"]', 'E-mail', 'Nova Proposta Recebida', 'Prezado(a) {NomeProprietario}, recebemos uma nova proposta no valor de {Valor} para seu imóvel {Imovel}. Em breve entraremos em contato.', 'Proprietário', 'Ativo', '2026-09-03'),
+        ('Lembrete de Vencimento de Aluguel', 'Vencimento de Aluguel (3 dias antes)', '["WhatsApp","E-mail"]', 'WhatsApp', 'Lembrete de Aluguel', 'Olá {NomeCliente}, lembramos que o aluguel do imóvel {Imovel} vence em {Data}, no valor de {Valor}. Qualquer dúvida, estamos à disposição!', 'Cliente', 'Ativo', '2026-09-04'),
+        ('Aviso de Repasse ao Proprietário', 'Repasse Realizado ao Proprietário', '["WhatsApp","E-mail"]', 'WhatsApp', 'Repasse Financeiro Realizado', 'Olá {NomeProprietario}, confirmamos o repasse líquido de {Valor} referente ao aluguel do imóvel {Imovel} via chave PIX {ChavePix}.', 'Proprietário', 'Ativo', '2026-09-05')
+    `);
+  }
+
+  // 14. Financeiro
+  const finCount = (await get('SELECT COUNT(*) as c FROM financeiro')).c;
+  if (finCount === 0) {
+    console.log('Criando lançamentos e operações financeiras...');
+    await run(`
+      INSERT INTO financeiro (tipo, categoria, descricao, valor, dataVencimento, dataPagamento, status, formaPagamento, clienteId, clienteNome, imovelId, imovelTitulo, proprietarioId, proprietarioNome, contratoId, reciboNumero, data, operador)
+      VALUES
+        ('Receita', 'Aluguel de Imóvel', 'Aluguel Mensal - Competência Setembro/2026', 4200.00, '2026-09-10', '2026-09-08', 'Pago', 'Boleto Bancário', 3, 'Lucas Vilas Boas', 2, 'Casa Térrea em Condomínio Fechado', 2, 'Construtora Alvorada Ltda', 1, 'REC-20260908-01', '2026-09-08', 'Mariana Silva'),
+        ('Receita', 'Taxa de Administração', 'Honorários de Gestão Locatícia (10%)', 420.00, '2026-09-10', '2026-09-08', 'Pago', 'Retenção Automática', 3, 'Lucas Vilas Boas', 2, 'Casa Térrea em Condomínio Fechado', 2, 'Construtora Alvorada Ltda', 1, 'REC-20260908-02', '2026-09-08', 'Mariana Silva'),
+        ('Repasse', 'Repasse ao Proprietário', 'Repasse Líquido de Aluguel - Construtora Alvorada', 3780.00, '2026-09-15', '2026-09-15', 'Pago', 'PIX', null, null, 2, 'Casa Térrea em Condomínio Fechado', 2, 'Construtora Alvorada Ltda', 1, 'REP-20260915-01', '2026-09-15', 'Carlos Mendes'),
+        ('Receita', 'Comissão de Venda', 'Comissão de Intermediação - Venda Apartamento Centro', 25800.00, '2026-09-30', '2026-09-28', 'Pago', 'Transferência Bancária', 2, 'Beatriz Helena Lima', 1, 'Apartamento 3 Quartos com Vista Panorâmica', 1, 'Roberto de Souza', 2, 'REC-20260928-04', '2026-09-28', 'Carlos Mendes'),
+        ('Despesa', 'Marketing e Divulgação', 'Divulgação em Portais Imobiliários e Mídias Sociais', 1450.00, '2026-10-05', null, 'Pendente', 'Boleto Bancário', null, null, null, null, null, null, null, null, '2026-09-25', 'Carlos Mendes'),
+        ('Despesa', 'Administrativa', 'Telefonia, Internet Fibra e Softwares de Gestão', 890.00, '2026-10-10', null, 'Pendente', 'Débito em Conta', null, null, null, null, null, null, null, null, '2026-09-26', 'Carlos Mendes'),
+        ('Repasse', 'Repasse ao Proprietário', 'Repasse Líquido de Aluguel - Competência Outubro', 3780.00, '2026-10-15', null, 'Pendente', 'PIX', null, null, 2, 'Casa Térrea em Condomínio Fechado', 2, 'Construtora Alvorada Ltda', 1, null, '2026-09-30', 'Carlos Mendes')
+    `);
+  }
+
+  // 15. Auditoria de Log (RNF 4.1)
+  const auditCount = (await get('SELECT COUNT(*) as c FROM auditoria')).c;
+  if (auditCount === 0) {
+    console.log('Criando logs de auditoria iniciais...');
+    await run(`
+      INSERT INTO auditoria (usuario, acao, entidade, entidadeId, detalhes, data, hora, ip)
+      VALUES
+        ('Carlos Mendes (Corretor)', 'Criação', 'clientes', 2, 'Cadastro inicial da cliente Beatriz Helena Lima', '2026-09-25', '09:14:02', '192.168.1.45'),
+        ('Carlos Mendes (Corretor)', 'Criação', 'imoveis', 1, 'Cadastro do imóvel Apartamento 3 Quartos no Centro', '2026-09-25', '10:30:15', '192.168.1.45'),
+        ('Mariana Silva (Corretor)', 'Criação', 'contratos', 1, 'Assinatura e ativação do Contrato de Locação #1', '2026-09-26', '14:20:10', '192.168.1.52'),
+        ('Carlos Mendes (Corretor)', 'Baixa de Pagamento', 'financeiro', 1, 'Confirmação e baixa do pagamento de aluguel (Recibo REC-20260908-01)', '2026-09-28', '11:42:00', '192.168.1.45'),
+        ('Carlos Mendes (Corretor)', 'Criação', 'contratos', 2, 'Cadastro do Contrato de Compra e Venda #2', '2026-09-28', '16:10:05', '192.168.1.45')
+    `);
+  }
+
+  // 16. Perfis de Acesso (RF F9-F12)
+  const perfCount = (await get('SELECT COUNT(*) as c FROM perfis')).c;
+  if (perfCount === 0) {
+    console.log('Criando perfis de acesso padrão...');
+    const allActions = ['Visualizar', 'Criar', 'Editar', 'Excluir'];
+    const allModulesList = ['clientes', 'proprietarios', 'imoveis', 'visitas', 'negociacoes', 'contratos', 'financeiro', 'despesas', 'multas', 'relatorios', 'notificacoes', 'funcionarios', 'perfis', 'servicos', 'prestadores', 'reparos', 'canais', 'anuncios'];
+    const adminPerms = {};
+    allModulesList.forEach(m => { adminPerms[m] = [...allActions]; });
+
+    const corretorPerms = {
+      clientes: ['Visualizar', 'Criar', 'Editar'],
+      proprietarios: ['Visualizar', 'Criar', 'Editar'],
+      imoveis: ['Visualizar', 'Criar', 'Editar'],
+      visitas: ['Visualizar', 'Criar', 'Editar', 'Excluir'],
+      negociacoes: ['Visualizar', 'Criar', 'Editar'],
+      contratos: ['Visualizar'],
+      financeiro: ['Visualizar'],
+      relatorios: ['Visualizar'],
+      notificacoes: ['Visualizar'],
+      anuncios: ['Visualizar', 'Criar', 'Editar'],
+    };
+
+    const secretariaPerms = {
+      clientes: ['Visualizar', 'Criar', 'Editar'],
+      proprietarios: ['Visualizar'],
+      imoveis: ['Visualizar'],
+      visitas: ['Visualizar', 'Criar', 'Editar', 'Excluir'],
+      notificacoes: ['Visualizar', 'Criar'],
+      servicos: ['Visualizar'],
+      prestadores: ['Visualizar'],
+      reparos: ['Visualizar', 'Criar'],
+    };
+
+    await run(`
+      INSERT INTO perfis (nome, descricao, permissoes, status, nativo)
+      VALUES 
+        ('Administrador', 'Acesso total e irrestrito a todos os módulos, relatórios gerenciais e configurações do sistema.', ?, 'Ativo', 1),
+        ('Corretor', 'Acesso às operações imobiliárias, gestão de clientes, imóveis, agendamento de visitas e negociações.', ?, 'Ativo', 1),
+        ('Secretária', 'Atendimento ao público, recepção de clientes, agendamento de visitas e rotinas operacionais.', ?, 'Ativo', 0)
+    `, [JSON.stringify(adminPerms), JSON.stringify(corretorPerms), JSON.stringify(secretariaPerms)]);
+
+    // Vincula funcionários existentes aos perfis
+    await run('UPDATE funcionarios SET perfilId = 2 WHERE cargo = "Corretor"');
+    await run('UPDATE funcionarios SET perfilId = 3 WHERE cargo = "Secretária"');
+  }
+
+  // 17. Gestão de Multas (RF F1-F4)
+  const multasCount = (await get('SELECT COUNT(*) as c FROM multas')).c;
+  if (multasCount === 0) {
+    console.log('Criando multas de exemplo...');
+    const hist1 = JSON.stringify([
+      { de: null, para: 'Pendente', data: '2026-09-12 10:30', usuario: 'Sistema Automático' }
+    ]);
+    const hist2 = JSON.stringify([
+      { de: null, para: 'Pendente', data: '2026-09-15 08:45', usuario: 'Mariana Silva' },
+      { de: 'Pendente', para: 'Pago', data: '2026-09-25 14:10', usuario: 'Carlos Mendes' }
+    ]);
+
+    await run(`
+      INSERT INTO multas (contratoId, clienteId, clienteNome, motivo, tipo, modoValor, valor, percentual, valorCalculado, dataAplicacao, dataVencimento, status, historicoStatus)
+      VALUES
+        (1, 3, 'Lucas Vilas Boas', 'Atraso no pagamento do aluguel referente à competência 08/2026.', 'Atraso no pagamento', 'Percentual (%)', 84.00, 2.0, 84.00, '2026-09-12', '2026-10-10', 'Pendente', ?),
+        (1, 3, 'Lucas Vilas Boas', 'Dano acidental ao portão basculante durante descarga de mudança.', 'Dano ao imóvel', 'Fixo (R$)', 350.00, 0, 350.00, '2026-09-15', '2026-09-25', 'Pago', ?)
+    `, [hist1, hist2]);
+  }
+
+  // 18. Controle de Despesas (RF F1-F4)
+  const despCount = (await get('SELECT COUNT(*) as c FROM despesas')).c;
+  if (despCount === 0) {
+    console.log('Criando despesas de exemplo...');
+    const histD1 = JSON.stringify([
+      { de: null, para: 'Pendente', data: '2026-09-26 09:00', usuario: 'Carlos Mendes' }
+    ]);
+    const histD2 = JSON.stringify([
+      { de: null, para: 'Pendente', data: '2026-09-20 11:15', usuario: 'Carlos Mendes' },
+      { de: 'Pendente', para: 'Pago', data: '2026-09-28 16:30', usuario: 'Carlos Mendes' }
+    ]);
+    const histD3 = JSON.stringify([
+      { de: null, para: 'Pendente', data: '2026-09-10 14:00', usuario: 'Carlos Mendes' },
+      { de: 'Pendente', para: 'Atrasado', data: '2026-09-21 00:01', usuario: 'Sistema Automático' }
+    ]);
+
+    await run(`
+      INSERT INTO despesas (descricao, valor, dataVencimento, dataPagamento, status, categoria, imovelId, imovelTitulo, formaPagamento, observacoes, comprovante, historicoStatus)
+      VALUES
+        ('Conta de Energia Elétrica e Internet Fibra da Sede', 650.00, '2026-10-10', null, 'Pendente', 'Administrativa', null, null, 'Boleto Bancário', 'Consumo referente ao mês anterior.', null, ?),
+        ('Manutenção e Substituição de Disjuntores e Tomadas', 380.00, '2026-09-28', '2026-09-28', 'Pago', 'Manutenção de imóveis sob gestão', 1, 'Apartamento 3 Quartos com Vista Panorâmica', 'PIX', 'Serviço executado pelo prestador João Eletricista.', null, ?),
+        ('Campanha de Mídia Paga no Google Ads e Instagram', 1200.00, '2026-09-20', null, 'Atrasado', 'Marketing', null, null, 'Cartão de Crédito', 'Aguardando validação da fatura pelo gerente.', null, ?)
+    `, [histD1, histD2, histD3]);
+  }
+
   console.log('Seed finalizado com sucesso!');
   process.exit(0);
 }

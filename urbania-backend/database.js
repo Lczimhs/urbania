@@ -56,8 +56,12 @@ const schema = {
     garantiaTipo: 'TEXT', garantiaValor: 'REAL', garantiaDetalhes: 'TEXT',
     indiceReajuste: 'TEXT', multaAtraso: 'REAL', multaRescisoria: 'TEXT', observacoes: 'TEXT',
   },
-  perfis: { nome: 'TEXT', descricao: 'TEXT', permissoes: 'TEXT' },
-  notificacoes: { titulo: 'TEXT', mensagem: 'TEXT', destinatario: 'TEXT', canal: 'TEXT', dataEnvio: 'TEXT', status: 'TEXT' },
+  perfis: { nome: 'TEXT', descricao: 'TEXT', permissoes: 'TEXT', status: 'TEXT', nativo: 'INTEGER' },
+  notificacoes: {
+    nome: 'TEXT', gatilho: 'TEXT', canais: 'TEXT', canal: 'TEXT',
+    titulo: 'TEXT', mensagem: 'TEXT', destinatario: 'TEXT',
+    status: 'TEXT', dataCriacao: 'TEXT', dataEnvio: 'TEXT',
+  },
   servicos: { nome: 'TEXT', descricao: 'TEXT', categoria: 'TEXT' },
   // servicos: lista JSON com os ids dos serviços prestados (ex.: "[1,3]")
   prestadores: {
@@ -75,10 +79,29 @@ const schema = {
     imovelId: 'INTEGER', canal: 'TEXT', dataPublicacao: 'TEXT', status: 'TEXT', cliques: 'INTEGER', contatos: 'INTEGER',
     canalId: 'INTEGER', descricao: 'TEXT', valor: 'REAL', fotos: 'TEXT',
   },
-  despesas: { descricao: 'TEXT', valor: 'REAL', dataVencimento: 'TEXT', status: 'TEXT', categoria: 'TEXT' },
-  multas: { contratoId: 'INTEGER', motivo: 'TEXT', valor: 'REAL', dataAplicacao: 'TEXT', status: 'TEXT' },
-  financeiro: { tipo: 'TEXT', valor: 'REAL', data: 'TEXT', descricao: 'TEXT', status: 'TEXT' },
-  auditoria: { usuario: 'TEXT', acao: 'TEXT', entidade: 'TEXT', entidadeId: 'INTEGER', data: 'TEXT', ip: 'TEXT' },
+  despesas: {
+    descricao: 'TEXT', valor: 'REAL', dataVencimento: 'TEXT', dataPagamento: 'TEXT',
+    status: 'TEXT', categoria: 'TEXT', imovelId: 'INTEGER', imovelTitulo: 'TEXT',
+    formaPagamento: 'TEXT', observacoes: 'TEXT', comprovante: 'TEXT', historicoStatus: 'TEXT',
+  },
+  multas: {
+    contratoId: 'INTEGER', clienteId: 'INTEGER', clienteNome: 'TEXT',
+    motivo: 'TEXT', tipo: 'TEXT', modoValor: 'TEXT', valor: 'REAL', percentual: 'REAL', valorCalculado: 'REAL',
+    dataAplicacao: 'TEXT', dataVencimento: 'TEXT', status: 'TEXT', historicoStatus: 'TEXT',
+  },
+  financeiro: {
+    tipo: 'TEXT', categoria: 'TEXT', descricao: 'TEXT', valor: 'REAL',
+    dataVencimento: 'TEXT', dataPagamento: 'TEXT', status: 'TEXT',
+    formaPagamento: 'TEXT', clienteId: 'INTEGER', clienteNome: 'TEXT',
+    proprietarioId: 'INTEGER', proprietarioNome: 'TEXT',
+    imovelId: 'INTEGER', imovelTitulo: 'TEXT', contratoId: 'INTEGER',
+    comprovante: 'TEXT', observacoes: 'TEXT', reciboNumero: 'TEXT',
+    operador: 'TEXT', data: 'TEXT',
+  },
+  auditoria: {
+    usuario: 'TEXT', acao: 'TEXT', entidade: 'TEXT', entidadeId: 'INTEGER',
+    detalhes: 'TEXT', data: 'TEXT', hora: 'TEXT', ip: 'TEXT',
+  },
 };
 
 db.serialize(() => {

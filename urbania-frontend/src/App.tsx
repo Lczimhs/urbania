@@ -16,6 +16,12 @@ import { PrestadorPage, PrestadoresList } from './pages/Prestadores';
 import { ReparoPage, ReparosList } from './pages/Reparos';
 import { CanalPage, CanaisList } from './pages/Canais';
 import { AnuncioPage, AnunciosList } from './pages/Anuncios';
+import { NotificacaoPage, NotificacoesList } from './pages/Notificacoes';
+import { FinanceiroPage, FinanceiroList } from './pages/Financeiro';
+import { PerfilPage, PerfisList } from './pages/Perfis';
+import { MultaPage, MultasList } from './pages/Multas';
+import { DespesaPage, DespesasList } from './pages/Despesas';
+import Relatorios from './pages/Relatorios';
 import GenericCrud from './pages/GenericCrud';
 
 // Gera as 4 rotas de um módulo: consultar, cadastrar, visualizar e editar
@@ -41,6 +47,11 @@ export default function App() {
             {crudRoutes('/contratos', ContratosList, ContratoPage)}
             {crudRoutes('/funcionarios', FuncionariosList, FuncionarioPage)}
 
+            {/* Gestão Financeira e Comunicação (RF F72 / F13-F16) */}
+            {crudRoutes('/financeiro', FinanceiroList, FinanceiroPage)}
+            {crudRoutes('/notificacoes', NotificacoesList, NotificacaoPage)}
+            <Route path="/relatorios" element={<Relatorios />} />
+
             {/* Manutenção e Divulgação */}
             {crudRoutes('/servicos', ServicosList, ServicoPage)}
             {crudRoutes('/prestadores', PrestadoresList, PrestadorPage)}
@@ -48,12 +59,14 @@ export default function App() {
             {crudRoutes('/canais', CanaisList, CanalPage)}
             {crudRoutes('/anuncios', AnunciosList, AnuncioPage)}
 
-            {/* Módulos ainda no CRUD genérico (a desenvolver conforme o Documento de Requisitos) */}
-            <Route path="/perfis" element={<GenericCrud entity="perfis" title="Perfis de Acesso" fields={[{key:'nome',label:'Perfil'},{key:'descricao',label:'Descrição'}]} />} />
-            <Route path="/notificacoes" element={<GenericCrud entity="notificacoes" title="Notificações" fields={[{key:'titulo',label:'Título'},{key:'canal',label:'Canal'},{key:'status',label:'Status'}]} />} />
-            <Route path="/despesas" element={<GenericCrud entity="despesas" title="Controle de Despesas" fields={[{key:'descricao',label:'Descrição'},{key:'valor',label:'Valor'},{key:'status',label:'Status'}]} />} />
-            <Route path="/multas" element={<GenericCrud entity="multas" title="Gestão de Multas" fields={[{key:'motivo',label:'Motivo'},{key:'valor',label:'Valor'},{key:'status',label:'Status'}]} />} />
-            <Route path="/financeiro" element={<GenericCrud entity="financeiro" title="Operações Financeiras" fields={[{key:'tipo',label:'Tipo'},{key:'descricao',label:'Descrição'},{key:'valor',label:'Valor'},{key:'status',label:'Status'}]} />} />
+            {/* Gestão Financeira, Multas e Despesas */}
+            {crudRoutes('/despesas', DespesasList, DespesaPage)}
+            {crudRoutes('/multas', MultasList, MultaPage)}
+
+            {/* Administração e Perfis de Acesso */}
+            {crudRoutes('/perfis', PerfisList, PerfilPage)}
+
+            {/* Auditoria de Acessos e Logs */}
             <Route path="/auditoria" element={<GenericCrud entity="auditoria" title="Auditoria de Acessos" fields={[{key:'usuario',label:'Usuário'},{key:'acao',label:'Ação'},{key:'data',label:'Data'}]} />} />
           </Routes>
         </Layout>

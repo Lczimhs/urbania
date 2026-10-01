@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diagnóstico & Relatório de Requisitos - Sistema Urbânia (IFRO 2026)</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --card-border: #334155;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #0284c7;
+      --primary-light: #38bdf8;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --purple: #8b5cf6;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 32px 20px;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    
+    header {
+      margin-bottom: 32px;
+      background: linear-gradient(135deg, #0a2540 0%, #0369a1 100%);
+      padding: 32px;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    header h1 { font-size: 28px; font-weight: 800; margin-bottom: 8px; color: #fff; display: flex; align-items: center; gap: 12px; }
+    header p { color: #bae6fd; font-size: 15px; }
+    .badge-header {
+      background: rgba(255, 255, 255, 0.15);
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    /* STATS SUMMARY CARDS */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 4px;
+    }
+    .stat-card.success::before { background: var(--success); }
+    .stat-card.warning::before { background: var(--warning); }
+    .stat-card.danger::before { background: var(--danger); }
+    .stat-card.info::before { background: var(--primary-light); }
+    
+    .stat-num { font-size: 32px; font-weight: 800; color: #fff; margin-bottom: 4px; }
+    .stat-label { font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-desc { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+
+    /* PROGRESS BAR */
+    .global-progress {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 32px;
+    }
+    .progress-header { display: flex; justify-content: space-between; font-weight: 700; margin-bottom: 10px; font-size: 15px; }
+    .bar-bg { height: 12px; background: #334155; border-radius: 9999px; overflow: hidden; }
+    .bar-fill { height: 100%; width: 68%; background: linear-gradient(90deg, #0284c7, #10b981); border-radius: 9999px; transition: width 0.5s; }
+
+    /* FILTERS */
+    .filter-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      padding: 10px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    .tab-btn:hover { background: #334155; color: #fff; }
+    .tab-btn.active { background: var(--primary); color: #fff; border-color: var(--primary-light); }
+
+    /* MODULE ACCORDIONS */
+    .module-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      margin-bottom: 20px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .module-card:hover { border-color: #475569; }
+    
+    .module-header {
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.02);
+      border-bottom: 1px solid transparent;
+    }
+    .module-header.open { border-bottom-color: var(--card-border); }
+    .module-title-box { display: flex; align-items: center; gap: 14px; }
+    .module-code {
+      font-family: monospace;
+      font-size: 12px;
+      padding: 4px 8px;
+      background: #0f172a;
+      border-radius: 6px;
+      border: 1px solid #334155;
+      color: var(--primary-light);
+    }
+    .module-title { font-size: 17px; font-weight: 700; color: #fff; }
+    .module-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 9999px;
+    }
+    .status-done { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .status-partial { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .status-todo { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+    .module-body { padding: 24px; display: block; }
+    .grid-details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    @media (max-width: 850px) {
+      .grid-details { grid-template-columns: 1fr; }
+    }
+    
+    .detail-box {
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 18px;
+    }
+    .detail-box h4 {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .detail-box.pdf h4 { color: #38bdf8; }
+    .detail-box.current h4 { color: #cbd5e1; }
+    .detail-box.action h4 { color: #f59e0b; }
+
+    ul.req-list { list-style: none; }
+    ul.req-list li {
+      font-size: 13px;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    ul.req-list li:last-child { border-bottom: none; }
+    .check-icon { font-weight: bold; }
+    .check-done { color: var(--success); }
+    .check-miss { color: var(--danger); }
+    .check-warn { color: var(--warning); }
+
+    .action-banner {
+      grid-column: 1 / -1;
+      background: rgba(245, 158, 11, 0.08);
+      border: 1px solid rgba(245, 158, 11, 0.25);
+      border-radius: 10px;
+      padding: 16px;
+      margin-top: 10px;
+    }
+    .action-banner p { font-size: 13px; color: #fde68a; line-height: 1.5; }
+
+    .tech-spec-box {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 24px;
+      margin-top: 32px;
+    }
+    .tech-spec-box h3 { font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 16px; }
+    .tech-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+    .tech-card { background: #0f172a; border: 1px solid #334155; padding: 16px; border-radius: 10px; font-size: 13px; }
+    .tech-card strong { color: var(--primary-light); display: block; margin-bottom: 4px; font-size: 14px; }
+
+    footer {
+      text-align: center;
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid #334155;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- CABEÇALHO -->
+  <header>
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
+      <div>
+        <span class="badge-header">IFRO - Campus Ji-Paraná • ADS 2026</span>
+        <h1 style="margin-top: 8px;">📋 Diagnóstico de Requisitos - Urbânia</h1>
+        <p>Comparativo minucioso entre o <strong>Documento de Requisitos (PDF)</strong> e o <strong>Código do Sistema (urbania)</strong></p>
+      </div>
+      <div style="text-align: right; background: rgba(0,0,0,0.2); padding: 12px 18px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08);">
+        <p style="font-size: 12px; color: #94a3b8;">Equipe</p>
+        <p style="font-weight: 700; color: #fff; font-size: 15px;">FrontDev's</p>
+        <p style="font-size: 11px; color: #38bdf8; margin-top: 4px;">Orientador: Dr. Jackson Henrique</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- CARDS DE ESTATÍSTICA -->
+  <div class="stats-grid">
+    <div class="stat-card success">
+      <div class="stat-num">9</div>
+      <div class="stat-label">Módulos Concluídos</div>
+      <div class="stat-desc">60% com telas especializadas e regras atendidas</div>
+    </div>
+    <div class="stat-card warning">
+      <div class="stat-num">3</div>
+      <div class="stat-label">Módulos Parciais</div>
+      <div class="stat-desc">Dashboard, Imóveis e Funcionários com pendências</div>
+    </div>
+    <div class="stat-card danger">
+      <div class="stat-num">6</div>
+      <div class="stat-label">Módulos Críticos Faltando</div>
+      <div class="stat-desc">Perfis, Notificações, Despesas, Multas, Históricos e Logs</div>
+    </div>
+    <div class="stat-card info">
+      <div class="stat-num">15</div>
+      <div class="stat-label">Total de Módulos</div>
+      <div class="stat-desc">Cobertura Geral do Projeto: ~68%</div>
+    </div>
+  </div>
+
+  <!-- BARRA DE PROGRESSO GLOBAL -->
+  <div class="global-progress">
+    <div class="progress-header">
+      <span>Status Global de Aderência ao Documento de Requisitos</span>
+      <span style="color: #38bdf8;">68% Implementado</span>
+    </div>
+    <div class="bar-bg">
+      <div class="bar-fill"></div>
+    </div>
+    <p style="font-size: 12px; color: var(--text-muted); margin-top: 10px;">
+      💡 <strong>Diagnóstico:</strong> A base do sistema (Cadastros de Clientes, Proprietários, Imóveis, Visitas, Serviços e Anúncios) está muito bem estruturada. O foco prioritário para nota máxima é substituir os módulos que ainda usam <code>GenericCrud</code> por telas especializadas com as regras específicas do PDF.
+    </p>
+  </div>
+
+  <!-- ABAS DE FILTRO -->
+  <div class="filter-tabs">
+    <button class="tab-btn active" onclick="filterModules('all')">Todos os Módulos (15)</button>
+    <button class="tab-btn" onclick="filterModules('todo')">🔴 O que Precisa Ser Feito (6 Críticos)</button>
+    <button class="tab-btn" onclick="filterModules('partial')">🟡 Ajustes Necessários (3 Parciais)</button>
+    <button class="tab-btn" onclick="filterModules('done')">🟢 Concluídos / OK (9 Módulos)</button>
+  </div>
+
+  <!-- LISTA DE MÓDULOS COMPARADOS -->
+  <div id="module-container">
+
+    <!-- 1. PERFIS DE ACESSO -->
+    <div class="module-card" data-status="todo">
+      <div class="module-header open">
+        <div class="module-title-box">
+          <span class="module-code">F9 a F12</span>
+          <span class="module-title">Perfis de Acesso (Permissões de Usuário)</span>
+        </div>
+        <span class="module-status status-todo">🔴 CRÍTICO - Faltando Tela Específica</span>
+      </div>
+      <div class="module-body">
+        <div class="grid-details">
+          <div class="detail-box pdf">
+            <h4>📄 Exigências do PDF</h4>
+            <ul class="req-list">
+              <li><span class="check-icon check-miss">✕</span> <strong>F9:</strong> Seleção de permissões em formato de Matriz ou Árvore expansível (Treeview) agrupada por módulos (ex: Imóveis -> Criar, Editar, Excluir).</li>
+              <li><span class="check-icon check-miss">✕</span> <strong>RNF 1.3:</strong> Checkbox "Selecionar Todos" no topo de cada módulo para agilizar o preenchimento.</li>
+              <li><span class="check-icon check-miss">✕</span> <strong>F10:</strong> Listagem com colunas: Nome do Perfil, Quantidade de Usuários Vinculados e Status (Ativo/Inativo).</li>
+              <li><span class="check-icon check-miss">✕</span> <strong>F11:</strong> Visualização Read-only (opacidade reduzida nos desmarcados) e total de funcionários que usam o perfil.</li>
+              <li><span class="check-icon check-miss">✕</span> <strong>F12:</strong> Perfis nativos (com cadeado) têm Nome bloqueado. Modal vermelho bloqueando exclusão se houver usuários vinculados.</li>
+            </ul>
+          </div>
+          <div class="detail-box current">
+            <h4>💻 Como está no Código Atual</h4>
+            <p style="font-size: 13px; color: #cbd5e1; margin-bottom: 10px;">
+              Está mapeado no <code>App.tsx</code> usando o componente temporário <strong><code>GenericCrud</code></strong>, com apenas 2 campos simples (nome e descrição).
+            </p>
+            <p style="font-size: 12px; color: #ef4444;">
+              Não possui a árvore/matriz de permissões, não possui contagem de funcionários vinculados e não valida perfis nativos com cadeado.
+            </p>
+          </div>
+          <div class="action-banner">
+            <p><strong>🛠️ Ação Necessária:</strong> Criar a página <code>Perfis.tsx</code> substituindo o GenericCrud. Criar o componente de Árvore de Permissões com checkboxes agrupados por módulo e suporte a "Selecionar Todos".</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. NOTIFICAÇÕES -->
+    <div class="module-card" data-status="todo">
+      <div class="module-header open">
+        <div class="module-title-box">
+          <span class="module-code">F13 a F16</span>
+          <span class="module-title">Notificações e Mensagens Automáticas</span>
+        </div>
+        <span class="module-status status-todo">🔴 CRÍTICO - Faltando Tela Específica</span>
+      </div>
+      <div class="module-body">
+        <div class="grid-details">
+          <div class="detail-box pdf">
+            <h4>📄 Exigências do PDF</h4>
+            <ul class="req-list">
+              <li><span class="check-icon check-miss">✕</span> <strong>RNF 1.2:</strong> Seleção de canais (WhatsApp, E-mail, SMS) via Toggle Buttons com ícones coloridos, permitindo múltipla escolha.</li>
+              <li><span class="check-icon check-miss">✕</span> <strong>RNF 1.3:</strong> "Pílulas/Chips" interativos acima da Text Area (ex: <code>{NomeCliente}</code>, <code>{Imóvel}</code>). Ao clicar, insere a variável no texto!</li>
+              <li><span class="check-icon check-miss">✕</span> <strong>F14:</strong> Listagem com coluna de Status como Toggle Switch (liga/desliga) direto na tabela. Ícones miniatura de canais.</li>
+              <li><span class="check-icon check-miss">✕</span> <strong>F15:</strong> Card de Pré-visualização (Preview) simulando a mensagem final (ex: balãozinho verde imitando WhatsApp com o texto formatado).</li>
+              <li><span class="check-icon check-miss">✕</span> <strong>F16:</strong> Contador de caracteres (120/160) se canal SMS. Borda vermelha se o texto for apagado.</li>
+            </ul>
+          </div>
+          <div class="detail-box current">
+            <h4>💻 Como está no Código Atual</h4>
+            <p style="font-size: 13px; color: #cbd5e1;">
+              Atualmente utiliza apenas a tabela genérica <code>GenericCrud</code> com colunas de texto cru (título, canal, status). Não há os chips inteligentes nem a simulação do balãozinho de WhatsApp.
+            </p>
+          </div>
+          <div class="action-banner">
+            <p><strong>🛠️ Ação Necessária:</strong> Criar a página <code>Notificacoes.tsx</code> com os botões seletores de canal, os chips de inserção automática de variáveis no textarea e o card visual de preview (estilo WhatsApp).</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. DESPESAS -->
+    <div class="module-card" data-status="todo">
+      <div class="module-header open">
+        <div class="module-title-box">
+          <span class="module-code">Págs 14-15</span>
+          <span class="module-title">Controle de Despesas da Imobiliária</span>
+        </div>
+        <span class="module-status status-todo">🔴 CRÍTICO - Faltando Tela Específica</span>
+      </div>
+      <div class="module-body">
+        <div class="grid-details">
+          <div class="detail-box pdf">
+            <h4>📄 Exigências do PDF</h4>
+            <ul class="req-list">
+              <li><span class="check-icon check-miss">✕</span> <strong>RNF 1.1.1:</strong> ComboBox de Categorias: Administrativa, Pessoal, Marketing, Manutenção sob gestão, Impostos/Taxas, Terceirizados e Outros.</li>
+              <li><span class="check-icon check-miss">✕</span> <strong>RNF 1.1.2:</strong> Campo imóvel opcional (preenchido só se for despesa de imóvel sob gestão).</li>
+              <li><span class="check-icon check-miss">✕</span> <strong>RNF 1.1.5:</strong> Anexo de comprovante em PDF, JPG ou PNG.</li>
+              <li><span class="check-icon check-miss">✕</span> <strong>RNF 1.5:</strong> Status (Pendente, Pago, Atrasado) calculado AUTOMATICAMENTE com base nas datas de vencimento e pagamento.</li>
+              <li><span class="check-icon check-miss">✕</span> <strong>RNF 1.5.3:</strong> Impedir exclusão de despesas já Pagas (permitindo apenas cancelamento). Se Paga, bloquear edição de valor.</li>
+              <li><span class="check-icon check-miss">✕</span> <strong>Visualizar:</strong> GRID com histórico de mudanças de status com data de cada alteração.</li>
+            </ul>
+          </div>
+          <div class="detail-box current">
+            <h4>💻 Como está no Código Atual</h4>
+            <p style="font-size: 13px; color: #cbd5e1;">
+              Está em <code>GenericCrud</code>. Não calcula status por data, não permite anexo de comprovante e não possui a trava de exclusão de contas pagas.
+            </p>
+          </div>
+          <div class="action-banner">
+            <p><strong>🛠️ Ação Necessária:</strong> Criar <code>Despesas.tsx</code> com cálculo dinâmico de status por data, upload de recibo e trava de exclusão caso esteja com status Pago.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. MULTAS DE ALUGUEL -->
+    <div class="module-card" data-status="todo">
+      <div class="module-header open">
+        <div class="module-title-box">
+          <span class="module-code">Págs 15-16</span>
+          <span class="module-title">Gestão de Multas de Aluguel</span>
+        </div>
+        <span class="module-status status-todo">🔴 CRÍTICO - Faltando Tela Específica</span>
+      </div>
+      <div class="module-body">
+        <div class="grid-details">
+          <div class="detail-box pdf">
+            <h4>📄 Exigências do PDF</h4>
+            <ul class="req-list">
+              <li><span class="check-icon check-miss">✕</span> <strong>RNF 1.1.2:</strong> ComboBox de Contrato vinculado que preenche o inquilino automaticamente.</li>
+              <li><span class="check-icon check-miss">✕</span> <strong>RNF 1.1.3:</strong> Multa como Valor Fixo (R$) ou Percentual (%) sobre o aluguel, com máscara para cada opção.</li>
+              <li><span class="check-icon check-miss">✕</span> <strong>RNF 1.1.4:</strong> Motivo em texto livre tornando-se obrigatório quando a opção for "Outros".</li>
+              <li><span class="check-icon check-miss">✕</span> <strong>RNF 1.5:</strong> Status inicial sempre "Pendente". Se Paga, impedir exclusão (apenas cancelamento justificado).</li>
+              <li><span class="check-icon check-miss">✕</span> <strong>Visualizar:</strong> GRID com histórico de status da multa (Pendente, Contestado, Pago, Cancelado).</li>
+            </ul>
+          </div>
+          <div class="detail-box current">
+            <h4>💻 Como está no Código Atual</h4>
+            <p style="font-size: 13px; color: #cbd5e1;">
+              Apenas campos genéricos (motivo, valor, status) via <code>GenericCrud</code>.
+            </p>
+          </div>
+          <div class="action-banner">
+            <p><strong>🛠️ Ação Necessária:</strong> Criar <code>Multas.tsx</code> com seleção inteligente de contrato, toggle R$ / %, regra condicional do campo motivo e trava de status.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. HISTÓRICOS & RELATÓRIOS -->
+    <div class="module-card" data-status="todo">
+      <div class="module-header open">
+        <div class="module-title-box">
+          <span class="module-code">F68 a F71</span>
+          <span class="module-title">Históricos de Rastreabilidade & Relatórios Exportáveis</span>
+        </div>
+        <span class="module-status status-todo">🔴 CRÍTICO - Tela Inexistente</span>
+      </div>
+      <div class="module-body">
+        <div class="grid-details">
+          <div class="detail-box pdf">
+            <h4>📄 Exigências do PDF</h4>
+            <ul class="req-list">
+              <li><span class="check-icon check-miss">✕</span> <strong>F68-F71:</strong> Rastreabilidade de: Propostas, Intervenções, Módulo Financeiro e Vínculos Imóveis/Proprietários.</li>
+              <li><span class="check-icon check-miss">✕</span> <strong>RNF 1.2:</strong> Filtros obrigatórios por período (Data Inicial e Data Final) e por Usuário Responsável.</li>
+              <li><span class="check-icon check-miss">✕</span> <strong>RNF 1.3:</strong> Exportação nativa dos relatórios gerados para formatos <strong>PDF</strong> e <strong>Excel (.xlsx)</strong>.</li>
+              <li><span class="check-icon check-miss">✕</span> <strong>RNF 1.1 / 1.4:</strong> Renderização em até 3 segundos e paginação acima de 30 registros.</li>
+            </ul>
+          </div>
+          <div class="detail-box current">
+            <h4>💻 Como está no Código Atual</h4>
+            <p style="font-size: 13px; color: #ef4444;">
+              O menu "Relatórios" na Sidebar está marcado como "Em Breve" e não possui tela nem rota no <code>App.tsx</code>. Não há botões para exportar PDF ou Excel.
+            </p>
+          </div>
+          <div class="action-banner">
+            <p><strong>🛠️ Ação Necessária:</strong> Criar a página <code>Relatorios.tsx</code> com filtros de data/responsável e biblioteca para download em Excel (SheetJS/xlsx) e PDF (jspdf).</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. AUDITORIA & LOGS -->
+    <div class="module-card" data-status="todo">
+      <div class="module-header open">
+        <div class="module-title-box">
+          <span class="module-code">F74</span>
+          <span class="module-title">Auditoria e Relatório de Log do Sistema</span>
+        </div>
+        <span class="module-status status-todo">🔴 CRÍTICO - Faltando Regras de Segurança</span>
+      </div>
+      <div class="module-body">
+        <div class="grid-details">
+          <div class="detail-box pdf">
+            <h4>📄 Exigências do PDF</h4>
+            <ul class="req-list">
+              <li><span class="check-icon check-miss">✕</span> <strong>RNF 4.1:</strong> Registro incontestável de: data, hora, usuário logado, endereço IP e operação exata realizada.</li>
+              <li><span class="check-icon check-miss">✕</span> <strong>RNF 4.2:</strong> Acesso restrito EXCLUSIVAMENTE a perfis autenticados com o nível de "Administrador".</li>
+              <li><span class="check-icon check-miss">✕</span> <strong>RNF 4.3:</strong> Busca interna por texto (ex: filtrar por nome de usuário para auditoria).</li>
+            </ul>
+          </div>
+          <div class="detail-box current">
+            <h4>💻 Como está no Código Atual</h4>
+            <p style="font-size: 13px; color: #cbd5e1;">
+              Apenas rota genérica no frontend e backend gravando tabela crua, sem captura automática de IP nas requisições da API e sem bloqueio por perfil.
+            </p>
+          </div>
+          <div class="action-banner">
+            <p><strong>🛠️ Ação Necessária:</strong> Adicionar middleware no <code>server.js</code> para gravar automaticamente o IP e rota em cada POST/PUT/DELETE na tabela <code>auditoria</code>.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. DASHBOARD -->
+    <div class="module-card" data-status="partial">
+      <div class="module-header open">
+        <div class="module-title-box">
+          <span class="module-code">F73</span>
+          <span class="module-title">Dashboard e Painéis Gráficos</span>
+        </div>
+        <span class="module-status status-partial">🟡 PARCIAL - Faltam Gráficos com Tooltip</span>
+      </div>
+      <div class="module-body">
+        <div class="grid-details">
+          <div class="detail-box pdf">
+            <h4>📄 Exigências do PDF</h4>
+            <ul class="req-list">
+              <li><span class="check-icon check-done">✓</span> Indicadores gerenciais e resumo da imobiliária (Clientes, Imóveis, Visitas, Contratos).</li>
+              <li><span class="check-icon check-miss">✕</span> <strong>RNF 3.1 & 3.3:</strong> Painéis com gráficos interativos (barras, rosca ou linhas) com caixas explicativas (Tooltips) ao passar o cursor do mouse.</li>
+              <li><span class="check-icon check-done">✓</span> <strong>RNF 3.2:</strong> Responsividade para computadores, tablets e celulares.</li>
+            </ul>
+          </div>
+          <div class="detail-box current">
+            <h4>💻 Como está no Código Atual</h4>
+            <p style="font-size: 13px; color: #cbd5e1;">
+              Possui 6 cards numéricos excelentes, banner de portfólio e lista de imóveis recentes. Porém, <strong>não possui gráficos visuais</strong> (ex: gráfico de barras de visitas por mês ou gráfico de rosca de tipos de imóveis com tooltips).
+            </p>
+          </div>
+          <div class="action-banner">
+            <p><strong>🛠️ Ação Recomendada:</strong> Adicionar 2 gráficos SVG ou com biblioteca leve (ex: Recharts ou Chart.js) mostrando "Imóveis por Finalidade" e "Status das Visitas", incluindo os tooltips exigidos pelo professor.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 8. IMÓVEIS -->
+    <div class="module-card" data-status="partial">
+      <div class="module-header open">
+        <div class="module-title-box">
+          <span class="module-code">Págs 10 / 18</span>
+          <span class="module-title">Catálogo e Consulta de Imóveis</span>
+        </div>
+        <span class="module-status status-partial">🟡 PARCIAL - Ajuste de Modo Padrão</span>
+      </div>
+      <div class="module-body">
+        <div class="grid-details">
+          <div class="detail-box pdf">
+            <h4>📄 Exigências do PDF</h4>
+            <ul class="req-list">
+              <li><span class="check-icon check-warn">!</span> <strong>RNF 1.1 (pág 18):</strong> "A consulta deve apresentar os imóveis em formato de <strong>cards (não em lista/grid comum)</strong>, exibindo em cada card: foto principal, título, endereço e preço."</li>
+              <li><span class="check-icon check-done">✓</span> Filtros por Finalidade, Tipo, Bairro, Quartos e Proprietário.</li>
+              <li><span class="check-icon check-done">✓</span> 5 abas no cadastro (Básicos, Endereço, Valores, Características, Fotos).</li>
+              <li><span class="check-icon check-done">✓</span> Aba Relacionamentos na visualização com Visitas e Negociações vinculadas.</li>
+            </ul>
+          </div>
+          <div class="detail-box current">
+            <h4>💻 Como está no Código Atual</h4>
+            <p style="font-size: 13px; color: #cbd5e1;">
+              O código já implementou os cards perfeitamente! Porém, a variável de estado inicia com <code>viewMode = 'table'</code> por padrão. Como o PDF proíbe explicitamente listagem comum na consulta principal de imóveis, deve iniciar como <code>'grid'</code>.
+            </p>
+          </div>
+          <div class="action-banner">
+            <p><strong>🛠️ Ação Recomendada:</strong> Alterar a linha 37 de <code>Imoveis.tsx</code> de <code>useState('table')</code> para <code>useState('grid')</code>.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 9. FUNCIONÁRIOS -->
+    <div class="module-card" data-status="partial">
+      <div class="module-header open">
+        <div class="module-title-box">
+          <span class="module-code">Págs 11 / 20</span>
+          <span class="module-title">Gestão de Funcionários</span>
+        </div>
+        <span class="module-status status-partial">🟡 PARCIAL - Faltam Estatísticas e ViaCEP</span>
+      </div>
+      <div class="module-body">
+        <div class="grid-details">
+          <div class="detail-box pdf">
+            <h4>📄 Exigências do PDF</h4>
+            <ul class="req-list">
+              <li><span class="check-icon check-done">✓</span> Campos obrigatórios com asterisco (*), CRECI condicional para corretores.</li>
+              <li><span class="check-icon check-miss">✕</span> <strong>RNF 1.4:</strong> Preenchimento automático do endereço ao digitar o CEP (ViaCEP).</li>
+              <li><span class="check-icon check-miss">✕</span> <strong>RNF 3.2 (Visualizar):</strong> Exibir estatísticas vinculadas ao funcionário (quantos imóveis captou, quantas visitas já realizou).</li>
+              <li><span class="check-icon check-done">✓</span> Mini-dropdown de status na listagem e CPF desabilitado na edição.</li>
+            </ul>
+          </div>
+          <div class="detail-box current">
+            <h4>💻 Como está no Código Atual</h4>
+            <p style="font-size: 13px; color: #cbd5e1;">
+              A listagem e cadastro estão excelentes. Falta conectar a busca de CEP (ViaCEP) no formulário e exibir o bloco de estatísticas (imóveis captados/visitas) na visualização.
+            </p>
+          </div>
+          <div class="action-banner">
+            <p><strong>🛠️ Ação Recomendada:</strong> Adicionar <code>fetch(`https://viacep.com.br/ws/${cep}/json/`)</code> no campo CEP e incluir os 2 cards de estatística no <code>Funcionarios.tsx</code>.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 10. CLIENTES -->
+    <div class="module-card" data-status="done">
+      <div class="module-header open">
+        <div class="module-title-box">
+          <span class="module-code">Págs 9 / 16 / 28</span>
+          <span class="module-title">Clientes</span>
+        </div>
+        <span class="module-status status-done">🟢 CONCLUÍDO (100% de Aderência)</span>
+      </div>
+      <div class="module-body">
+        <div class="grid-details">
+          <div class="detail-box pdf">
+            <h4>📄 Exigências do PDF</h4>
+            <ul class="req-list">
+              <li><span class="check-icon check-done">✓</span> 4 Abas: Dados Básicos, Dados Pessoais, Endereço e Perfil de Busca.</li>
+              <li><span class="check-icon check-done">✓</span> Máscaras em CPF/CNPJ, Telefone, RG, Moeda e CEP.</li>
+              <li><span class="check-icon check-done">✓</span> Validação de obrigatórios com asterisco (*).</li>
+              <li><span class="check-icon check-done">✓</span> Visualização com GRIDs vinculados de Histórico de Visitas e Negociações.</li>
+              <li><span class="check-icon check-done">✓</span> Trava no backend contra exclusão caso tenha vínculos.</li>
+            </ul>
+          </div>
+          <div class="detail-box current">
+            <h4>💻 Como está no Código Atual</h4>
+            <p style="font-size: 13px; color: #34d399;">
+              Implementado com excelência em <code>Clientes.tsx</code>! Atende a todos os requisitos funcionais e não-funcionais (F1, F2, F3 e F4).
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 11. PROPRIETÁRIOS -->
+    <div class="module-card" data-status="done">
+      <div class="module-header open">
+        <div class="module-title-box">
+          <span class="module-code">Págs 9-10 / 17</span>
+          <span class="module-title">Proprietários</span>
+        </div>
+        <span class="module-status status-done">🟢 CONCLUÍDO (100% de Aderência)</span>
+      </div>
+      <div class="module-body">
+        <div class="grid-details">
+          <div class="detail-box pdf">
+            <h4>📄 Exigências do PDF</h4>
+            <ul class="req-list">
+              <li><span class="check-icon check-done">✓</span> 4 Abas: Dados Básicos, Dados Pessoais, Endereço e Dados Bancários (repasse).</li>
+              <li><span class="check-icon check-done">✓</span> ComboBox Física/Jurídica habilitando CNPJ e Razão Social.</li>
+              <li><span class="check-icon check-done">✓</span> Grids vinculados de Imóveis e Negociações na visualização.</li>
+              <li><span class="check-icon check-done">✓</span> Bloqueio de exclusão no backend se possuir imóveis ou contratos.</li>
+            </ul>
+          </div>
+          <div class="detail-box current">
+            <h4>💻 Como está no Código Atual</h4>
+            <p style="font-size: 13px; color: #34d399;">
+              Implementado com excelência em <code>Proprietarios.tsx</code>. Totalmente aderente às especificações.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 12. VISITAS -->
+    <div class="module-card" data-status="done">
+      <div class="module-header open">
+        <div class="module-title-box">
+          <span class="module-code">Págs 10-11 / 19</span>
+          <span class="module-title">Agenda de Visitas</span>
+        </div>
+        <span class="module-status status-done">🟢 CONCLUÍDO (95% de Aderência)</span>
+      </div>
+      <div class="module-body">
+        <div class="grid-details">
+          <div class="detail-box pdf">
+            <h4>📄 Exigências do PDF</h4>
+            <ul class="req-list">
+              <li><span class="check-icon check-done">✓</span> Filtros Rápidos ("Hoje", "Esta Semana", "Pendentes").</li>
+              <li><span class="check-icon check-done">✓</span> Tags visuais de status e mini-dropdown interativo na tabela.</li>
+              <li><span class="check-icon check-done">✓</span> Menu de 3 pontos com atalhos para visualizar, editar e cancelar visita.</li>
+              <li><span class="check-icon check-done">✓</span> Visualização somente leitura com endereço completo do imóvel.</li>
+            </ul>
+          </div>
+          <div class="detail-box current">
+            <h4>💻 Como está no Código Atual</h4>
+            <p style="font-size: 13px; color: #34d399;">
+              Implementado com excelência em <code>Visitas.tsx</code>.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 13. PRESTADORES, SERVIÇOS E REPAROS -->
+    <div class="module-card" data-status="done">
+      <div class="module-header open">
+        <div class="module-title-box">
+          <span class="module-code">Págs 12-13 / 22-23</span>
+          <span class="module-title">Serviços, Prestadores Terceirizados & Reparos</span>
+        </div>
+        <span class="module-status status-done">🟢 CONCLUÍDO (100% de Aderência)</span>
+      </div>
+      <div class="module-body">
+        <div class="grid-details">
+          <div class="detail-box pdf">
+            <h4>📄 Exigências do PDF</h4>
+            <ul class="req-list">
+              <li><span class="check-icon check-done">✓</span> Prestadores com 3 abas, múltiplos serviços vinculados em grid, dados bancários e chave PIX.</li>
+              <li><span class="check-icon check-done">✓</span> Reparos com seleção de imóvel, preenchimento automático do responsável e status.</li>
+              <li><span class="check-icon check-done">✓</span> Serviços com filtros e ordenação por ID.</li>
+            </ul>
+          </div>
+          <div class="detail-box current">
+            <h4>💻 Como está no Código Atual</h4>
+            <p style="font-size: 13px; color: #34d399;">
+              Implementado em <code>Prestadores.tsx</code>, <code>Servicos.tsx</code> e <code>Reparos.tsx</code> com todos os relacionamentos funcionando no backend.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 14. CANAIS E ANÚNCIOS -->
+    <div class="module-card" data-status="done">
+      <div class="module-header open">
+        <div class="module-title-box">
+          <span class="module-code">Págs 13-14 / 24-25</span>
+          <span class="module-title">Canais de Publicação & Anúncios</span>
+        </div>
+        <span class="module-status status-done">🟢 CONCLUÍDO (95% de Aderência)</span>
+      </div>
+      <div class="module-body">
+        <div class="grid-details">
+          <div class="detail-box pdf">
+            <h4>📄 Exigências do PDF</h4>
+            <ul class="req-list">
+              <li><span class="check-icon check-done">✓</span> Anúncios com 2 abas: Dados do Anúncio e Dados do Imóvel.</li>
+              <li><span class="check-icon check-done">✓</span> Modal de seleção de imóvel com busca por título/bairro/cidade e preenchimento automático.</li>
+              <li><span class="check-icon check-done">✓</span> Filtros por canais e quantidade de quartos.</li>
+            </ul>
+          </div>
+          <div class="detail-box current">
+            <h4>💻 Como está no Código Atual</h4>
+            <p style="font-size: 13px; color: #34d399;">
+              Implementado em <code>Anuncios.tsx</code> e <code>Canais.tsx</code>.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 15. NEGOCIAÇÕES E CONTRATOS -->
+    <div class="module-card" data-status="done">
+      <div class="module-header open">
+        <div class="module-title-box">
+          <span class="module-code">Geral</span>
+          <span class="module-title">Negociações e Contratos de Locação</span>
+        </div>
+        <span class="module-status status-done">🟢 CONCLUÍDO</span>
+      </div>
+      <div class="module-body">
+        <div class="grid-details">
+          <div class="detail-box pdf">
+            <h4>📄 Exigências do PDF</h4>
+            <ul class="req-list">
+              <li><span class="check-icon check-done">✓</span> Gerenciamento de propostas em andamento, realizadas e canceladas.</li>
+              <li><span class="check-icon check-done">✓</span> Vínculo direto de cliente, corretor, imóvel e proprietário.</li>
+              <li><span class="check-icon check-done">✓</span> Rastreabilidade para o financeiro e repasse ao proprietário.</li>
+            </ul>
+          </div>
+          <div class="detail-box current">
+            <h4>💻 Como está no Código Atual</h4>
+            <p style="font-size: 13px; color: #34d399;">
+              Implementado em <code>Negociacoes.tsx</code> e integrado na tabela de <code>contratos</code> no backend.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ESPECIFICAÇÃO TÉCNICA (SEÇÃO 1 DO PDF) -->
+  <div class="tech-spec-box">
+    <h3>⚙️ Comparativo da Especificação Técnica (Seção 1 do PDF)</h3>
+    <div class="tech-grid">
+      <div class="tech-card">
+        <strong>Camada Front-End</strong>
+        <p style="color: #94a3b8; margin-bottom: 4px;">PDF: C# Desktop / Frameworks multiplataforma</p>
+        <p style="color: #38bdf8;">Projeto Real: React + Vite + TypeScript + Tailwind (Figma Moderno)</p>
+        <p style="font-size: 11px; color: #10b981; margin-top: 6px;">✓ Justificativa do grupo: Interface Web moderna baseada nos protótipos Figma (conforme 1.2.1 do PDF).</p>
+      </div>
+      <div class="tech-card">
+        <strong>Camada Back-End & SGBD</strong>
+        <p style="color: #94a3b8; margin-bottom: 4px;">PDF: API em C# e Banco de Dados MySQL</p>
+        <p style="color: #38bdf8;">Projeto Real: API REST em Node.js/Express + SQLite</p>
+        <p style="font-size: 11px; color: #f59e0b; margin-top: 6px;">! SQLite foi usado para facilitar testes e deploy ágil (Render). Pode ser migrado para MySQL caso o professor exija estritamente.</p>
+      </div>
+      <div class="tech-card">
+        <strong>Metodologia de Gestão</strong>
+        <p style="color: #94a3b8; margin-bottom: 4px;">PDF: Scrum com Taiga e Sprints definidas</p>
+        <p style="color: #38bdf8;">Status: Sprints 1 e 2 documentadas</p>
+        <p style="font-size: 11px; color: #38bdf8; margin-top: 6px;">✓ Equipe de 6 integrantes do IFRO (FrontDev's).</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHECKLIST DE PRIORIDADES -->
+  <div style="background: linear-gradient(135deg, rgba(2,132,199,0.1) 0%, rgba(16,185,129,0.1) 100%); border: 1px solid rgba(56,189,248,0.2); border-radius: 14px; padding: 24px; margin-top: 32px;">
+    <h3 style="font-size: 18px; color: #38bdf8; margin-bottom: 12px;">🚀 Roteiro Recomendado para Fechar o Sistema (Nota Máxima)</h3>
+    <ol style="padding-left: 20px; font-size: 14px; color: #e2e8f0; line-height: 1.8;">
+      <li><strong>Passo 1:</strong> Desenvolver <code>Perfis.tsx</code> com a Árvore de Permissões agrupadas por módulo (F9 a F12).</li>
+      <li><strong>Passo 2:</strong> Desenvolver <code>Notificacoes.tsx</code> com os chips de inserção automática de variáveis e balão de preview de WhatsApp (F13 a F16).</li>
+      <li><strong>Passo 3:</strong> Desenvolver <code>Despesas.tsx</code> e <code>Multas.tsx</code> com cálculo de status automático e trava de contas pagas.</li>
+      <li><strong>Passo 4:</strong> Adicionar 2 gráficos interativos com tooltips no <code>Dashboard.tsx</code> (F73).</li>
+      <li><strong>Passo 5:</strong> Criar <code>Relatorios.tsx</code> com exportação direta para Excel (.xlsx) e PDF (F68 a F71).</li>
+      <li><strong>Passo 6:</strong> Trocar a visualização padrão de <code>Imoveis.tsx</code> para Cards.</li>
+    </ol>
+  </div>
+
+  <footer>
+    Relatório gerado automaticamente para a equipe <strong>FrontDev's</strong> • IFRO Campus Ji-Paraná • Projeto Urbânia 2026
+  </footer>
+
+</div>
+
+<script>
+  function filterModules(type) {
+    const cards = document.querySelectorAll('.module-card');
+    const buttons = document.querySelectorAll('.tab-btn');
+    
+    buttons.forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+
+    cards.forEach(card => {
+      const status = card.getAttribute('data-status');
+      if (type === 'all') {
+        card.style.display = 'block';
+      } else if (type === status) {
+        card.style.display = 'block';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  }
+</script>
+
+</body>
+</html>

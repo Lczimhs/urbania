@@ -49,7 +49,66 @@ export const statusColor = (status: unknown) => ({
   'Em Andamento': 'bg-sky-100 text-sky-700',
   Finalizado: 'bg-indigo-100 text-indigo-700',
   Rescindido: 'bg-rose-100 text-rose-700',
+  Pago: 'bg-emerald-100 text-emerald-700',
+  Atrasado: 'bg-rose-100 text-rose-700',
+  Receita: 'bg-emerald-100 text-emerald-700',
+  Despesa: 'bg-rose-100 text-rose-700',
+  Repasse: 'bg-sky-100 text-sky-700',
+  Contestado: 'bg-orange-100 text-orange-700',
 }[String(status)] || 'bg-slate-100 text-slate-600');
+
+// Notificações e Automações (RF F13-F16)
+export const GATILHOS_NOTIFICACAO = [
+  'Novo Cliente Cadastrado',
+  'Visita Agendada',
+  'Visita Confirmada',
+  'Proposta/Negociação Recebida',
+  'Proposta Aceita',
+  'Contrato Assinado',
+  'Vencimento de Aluguel (3 dias antes)',
+  'Aluguel em Atraso',
+  'Repasse Realizado ao Proprietário',
+  'Orçamento de Reparo Solicitado',
+];
+export const CANAIS_NOTIFICACAO = ['WhatsApp', 'E-mail', 'SMS'];
+export const CHIPS_NOTIFICACAO = [
+  '{NomeCliente}',
+  '{NomeProprietario}',
+  '{Imovel}',
+  '{Endereco}',
+  '{Data}',
+  '{Hora}',
+  '{Valor}',
+  '{Corretor}',
+  '{ChavePix}',
+];
+export const DESTINATARIOS_NOTIFICACAO = ['Cliente', 'Proprietário', 'Corretor', 'Todos'];
+
+// Financeiro e Despesas (RF F1-F4 Despesas / F72 Efetuar Pagamento)
+export const TIPOS_FINANCEIRO = ['Receita', 'Despesa', 'Repasse'];
+export const STATUS_FINANCEIRO = ['Pendente', 'Pago', 'Atrasado', 'Cancelado'];
+export const CATEGORIAS_FINANCEIRO = [
+  'Aluguel de Imóvel',
+  'Comissão de Venda',
+  'Taxa de Administração',
+  'Repasse ao Proprietário',
+  'Manutenção e Reparo',
+  'Marketing e Divulgação',
+  'Administrativa',
+  'Pessoal e Salários',
+  'Impostos e Taxas',
+  'Serviços Terceirizados',
+  'Outros',
+];
+export const FORMAS_PAGAMENTO_FINANCEIRO = [
+  'Boleto Bancário',
+  'PIX',
+  'Transferência Bancária',
+  'Cartão de Crédito',
+  'Débito em Conta',
+  'Retenção Automática',
+  'Dinheiro',
+];
 
 // Contratos (Locação, Venda e Temporada)
 export const TIPOS_CONTRATO = ['Locação', 'Compra e Venda', 'Temporada'];
@@ -71,3 +130,56 @@ export const TIPOS_CHAVE_PIX = ['CPF', 'CNPJ', 'E-mail', 'Celular', 'Chave Aleat
 export const STATUS_REPARO = ['Pendente', 'Iniciado', 'Finalizado'];
 export const TIPOS_CANAL = ['Site', 'Impresso', 'Anunciado'];
 export const SITUACOES_ANUNCIO = ['Ativo', 'Pausado', 'Encerrado'];
+
+// Controle de Despesas (RF F1-F4 Despesas)
+export const CATEGORIAS_DESPESA = [
+  'Administrativa',
+  'Pessoal',
+  'Marketing',
+  'Manutenção de imóveis sob gestão',
+  'Impostos e taxas',
+  'Serviços terceirizados',
+  'Outros',
+];
+export const STATUS_DESPESA = ['Pendente', 'Pago', 'Atrasado'];
+
+// Gestão de Multas (RF F1-F4 Multas)
+export const TIPOS_MULTA = [
+  'Atraso no pagamento',
+  'Rescisão antecipada',
+  'Dano ao imóvel',
+  'Quebra de cláusula',
+  'Outros',
+];
+export const STATUS_MULTA = ['Pendente', 'Contestado', 'Pago', 'Cancelado'];
+export const MODOS_VALOR_MULTA = ['Fixo (R$)', 'Percentual (%)'];
+
+// Perfis de Acesso (RF F9-F12)
+export const STATUS_PERFIL = ['Ativo', 'Inativo'];
+
+export interface ModuloSistemaDef {
+  id: string;
+  label: string;
+  categoria: string;
+  descricao: string;
+  acoes: string[];
+}
+
+export const MODULOS_SISTEMA: ModuloSistemaDef[] = [
+  { id: 'clientes', label: 'Clientes', categoria: 'Operações Imobiliárias', descricao: 'Cadastro, consulta e perfil de interesse de clientes', acoes: ['Visualizar', 'Criar', 'Editar', 'Excluir'] },
+  { id: 'proprietarios', label: 'Proprietários', categoria: 'Operações Imobiliárias', descricao: 'Cadastro de proprietários e dados bancários para repasse', acoes: ['Visualizar', 'Criar', 'Editar', 'Excluir'] },
+  { id: 'imoveis', label: 'Imóveis', categoria: 'Operações Imobiliárias', descricao: 'Portfólio de imóveis, precificação e galeria de fotos', acoes: ['Visualizar', 'Criar', 'Editar', 'Excluir'] },
+  { id: 'visitas', label: 'Visitas', categoria: 'Operações Imobiliárias', descricao: 'Agendamento de visitas com clientes e corretores', acoes: ['Visualizar', 'Criar', 'Editar', 'Excluir'] },
+  { id: 'negociacoes', label: 'Negociações', categoria: 'Operações Imobiliárias', descricao: 'Propostas de compra, venda e locação', acoes: ['Visualizar', 'Criar', 'Editar', 'Excluir'] },
+  { id: 'contratos', label: 'Contratos', categoria: 'Operações Imobiliárias', descricao: 'Contratos de locação e compra/venda, garantias e termos', acoes: ['Visualizar', 'Criar', 'Editar', 'Excluir'] },
+  { id: 'financeiro', label: 'Financeiro', categoria: 'Gestão Financeira', descricao: 'Fluxo de caixa, recebimentos de aluguel e comissões', acoes: ['Visualizar', 'Criar', 'Editar', 'Excluir'] },
+  { id: 'despesas', label: 'Controle de Despesas', categoria: 'Gestão Financeira', descricao: 'Despesas administrativas e de imóveis sob gestão', acoes: ['Visualizar', 'Criar', 'Editar', 'Excluir'] },
+  { id: 'multas', label: 'Gestão de Multas', categoria: 'Gestão Financeira', descricao: 'Aplicação e controle de multas contratuais e atrasos', acoes: ['Visualizar', 'Criar', 'Editar', 'Excluir'] },
+  { id: 'relatorios', label: 'Relatórios e Auditoria', categoria: 'Gestão e Segurança', descricao: 'Relatórios gerenciais e logs de auditoria sistêmica', acoes: ['Visualizar', 'Criar', 'Editar', 'Excluir'] },
+  { id: 'notificacoes', label: 'Notificações', categoria: 'Comunicação', descricao: 'Régua de notificações e automações via WhatsApp/E-mail', acoes: ['Visualizar', 'Criar', 'Editar', 'Excluir'] },
+  { id: 'funcionarios', label: 'Funcionários', categoria: 'Administração', descricao: 'Gestão de equipe, corretores e colaboradores', acoes: ['Visualizar', 'Criar', 'Editar', 'Excluir'] },
+  { id: 'perfis', label: 'Perfis de Acesso', categoria: 'Administração', descricao: 'Níveis de permissões e controle de acessos da equipe', acoes: ['Visualizar', 'Criar', 'Editar', 'Excluir'] },
+  { id: 'manutencao', label: 'Manutenção (Serviços e Reparos)', categoria: 'Manutenção', descricao: 'Ordens de reparos, catálogo de serviços e prestadores', acoes: ['Visualizar', 'Criar', 'Editar', 'Excluir'] },
+  { id: 'divulgacao', label: 'Divulgação (Canais e Anúncios)', categoria: 'Divulgação', descricao: 'Canais de publicação e anúncios de imóveis', acoes: ['Visualizar', 'Criar', 'Editar', 'Excluir'] },
+];
+
