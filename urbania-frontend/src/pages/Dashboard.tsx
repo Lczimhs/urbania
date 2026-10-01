@@ -1,5 +1,17 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Building2, CalendarPlus, FileText, Handshake, Plus } from 'lucide-react';
+import {
+  AlertTriangle,
+  BarChart3,
+  Bell,
+  Building2,
+  CalendarPlus,
+  DollarSign,
+  FileText,
+  Handshake,
+  Plus,
+  Receipt,
+  ShieldCheck,
+} from 'lucide-react';
 import { useList } from '../lib/useApi';
 import { formatCurrency, formatDate } from '../lib/format';
 import { onlyDigits } from '../lib/masks';
@@ -19,13 +31,18 @@ export default function Dashboard() {
   const visitas = useList('visitas');
   const negociacoes = useList('negociacoes');
   const contratos = useList('contratos');
+  const financeiro = useList('financeiro');
+  const despesas = useList('despesas');
+  const multas = useList('multas');
 
-  const loading = clientes.loading || proprietarios.loading || imoveis.loading || visitas.loading || negociacoes.loading || contratos.loading;
+  const loading = clientes.loading || proprietarios.loading || imoveis.loading || visitas.loading || negociacoes.loading || contratos.loading || financeiro.loading;
   const pf = clientes.rows.filter(c => onlyDigits(c.cpfCnpj).length !== 14).length;
   const pj = proprietarios.rows.filter(p => p.tipo === 'Jurídica').length;
   const aVenda = imoveis.rows.filter(i => i.finalidade === 'Venda' || i.finalidade === 'Venda e Aluguel');
   const paraLocacao = imoveis.rows.filter(i => i.finalidade !== 'Venda' && i.finalidade).length;
   const portfolio = aVenda.reduce((s, i) => s + Number(i.precoVenda || 0), 0);
+  const receitasMes = financeiro.rows.filter(f => f.status === 'Pago' && f.tipo === 'Receita').reduce((s, f) => s + Number(f.valor || 0), 0);
+  const repassesPendentes = financeiro.rows.filter(f => f.status === 'Pendente' && f.tipo === 'Repasse').reduce((s, f) => s + Number(f.valor || 0), 0);
   const pendentes = visitas.rows.filter(v => v.status === 'Pendente' || v.status === 'Confirmada');
   const emAndamentoNeg = negociacoes.rows.filter(n => n.status === 'Em Andamento');
   const contratosAtivos = contratos.rows.filter(c => c.status === 'Ativo');
@@ -59,10 +76,44 @@ export default function Dashboard() {
         ))}
       </div>
 
-      <div className="bg-white p-6 rounded-2xl border border-sky-100 shadow-sm">
-        <p className="text-sm font-bold text-slate-700">Portfólio à venda</p>
-        <p className="text-3xl font-bold text-indigo-600 mt-1">{loading ? '…' : formatCurrency(portfolio)}</p>
-        <p className="text-xs text-slate-400 mt-1">Soma dos preços de venda dos imóveis disponíveis para venda</p>
+      {/* Destaques Financeiros e de Portfólio */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-white p-6 rounded-2xl border border-sky-100 shadow-sm">
+          <p className="text-xs font-bold uppercase text-slate-400">Portfólio à venda</p>
+          <p className="text-2xl font-bold text-indigo-600 mt-1">{loading ? '…' : formatCurrency(portfolio)}</p>
+          <p className="text-xs text-slate-400 mt-1">Soma dos preços dos imóveis para venda</p>
+        </div>
+
+        <Link to="/financeiro" className="bg-white p-6 rounded-2xl border border-emerald-100 shadow-sm hover:border-emerald-300 transition group">
+          <div className="flex justify-between items-center">
+            <p className="text-xs font-bold uppercase text-slate-400">Receitas Liquidadas no Caixa</p>
+            <span className="text-xs text-emerald-600 font-semibold group-hover:underline">Ver caixa →</span>
+          </div>
+          <p className="text-2xl font-bold text-emerald-700 mt-1">{loading ? '…' : formatCurrency(receitasMes)}</p>
+          <p className="text-xs text-slate-400 mt-1">Aluguéis e comissões recebidas</p>
+        </Link>
+
+        <Link to="/financeiro" className="bg-white p-6 rounded-2xl border border-sky-100 shadow-sm hover:border-sky-300 transition group">
+          <div className="flex justify-between items-center">
+            <p className="text-xs font-bold uppercase text-sky-800">Repasses Pendentes</p>
+            <span className="text-xs text-sky-600 font-semibold group-hover:underline">Efetuar →</span>
+          </div>
+          <p className="text-2xl font-bold text-sky-700 mt-1">{loading ? '…' : formatCurrency(repassesPendentes)}</p>
+          <p className="text-xs text-slate-400 mt-1">A pagar aos proprietários legais</p>
+        </Link>
+
+        <Link to="/despesas" className="bg-white p-6 rounded-2xl border border-rose-100 shadow-sm hover:border-rose-300 transition group">
+          <div className="flex justify-between items-center">
+            <p className="text-xs font-bold uppercase text-rose-800">Despesas & Multas</p>
+            <span className="text-xs text-rose-600 font-semibold group-hover:underline">Ver custos →</span>
+          </div>
+          <p className="text-2xl font-bold text-rose-700 mt-1">
+            {loading ? '…' : formatCurrency(despesas.rows.reduce((s, d) => s + Number(d.valor || 0), 0))}
+          </p>
+          <p className="text-xs text-slate-400 mt-1">
+            {despesas.rows.length} despesas lançadas · {multas.rows.filter(m => m.status === 'Pendente').length} multas em cobrança
+          </p>
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -115,14 +166,19 @@ export default function Dashboard() {
       </div>
 
       {/* AÇÕES RÁPIDAS */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { to: '/clientes/novo', title: 'Cadastrar cliente', hint: 'Adicionar ao CRM', icon: <Plus size={20} /> },
-          { to: '/proprietarios/novo', title: 'Cadastrar proprietário', hint: 'Vincular imóveis', icon: <Plus size={20} /> },
           { to: '/imoveis/novo', title: 'Adicionar imóvel', hint: 'Com fotos e valores', icon: <Plus size={20} /> },
           { to: '/visitas/novo', title: 'Agendar visita', hint: 'Cliente + imóvel', icon: <CalendarPlus size={20} /> },
           { to: '/negociacoes/novo', title: 'Nova negociação', hint: 'Registrar proposta', icon: <Handshake size={20} /> },
           { to: '/contratos/novo', title: 'Novo contrato', hint: 'Locação ou venda', icon: <FileText size={20} /> },
+          { to: '/multas/novo', title: 'Aplicar multa', hint: 'Penalidade contratual', icon: <AlertTriangle size={20} /> },
+          { to: '/despesas/novo', title: 'Lançar despesa', hint: 'Custos operacionais', icon: <Receipt size={20} /> },
+          { to: '/financeiro/novo', title: 'Lançamento financeiro', hint: 'Receita ou repasse', icon: <DollarSign size={20} /> },
+          { to: '/relatorios', title: 'Históricos & Relatórios', hint: 'Rastreabilidade e logs', icon: <BarChart3 size={20} /> },
+          { to: '/notificacoes/novo', title: 'Nova notificação', hint: 'Regra de envio automático', icon: <Bell size={20} /> },
+          { to: '/perfis', title: 'Perfis de acesso', hint: 'Matriz de permissões', icon: <ShieldCheck size={20} /> },
         ].map(a => (
           <Link key={a.to} to={a.to} className="bg-white p-4 rounded-2xl border border-slate-200/60 shadow-sm hover:shadow-md hover:border-sky-200 transition flex items-center gap-3 group">
             <div className="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center group-hover:bg-sky-100 transition shrink-0">{a.icon}</div>

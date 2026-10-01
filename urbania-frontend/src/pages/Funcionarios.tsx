@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Building2, CalendarCheck, CalendarClock, Plus } from 'lucide-react';
+import { Building2, CalendarCheck, CalendarClock, Plus, Shield } from 'lucide-react';
 import { api } from '../api';
 import { Card, DataTable, FilterSelect, PageHeader, RowActions, SearchInput, Toolbar, matches } from '../components/DataTable';
 import { Avatar } from '../components/EntityForm';
@@ -18,6 +18,7 @@ export function FuncionariosList() {
   const navigate = useNavigate();
   const toast = useToast();
   const { rows, setRows, loading, reload } = useList('funcionarios');
+  const perfis = useList('perfis');
   const [campo, setCampo] = useState('nome');
   const [term, setTerm] = useState('');
   const del = useDelete('funcionarios', 'Funcionário', reload);
@@ -46,13 +47,22 @@ export function FuncionariosList() {
           <SearchInput value={term} onChange={setTerm} placeholder={campo === 'cpf' ? 'Digite o CPF...' : 'Digite o nome...'} />
         </Toolbar>
         <DataTable
-          rows={filtered} loading={loading}
+          rows={filtered} loading={loading || perfis.loading}
           onRowClick={r => navigate(`/funcionarios/${r.id}`)}
           columns={[
             { key: 'nome', label: 'Nome', render: r => (
               <div className="flex items-center gap-3"><Avatar src={r.foto} name={r.nome} size="sm" /><span className="font-semibold text-slate-800">{r.nome}</span></div>
             ) },
             { key: 'cargo', label: 'Função' },
+            { key: 'perfil', label: 'Perfil de Acesso', render: r => {
+              const p = perfis.rows.find(x => Number(x.id) === Number(r.perfilId));
+              return (
+                <span className="inline-flex items-center gap-1 text-xs font-semibold text-sky-800 bg-sky-50 px-2 py-0.5 rounded-full border border-sky-200">
+                  <Shield size={12} className="text-sky-600" />
+                  {p?.nome || 'Padrão'}
+                </span>
+              );
+            } },
             { key: 'telefone', label: 'Telefone' },
             { key: 'status', label: 'Status', render: r => <StatusDropdown value={r.status || 'Ativo'} options={STATUS_FUNCIONARIO} onChange={s => setStatus(r.id, s)} /> },
           ]}
@@ -119,14 +129,41 @@ const tabs: TabDef[] = [
 
 // Cadastrar / Visualizar / Editar Funcionário
 export function FuncionarioPage({ mode }: { mode: Mode }) {
+  const perfis = useList('perfis');
+
+  const pageTabs: TabDef[] = [
+    tabs[0],
+    {
+      ...tabs[1],
+      fields: [
+        ...(tabs[1].fields || []).slice(0, 4),
+        {
+          key: 'perfilId',
+          label: 'Perfil de Acesso (Permissões)',
+          type: 'select',
+          options: perfis.rows.map(p => ({
+            value: p.id,
+            label: `${p.nome}${Number(p.nativo) === 1 ? ' (Nativo)' : ''}`,
+          })),
+        },
+        ...(tabs[1].fields || []).slice(4),
+      ],
+    },
+    tabs[2],
+  ];
+
   const viewTabs: TabDef[] = mode === 'view'
-    ? [{ ...tabs[0], render: f => <div className="mt-6"><h3 className="font-bold text-slate-700 mb-3">Estatísticas</h3><Estatisticas funcionarioId={f.id} /></div> }, ...tabs.slice(1)]
-    : tabs;
+    ? [{ ...pageTabs[0], render: f => <div className="mt-6"><h3 className="font-bold text-slate-700 mb-3">Estatísticas</h3><Estatisticas funcionarioId={f.id} /></div> }, ...pageTabs.slice(1)]
+    : pageTabs;
 
   return (
     <EntityPage
       mode={mode} entity="funcionarios" basePath="/funcionarios" singular="Funcionário" tabs={viewTabs}
       defaults={{ status: 'Ativo' }} editLabel="Editar perfil"
+      prepare={f => ({
+        ...f,
+        perfilId: f.perfilId ? Number(f.perfilId) : null,
+      })}
       validate={f => {
         if (onlyDigits(f.cpf).length !== 11) return 'CPF inválido: informe os 11 dígitos.';
         if (onlyDigits(f.telefone).length < 10) return 'Celular inválido: informe DDD + número.';
