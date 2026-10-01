@@ -86,6 +86,67 @@ async function seed() {
     `);
   }
 
+  // 7. Serviços
+  const sCount = (await get('SELECT COUNT(*) as c FROM servicos')).c;
+  if (sCount === 0) {
+    console.log('Criando serviços padrão...');
+    await run(`
+      INSERT INTO servicos (nome, descricao, categoria)
+      VALUES
+        ('Reparo elétrico', 'Troca de tomadas, disjuntores e revisão da fiação.', 'Elétrica'),
+        ('Desentupimento e vazamentos', 'Desentupimento de pias/ralos e conserto de vazamentos.', 'Hidráulica'),
+        ('Pintura interna', 'Pintura de paredes e tetos, incluindo massa corrida.', 'Pintura')
+    `);
+  }
+
+  // 8. Prestadores de serviço
+  const prCount = (await get('SELECT COUNT(*) as c FROM prestadores')).c;
+  if (prCount === 0) {
+    console.log('Criando prestadores de serviço padrão...');
+    await run(`
+      INSERT INTO prestadores (nome, razaoSocial, cpfCnpj, email, telefone, pais, uf, cidade, bairro, logradouro, numero, servicos, especialidade, banco, agencia, conta, tipoChavePix, chavePix)
+      VALUES
+        ('João Eletricista', null, '234.567.890-12', 'joao.eletricista@gmail.com', '(69) 99111-2233', 'Brasil', 'RO', 'Ji-Paraná', 'Centro', 'Rua Rio Branco', '210', '[1]', 'Reparo elétrico', 'Caixa', '0123', '45678-9', 'Celular', '(69) 99111-2233'),
+        ('Reforma Fácil', 'Reforma Fácil Serviços Ltda', '23.456.789/0001-01', 'contato@reformafacil.com.br', '(69) 3422-7788', 'Brasil', 'RO', 'Ji-Paraná', 'Nova Brasília', 'Av. Brasil', '900', '[2,3]', 'Desentupimento e vazamentos, Pintura interna', 'Sicoob', '3325', '11223-4', 'CNPJ', '23.456.789/0001-01')
+    `);
+  }
+
+  // 9. Reparos
+  const rCount = (await get('SELECT COUNT(*) as c FROM reparos')).c;
+  if (rCount === 0) {
+    console.log('Criando reparos de exemplo...');
+    await run(`
+      INSERT INTO reparos (imovelId, servicoId, prestadorId, responsavelId, responsavel, descricao, dataSolicitacao, status, valor)
+      VALUES
+        (1, 1, 1, 1, 'Carlos Mendes', 'Disjuntor da cozinha desarmando com frequência; tomada da sala sem energia.', '2026-09-29', 'Pendente', 380)
+    `);
+  }
+
+  // 10. Canais de publicação
+  const caCount = (await get('SELECT COUNT(*) as c FROM canais')).c;
+  if (caCount === 0) {
+    console.log('Criando canais de publicação padrão...');
+    await run(`
+      INSERT INTO canais (nome, tipoCanal, observacoes)
+      VALUES
+        ('Site Urbânia', 'Site', 'Vitrine própria da imobiliária.'),
+        ('Jornal Diário da Amazônia', 'Impresso', 'Classificados de domingo.'),
+        ('Portal ZAP Imóveis', 'Anunciado', 'Plano com 20 anúncios ativos.')
+    `);
+  }
+
+  // 11. Anúncios
+  const aCount = (await get('SELECT COUNT(*) as c FROM anuncios')).c;
+  if (aCount === 0) {
+    console.log('Criando anúncios de exemplo...');
+    await run(`
+      INSERT INTO anuncios (imovelId, canalId, canal, descricao, valor, status, dataPublicacao)
+      VALUES
+        (1, 1, 'Site Urbânia', 'Apartamento com vista panorâmica no Centro, 3 quartos sendo 1 suíte, sacada gourmet e 2 vagas.', 450000, 'Ativo', '2026-09-26'),
+        (2, 3, 'Portal ZAP Imóveis', 'Casa térrea em condomínio fechado com piscina privativa e 4 dormitórios.', 850000, 'Ativo', '2026-09-27')
+    `);
+  }
+
   console.log('Seed finalizado com sucesso!');
   process.exit(0);
 }
