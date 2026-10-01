@@ -22,7 +22,7 @@ function useDropdown() {
 }
 
 const Panel = ({ children, className = '' }: { children: ReactNode; className?: string }) => (
-  <div className={`absolute right-0 top-full mt-2 z-50 bg-white rounded-2xl border border-slate-200 shadow-xl shadow-slate-900/10 overflow-hidden ${className}`}>{children}</div>
+  <div className={`absolute right-0 top-full mt-2.5 z-50 bg-white rounded-2xl border border-slate-200 shadow-xl shadow-slate-900/10 overflow-hidden ${className}`}>{children}</div>
 );
 
 const TOM_COR = { urgente: 'bg-rose-500', aviso: 'bg-amber-500', info: 'bg-sky-500' };
@@ -60,10 +60,10 @@ export function NotificationsMenu() {
   return (
     <div ref={ref} className="relative">
       <button type="button" onClick={() => { if (!open) recarregar(); setOpen(!open); }} title="Notificações"
-        className={`relative p-2 rounded-lg transition ${open ? 'bg-sky-50 text-sky-600' : 'text-slate-400 hover:text-sky-600 hover:bg-slate-50'}`}>
+        className={`relative p-2 rounded-xl transition ${open ? 'bg-sky-50 text-sky-600 ring-2 ring-sky-200' : 'text-slate-500 hover:text-sky-600 hover:bg-slate-100'}`}>
         {naoLidas ? <BellRing size={20} /> : <Bell size={20} />}
         {naoLidas > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-white">
+          <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-white shadow-xs">
             {naoLidas > 9 ? '9+' : naoLidas}
           </span>
         )}
@@ -127,11 +127,11 @@ export function UserMenu() {
   return (
     <div ref={ref} className="relative">
       <button type="button" onClick={() => setOpen(!open)}
-        className={`flex items-center gap-2.5 pl-1 pr-2 py-1 rounded-full border transition ${open ? 'border-sky-300 bg-sky-50/60' : 'border-transparent hover:border-slate-200 hover:bg-slate-50'}`}>
-        <span className="w-8 h-8 rounded-full bg-[#0a2540] flex items-center justify-center text-white font-bold text-xs shadow-sm">{iniciais}</span>
+        className={`flex items-center gap-2.5 pl-1.5 pr-2.5 py-1 rounded-xl border transition ${open ? 'border-sky-300 bg-sky-50/70 shadow-xs' : 'border-slate-200/80 bg-slate-50/60 hover:border-slate-300 hover:bg-slate-100/70'}`}>
+        <span className="w-8 h-8 rounded-lg bg-[#0a2540] flex items-center justify-center text-white font-bold text-xs shadow-xs">{iniciais}</span>
         <span className="hidden sm:flex flex-col text-left">
           <span className="text-xs font-bold text-slate-800 leading-tight max-w-[12rem] truncate">{nome}</span>
-          <span className="text-[11px] text-teal-600 font-medium">{user?.perfilNome || user?.cargo}</span>
+          <span className="text-[11px] text-teal-600 font-semibold">{user?.perfilNome || user?.cargo || 'Administrador'}</span>
         </span>
         <ChevronDown size={14} className={`text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>

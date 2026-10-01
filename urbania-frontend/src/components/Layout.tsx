@@ -11,11 +11,13 @@ import {
   ChevronDown,
   ChevronsLeft,
   ChevronsRight,
+  ChevronRight,
   ClipboardList,
   DollarSign,
   FileText,
   Handshake,
   HardHat,
+  Home,
   LayoutDashboard,
   LogOut,
   Megaphone,
@@ -163,7 +165,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         </div>
 
         {/* Navegação */}
-        <nav className="flex-1 overflow-y-auto overflow-x-hidden py-3 px-3 space-y-4">
+        <nav className="flex-1 overflow-y-auto overflow-x-hidden py-3 px-3 space-y-4 sidebar-scroll">
           {visibleSections.map(section => {
             const hasActive = section.items.some(i => isActive(i.path, loc.pathname));
             const open = !section.collapsible || mini || hasActive || !closedGroups.includes(section.id);
@@ -226,23 +228,55 @@ export default function Layout({ children }: { children: ReactNode }) {
       {/* MAIN CONTENT */}
       <main className="flex-1 min-w-0 flex flex-col overflow-hidden">
 
-        {/* HEADER */}
-        <header className="h-16 bg-white flex items-center justify-between px-4 md:px-8 shadow-sm z-10">
-          <div className="text-sky-700 font-medium text-sm flex items-center gap-3">
-            <button onClick={() => setMenuOpen(true)} className="md:hidden p-1 -ml-1 text-slate-600" title="Menu"><Menu size={24} /></button>
-            <span className="font-semibold text-slate-900">{nomeImobiliaria}</span>
-            {currentModule && currentModule.path !== '/' ? <span className="text-slate-400">/</span> : null}
-            {currentModule && currentModule.path !== '/' ? <span className="text-sky-600 font-semibold">{currentModule.label}</span> : null}
-          </div>
-          <div className="flex items-center gap-2 md:gap-4">
-            <NotificationsMenu />
-            <div className="h-8 w-px bg-slate-200" />
-            <UserMenu />
+        {/* BARRA SUPERIOR FLUTUANTE MODERNA (Card suspenso com cantos arredondados) */}
+        <header className="px-4 md:px-8 pt-4 pb-1 shrink-0 z-20">
+          <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-sm border border-slate-200/80 px-4 md:px-6 h-16 flex items-center justify-between transition-all">
+            {/* Esquerda: Menu Mobile e Breadcrumbs Estilizados */}
+            <div className="flex items-center gap-2 md:gap-3 min-w-0">
+              <button
+                onClick={() => setMenuOpen(true)}
+                className="md:hidden p-2 -ml-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition"
+                title="Abrir menu"
+              >
+                <Menu size={22} />
+              </button>
+
+              <Link
+                to="/"
+                className="hidden sm:flex items-center gap-2 text-xs md:text-sm font-semibold text-slate-500 hover:text-sky-700 transition px-2.5 py-1.5 rounded-xl hover:bg-slate-100"
+                title="Ir para o início"
+              >
+                <Home size={15} className="text-slate-400" />
+                <span>{nomeImobiliaria}</span>
+              </Link>
+
+              {currentModule && currentModule.path !== '/' ? (
+                <>
+                  <ChevronRight size={14} className="text-slate-300 hidden sm:block shrink-0" />
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-sky-50 border border-sky-100 text-sky-800 text-xs md:text-sm font-bold shadow-xs">
+                    <span className="text-sky-600 shrink-0">{currentModule.icon}</span>
+                    <span className="truncate">{currentModule.label}</span>
+                  </div>
+                </>
+              ) : (
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 text-slate-800 text-xs md:text-sm font-bold">
+                  <LayoutDashboard size={15} className="text-sky-600 shrink-0" />
+                  <span>Painel Geral</span>
+                </div>
+              )}
+            </div>
+
+            {/* Direita: Notificações, Divisor e Menu de Usuário */}
+            <div className="flex items-center gap-2 md:gap-3.5">
+              <NotificationsMenu />
+              <div className="h-6 w-px bg-slate-200" />
+              <UserMenu />
+            </div>
           </div>
         </header>
 
         {/* PAGE CONTENT */}
-        <div className="flex-1 overflow-auto p-4 md:p-8">
+        <div className="flex-1 overflow-auto px-4 md:px-8 pb-6 pt-3">
           {children}
         </div>
       </main>
