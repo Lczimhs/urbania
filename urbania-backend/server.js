@@ -25,6 +25,10 @@ const deleteGuards = {
   proprietarios: [['imoveis', 'proprietarioId', 'imóvel(is)'], ['negociacoes', 'proprietarioId', 'negociação(ões)']],
   imoveis: [['visitas', 'imovelId', 'visita(s)'], ['negociacoes', 'imovelId', 'negociação(ões)'], ['contratos', 'imovelId', 'contrato(s)']],
   funcionarios: [['visitas', 'corretorId', 'visita(s)'], ['negociacoes', 'corretorId', 'negociação(ões)'], ['imoveis', 'responsavelId', 'imóvel(is)']],
+  // 4º item opcional: condição própria (prestadores.servicos é uma lista JSON de ids)
+  servicos: [['reparos', 'servicoId', 'reparo(s)'], ['prestadores', 'servicos', 'prestador(es)', 'EXISTS (SELECT 1 FROM json_each(servicos) WHERE value = CAST(? AS INTEGER))']],
+  prestadores: [['reparos', 'prestadorId', 'reparo(s)']],
+  canais: [['anuncios', 'canalId', 'anúncio(s)']],
 };
 
 const get = (sql, params = []) => new Promise((resolve, reject) =>
@@ -81,8 +85,8 @@ tables.forEach(table => {
   app.delete(`/api/${table}/:id`, async (req, res) => {
     try {
       const blocked = [];
-      for (const [child, column, label] of deleteGuards[table] || []) {
-        const row = await get(`SELECT COUNT(*) as total FROM ${child} WHERE ${column} = ?`, [req.params.id]);
+      for (const [child, column, label, where] of deleteGuards[table] || []) {
+        const row = await get(`SELECT COUNT(*) as total FROM ${child} WHERE ${where || `${column} = ?`}`, [req.params.id]);
         if (row.total > 0) blocked.push(`${row.total} ${label}`);
       }
       if (blocked.length) {

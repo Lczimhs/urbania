@@ -51,9 +51,23 @@ const schema = {
   },
   perfis: { nome: 'TEXT', descricao: 'TEXT', permissoes: 'TEXT' },
   notificacoes: { titulo: 'TEXT', mensagem: 'TEXT', destinatario: 'TEXT', canal: 'TEXT', dataEnvio: 'TEXT', status: 'TEXT' },
-  prestadores: { nome: 'TEXT', especialidade: 'TEXT', telefone: 'TEXT', cpfCnpj: 'TEXT', avaliacao: 'REAL' },
-  reparos: { imovelId: 'INTEGER', prestadorId: 'INTEGER', descricao: 'TEXT', dataSolicitacao: 'TEXT', status: 'TEXT', valor: 'REAL' },
-  anuncios: { imovelId: 'INTEGER', canal: 'TEXT', dataPublicacao: 'TEXT', status: 'TEXT', cliques: 'INTEGER', contatos: 'INTEGER' },
+  servicos: { nome: 'TEXT', descricao: 'TEXT', categoria: 'TEXT' },
+  // servicos: lista JSON com os ids dos serviços prestados (ex.: "[1,3]")
+  prestadores: {
+    nome: 'TEXT', especialidade: 'TEXT', telefone: 'TEXT', cpfCnpj: 'TEXT', avaliacao: 'REAL',
+    razaoSocial: 'TEXT', email: 'TEXT', pais: 'TEXT', uf: 'TEXT', cidade: 'TEXT', bairro: 'TEXT', logradouro: 'TEXT',
+    numero: 'TEXT', complemento: 'TEXT', servicos: 'TEXT', banco: 'TEXT', agencia: 'TEXT', conta: 'TEXT',
+    tipoChavePix: 'TEXT', chavePix: 'TEXT',
+  },
+  reparos: {
+    imovelId: 'INTEGER', prestadorId: 'INTEGER', descricao: 'TEXT', dataSolicitacao: 'TEXT', status: 'TEXT', valor: 'REAL',
+    servicoId: 'INTEGER', responsavelId: 'INTEGER', responsavel: 'TEXT',
+  },
+  canais: { nome: 'TEXT', tipoCanal: 'TEXT', observacoes: 'TEXT' },
+  anuncios: {
+    imovelId: 'INTEGER', canal: 'TEXT', dataPublicacao: 'TEXT', status: 'TEXT', cliques: 'INTEGER', contatos: 'INTEGER',
+    canalId: 'INTEGER', descricao: 'TEXT', valor: 'REAL', fotos: 'TEXT',
+  },
   despesas: { descricao: 'TEXT', valor: 'REAL', dataVencimento: 'TEXT', status: 'TEXT', categoria: 'TEXT' },
   multas: { contratoId: 'INTEGER', motivo: 'TEXT', valor: 'REAL', dataAplicacao: 'TEXT', status: 'TEXT' },
   financeiro: { tipo: 'TEXT', valor: 'REAL', data: 'TEXT', descricao: 'TEXT', status: 'TEXT' },

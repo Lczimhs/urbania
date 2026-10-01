@@ -15,7 +15,9 @@ type Form = Record<string, any>;
 export type FieldDef = {
   key: string;
   label: string;
-  type?: 'text' | 'email' | 'date' | 'time' | 'number' | 'textarea' | 'select' | 'search-select' | 'currency' | 'photo' | 'photos' | 'toggle';
+  type?: 'text' | 'email' | 'date' | 'time' | 'number' | 'textarea' | 'select' | 'search-select' | 'currency' | 'photo' | 'photos' | 'toggle' | 'custom';
+  // type 'custom': o próprio campo desenha o conteúdo (ex.: grid de serviços, modal de seleção)
+  render?: (value: any, set: (value: any) => void, ctx: { form: Form; mode: Mode; disabled: boolean; invalid: boolean }) => ReactNode;
   options?: (string | Option)[];
   mask?: (v: unknown) => string;
   required?: boolean | ((form: Form) => boolean);
@@ -28,7 +30,12 @@ export type FieldDef = {
   onChange?: (value: any, form: Form) => Form | void;  // campos extras que mudam junto
 };
 
-export type TabDef = { label: string; fields?: FieldDef[]; render?: (form: Form, mode: Mode) => ReactNode };
+export type TabDef = {
+  label: string;
+  fields?: FieldDef[];
+  render?: (form: Form, mode: Mode) => ReactNode;
+  locked?: (form: Form) => string | null;   // devolve o motivo enquanto a aba estiver bloqueada
+};
 
 const toOptions = (opts: (string | Option)[] = []): Option[] => opts.map(o => (typeof o === 'string' ? { value: o, label: o } : o));
 const isRequired = (f: FieldDef, form: Form) => (typeof f.required === 'function' ? f.required(form) : !!f.required);
@@ -107,6 +114,8 @@ export function EntityForm({ title, mode, initial, tabs, defaults = {}, onSubmit
       toast.error('Preencha os campos obrigatórios desta etapa: ' + currentFields.map(f => f.label).join(', ') + '.');
       return;
     }
+    const lockedReason = tabs[tab + 1]?.locked?.(form);
+    if (lockedReason) return toast.error(lockedReason);
     setTab(cur => Math.min(cur + 1, tabs.length - 1));
   };
 
@@ -128,6 +137,8 @@ export function EntityForm({ title, mode, initial, tabs, defaults = {}, onSubmit
         {content}
       </div>
     );
+
+    if (f.type === 'custom') return wrap(f.render?.(value, v => set(f, v), { form, mode, disabled: view || disabled, invalid }));
 
     // Visualizar: somente texto, sem caixas de digitação
     if (view) {
@@ -199,9 +210,10 @@ export function EntityForm({ title, mode, initial, tabs, defaults = {}, onSubmit
           <div className="flex border-b px-4 sm:px-6 pt-3 gap-5 text-sm font-semibold text-slate-500 overflow-x-auto">
             {tabs.map((t, i) => {
               const hasError = allFields.some(f => f.tab === i && errors[f.key]);
+              const lockedReason = t.locked?.(form);
               return (
-                <button type="button" key={t.label} onClick={() => setTab(i)}
-                  className={`pb-3 border-b-2 whitespace-nowrap transition-colors ${tab === i ? 'border-[#0a2540] text-[#0a2540]' : 'border-transparent hover:text-slate-800'} ${hasError ? 'text-red-600' : ''}`}>
+                <button type="button" key={t.label} onClick={() => (lockedReason ? toast.error(lockedReason) : setTab(i))} title={lockedReason || undefined}
+                  className={`pb-3 border-b-2 whitespace-nowrap transition-colors ${tab === i ? 'border-[#0a2540] text-[#0a2540]' : 'border-transparent hover:text-slate-800'} ${hasError ? 'text-red-600' : ''} ${lockedReason ? 'opacity-40 cursor-not-allowed' : ''}`}>
                   {t.label}{hasError && ' •'}
                 </button>
               );

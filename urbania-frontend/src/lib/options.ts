@@ -48,3 +48,10 @@ export const statusColor = (status: unknown) => ({
   Inativo: 'bg-red-100 text-red-700',
   'Em Andamento': 'bg-sky-100 text-sky-700',
 }[String(status)] || 'bg-slate-100 text-slate-600');
+
+// Manutenção (Serviços, Prestadores, Reparos) e Divulgação (Canais, Anúncios)
+export const CATEGORIAS_SERVICO = ['Elétrica', 'Hidráulica', 'Pintura', 'Alvenaria', 'Marcenaria', 'Serralheria', 'Limpeza', 'Jardinagem', 'Climatização', 'Outros'];
+export const TIPOS_CHAVE_PIX = ['CPF', 'CNPJ', 'E-mail', 'Celular', 'Chave Aleatória'];
+export const STATUS_REPARO = ['Pendente', 'Iniciado', 'Finalizado'];
+export const TIPOS_CANAL = ['Site', 'Impresso', 'Anunciado'];
+export const SITUACOES_ANUNCIO = ['Ativo', 'Pausado', 'Encerrado'];
