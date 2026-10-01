@@ -25,6 +25,8 @@ import { MultaPage, MultasList } from './pages/Multas';
 import { DespesaPage, DespesasList } from './pages/Despesas';
 import Relatorios from './pages/Relatorios';
 import Configuracoes from './pages/Configuracoes';
+import Avisos from './pages/Avisos';
+import Perfil from './pages/Perfil';
 import { ConfigProvider } from './lib/config';
 import GenericCrud from './pages/GenericCrud';
 
@@ -106,6 +108,8 @@ export default function App() {
 
               {/* Sistema */}
               <Route path="/configuracoes" element={<Configuracoes />} />
+              <Route path="/avisos" element={<Avisos />} />
+              <Route path="/perfil" element={<Perfil />} />
 
               {/* Auditoria de Acessos e Logs */}
               <Route path="/auditoria" element={<GenericCrud entity="auditoria" title="Auditoria de Acessos" fields={[{key:'usuario',label:'Usuário'},{key:'acao',label:'Ação'},{key:'data',label:'Data'}]} />} />

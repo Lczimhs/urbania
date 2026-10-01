@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../lib/auth';
 import { useConfig } from '../lib/config';
+import { NotificationsMenu, UserMenu } from './HeaderMenus';
 import logoImg from '../assets/logo.png';
 
 type NavItem = { path: string; label: string; icon: ReactNode };
@@ -228,30 +229,10 @@ export default function Layout({ children }: { children: ReactNode }) {
             {currentModule && currentModule.path !== '/' ? <span className="text-slate-400">/</span> : null}
             {currentModule && currentModule.path !== '/' ? <span className="text-sky-600 font-semibold">{currentModule.label}</span> : null}
           </div>
-          <div className="flex items-center gap-4 md:gap-6">
-            <Link to="/notificacoes" className="relative p-2 text-slate-400 hover:text-sky-600 hover:bg-slate-50 rounded-lg transition" title="Notificações">
-              <Bell size={20} />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-            </Link>
-
-            <div className="flex items-center gap-3 pl-3 border-l border-slate-200">
-              <div className="w-8 h-8 rounded-full bg-[#0a2540] flex items-center justify-center text-white font-bold text-xs shadow-sm">
-                {initials}
-              </div>
-              <div className="hidden sm:flex flex-col text-left">
-                <span className="text-xs font-bold text-slate-800 leading-tight">{user?.nome || 'Imobiliária'}</span>
-                <span className="text-[11px] text-teal-600 font-medium">{user?.cargo || 'Administrador'}</span>
-              </div>
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="ml-1 sm:ml-2 px-2.5 py-1 text-xs font-medium text-slate-600 hover:text-rose-600 hover:bg-rose-50 rounded-lg border border-slate-200 transition flex items-center gap-1.5 cursor-pointer"
-                title="Sair do sistema"
-              >
-                <LogOut size={13} />
-                <span className="hidden sm:inline">Sair</span>
-              </button>
-            </div>
+          <div className="flex items-center gap-2 md:gap-4">
+            <NotificationsMenu />
+            <div className="h-8 w-px bg-slate-200" />
+            <UserMenu />
           </div>
         </header>
 
