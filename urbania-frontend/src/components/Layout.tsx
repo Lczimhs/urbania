@@ -10,6 +10,7 @@ const mainModules = [
   { path: '/imoveis', label: 'Imóveis', icon: <Building2 size={20} /> },
   { path: '/visitas', label: 'Visitas', icon: <Calendar size={20} /> },
   { path: '/negociacoes', label: 'Negociações', icon: <Handshake size={20} /> },
+  { path: '/contratos', label: 'Contratos', icon: <FileText size={20} /> },
   { path: '/funcionarios', label: 'Funcionários', icon: <BadgeCheck size={20} /> },
 ];
 
@@ -25,7 +26,6 @@ const maintenanceModules = [
 ];
 
 const upcomingModules = [
-  { label: 'Contratos', icon: <FileText size={20} /> },
   { label: 'Financeiro', icon: <DollarSign size={20} /> },
   { label: 'Relatórios', icon: <BarChart3 size={20} /> },
   { label: 'Configurações', icon: <Settings size={20} /> },

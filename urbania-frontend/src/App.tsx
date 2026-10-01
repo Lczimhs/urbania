@@ -10,6 +10,7 @@ import { ImovelPage, ImoveisList } from './pages/Imoveis';
 import { VisitaPage, VisitasList } from './pages/Visitas';
 import { FuncionarioPage, FuncionariosList } from './pages/Funcionarios';
 import { NegociacaoPage, NegociacoesList } from './pages/Negociacoes';
+import { ContratoPage, ContratosList } from './pages/Contratos';
 import { ServicoPage, ServicosList } from './pages/Servicos';
 import { PrestadorPage, PrestadoresList } from './pages/Prestadores';
 import { ReparoPage, ReparosList } from './pages/Reparos';
@@ -37,6 +38,7 @@ export default function App() {
             {crudRoutes('/imoveis', ImoveisList, ImovelPage)}
             {crudRoutes('/visitas', VisitasList, VisitaPage)}
             {crudRoutes('/negociacoes', NegociacoesList, NegociacaoPage)}
+            {crudRoutes('/contratos', ContratosList, ContratoPage)}
             {crudRoutes('/funcionarios', FuncionariosList, FuncionarioPage)}
 
             {/* Manutenção e Divulgação */}

@@ -100,18 +100,36 @@ const tabs: TabDef[] = [
   ] },
 ];
 
-// Imóveis e negociações vinculados (somente leitura)
+// Imóveis, negociações e contratos vinculados (somente leitura)
 function ProprietarioVinculos({ proprietarioId }: { proprietarioId: number }) {
   const navigate = useNavigate();
   const imoveis = useList('imoveis', { proprietarioId });
   const negociacoes = useList('negociacoes');
+  const contratos = useList('contratos');
   const ids = imoveis.rows.map(i => i.id);
   const minhasNegociacoes = negociacoes.rows.filter(n => ids.includes(n.imovelId) || Number(n.proprietarioId) === Number(proprietarioId));
+  const meusContratos = contratos.rows.filter(c => ids.includes(c.imovelId) || Number(c.proprietarioId) === Number(proprietarioId));
   const situacao = (imovelId: number) =>
+    meusContratos.some(c => c.imovelId === imovelId && c.status === 'Ativo') ? 'Locado/Vendido' :
     minhasNegociacoes.some(n => n.imovelId === imovelId && n.status === 'Realizada') ? 'Negociado' : 'Disponível';
 
   return (
     <>
+      <RelatedGrid title="Contratos Vinculados">
+        <DataTable
+          compact
+          rows={meusContratos} loading={contratos.loading} empty="Nenhum contrato ativo ou vinculado a este proprietário."
+          columns={[
+            { key: 'id', label: 'ID Contrato', render: r => `#${r.id}`, className: 'font-mono text-slate-500' },
+            { key: 'imovel', label: 'Imóvel', render: r => r.imovelTitulo || `#${r.imovelId}` },
+            { key: 'cliente', label: 'Inquilino / Comprador', render: r => r.clienteNome || `#${r.clienteId}` },
+            { key: 'tipo', label: 'Tipo', render: r => <span className="font-semibold text-xs">{r.tipo}</span> },
+            { key: 'repasse', label: 'Repasse Líquido Estimado', render: r => <span className="font-bold text-emerald-700">{formatCurrency(r.repasseProprietario || r.valor)}</span> },
+            { key: 'status', label: 'Status', render: r => <Badge className={statusColor(r.status)}>{r.status}</Badge> },
+          ]}
+          actions={r => <button type="button" onClick={() => navigate(`/contratos/${r.id}`)} className="inline-flex items-center gap-1 text-sky-600 font-semibold text-xs hover:underline"><Eye size={14} /> Visualizar</button>}
+        />
+      </RelatedGrid>
       <RelatedGrid title="Imóveis">
         <DataTable
           compact

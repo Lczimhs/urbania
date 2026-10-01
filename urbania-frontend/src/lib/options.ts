@@ -47,7 +47,23 @@ export const statusColor = (status: unknown) => ({
   Ativo: 'bg-emerald-100 text-emerald-700',
   Inativo: 'bg-red-100 text-red-700',
   'Em Andamento': 'bg-sky-100 text-sky-700',
+  Finalizado: 'bg-indigo-100 text-indigo-700',
+  Rescindido: 'bg-rose-100 text-rose-700',
 }[String(status)] || 'bg-slate-100 text-slate-600');
+
+// Contratos (Locação, Venda e Temporada)
+export const TIPOS_CONTRATO = ['Locação', 'Compra e Venda', 'Temporada'];
+export const STATUS_CONTRATO = ['Ativo', 'Pendente', 'Finalizado', 'Rescindido', 'Cancelado'];
+export const FINALIDADES_CONTRATO = ['Residencial', 'Comercial', 'Temporada', 'Industrial / Rural'];
+export const FORMAS_PAGAMENTO_CONTRATO = ['Boleto Bancário', 'PIX', 'Transferência Bancária', 'Débito em Conta', 'Dinheiro'];
+export const TIPOS_GARANTIA = [
+  'Caução em Dinheiro',
+  'Fiador',
+  'Seguro Fiança',
+  'Título de Capitalização',
+  'Sem Garantia / Não Aplicável',
+];
+export const INDICES_REAJUSTE = ['IGP-M', 'IPCA', 'INPC', 'Fixo (Sem Reajuste)'];
 
 // Manutenção (Serviços, Prestadores, Reparos) e Divulgação (Canais, Anúncios)
 export const CATEGORIAS_SERVICO = ['Elétrica', 'Hidráulica', 'Pintura', 'Alvenaria', 'Marcenaria', 'Serralheria', 'Limpeza', 'Jardinagem', 'Climatização', 'Outros'];

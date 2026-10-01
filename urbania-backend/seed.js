@@ -147,6 +147,37 @@ async function seed() {
     `);
   }
 
+  // 12. Contratos
+  const ctCount = (await get('SELECT COUNT(*) as c FROM contratos')).c;
+  if (ctCount === 0) {
+    console.log('Criando contratos de exemplo...');
+    await run(`
+      INSERT INTO contratos (
+        clienteId, clienteNome, imovelId, imovelTitulo, proprietarioId, proprietarioNome,
+        corretorId, corretor, tipo, status, finalidade, dataInicio, dataFim, dataAssinatura,
+        valor, condominio, iptu, diaVencimento, formaPagamento, taxaAdministracao,
+        repasseProprietario, garantiaTipo, garantiaValor, garantiaDetalhes,
+        indiceReajuste, multaAtraso, multaRescisoria, observacoes
+      ) VALUES
+        (
+          3, 'Lucas Vilas Boas', 2, 'Casa Térrea em Condomínio Fechado', 2, 'Construtora Alvorada Ltda',
+          2, 'Mariana Silva', 'Locação', 'Ativo', 'Residencial', '2026-02-01', '2027-01-31', '2026-01-25',
+          4200.00, 350.00, 100.00, 10, 'Boleto Bancário', 10.0,
+          3780.00, 'Seguro Fiança', 4200.00, 'Apólice Porto Seguro #994821 - Cobertura de 12 meses.',
+          'IPCA', 2.0, '3 meses de aluguel proporcional ao prazo restante.',
+          'Contrato padrão de locação residencial por 12 meses. Vistoria inicial registrada com sucesso.'
+        ),
+        (
+          2, 'Beatriz Helena Lima', 1, 'Apartamento 3 Quartos com Vista Panorâmica', 1, 'Roberto de Souza',
+          1, 'Carlos Mendes', 'Compra e Venda', 'Ativo', 'Residencial', '2026-09-25', null, '2026-09-25',
+          430000.00, 420.00, 950.00, null, 'Financiamento Bancário', 6.0,
+          404200.00, 'Sem Garantia / Não Aplicável', 0, null,
+          'Fixo (Sem Reajuste)', 0, 'Cláusula penal resolutiva de 10% sobre o valor global em caso de desistência imotivada.',
+          'Instrumento particular de compromisso de compra e venda com entrada de R$ 130.000,00 e saldo via financiamento habitacional CEF.'
+        )
+    `);
+  }
+
   console.log('Seed finalizado com sucesso!');
   process.exit(0);
 }

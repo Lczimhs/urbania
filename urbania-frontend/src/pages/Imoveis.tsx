@@ -227,16 +227,32 @@ export function ImoveisList() {
   );
 }
 
-// Visitas e negociações do imóvel (somente leitura)
+// Visitas, negociações e contratos do imóvel (somente leitura)
 function ImovelRelacionamentos({ imovelId }: { imovelId: number }) {
   const navigate = useNavigate();
   const visitas = useList('visitas', { imovelId });
   const negociacoes = useList('negociacoes', { imovelId });
+  const contratos = useList('contratos', { imovelId });
   const clientes = useList('clientes');
   const cliente = (id: number) => clientes.rows.find(c => c.id === id)?.nome || `#${id}`;
 
   return (
     <>
+      <RelatedGrid title="Contratos">
+        <DataTable
+          compact
+          rows={contratos.rows} loading={contratos.loading} empty="Nenhum contrato vinculado a este imóvel."
+          columns={[
+            { key: 'id', label: 'ID Contrato', render: r => `#${r.id}`, className: 'font-mono text-slate-500' },
+            { key: 'cliente', label: 'Inquilino / Comprador', render: r => r.clienteNome || cliente(r.clienteId) },
+            { key: 'tipo', label: 'Tipo', render: r => <span className="font-semibold text-xs">{r.tipo}</span> },
+            { key: 'vigencia', label: 'Início Vigência', render: r => formatDate(r.dataInicio) },
+            { key: 'valor', label: 'Valor', render: r => formatCurrency(r.valor) },
+            { key: 'status', label: 'Status', render: r => <Badge className={statusColor(r.status)}>{r.status}</Badge> },
+          ]}
+          actions={r => <button type="button" onClick={() => navigate(`/contratos/${r.id}`)} className="inline-flex items-center gap-1 text-sky-600 font-semibold text-xs hover:underline"><Eye size={14} /> Visualizar</button>}
+        />
+      </RelatedGrid>
       <RelatedGrid title="Visitas">
         <DataTable
           compact
