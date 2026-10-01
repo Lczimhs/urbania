@@ -10,6 +10,7 @@ import { useList } from '../lib/useApi';
 import { parsePhotos } from '../lib/files';
 import { formatCurrency, formatDate } from '../lib/format';
 import { FINALIDADES_IMOVEL, TIPOS_IMOVEL, addressFields, statusColor } from '../lib/options';
+import { Pode } from '../lib/auth';
 
 const PAGE_SIZE = 10;
 const isAluguel = (finalidade: unknown) => finalidade === 'Aluguel' || finalidade === 'Temporada';
@@ -120,7 +121,7 @@ export function ImoveisList() {
     <div className="space-y-6 max-w-7xl mx-auto">
       <PageHeader
         title="Imóveis" subtitle={`${rows.length} cadastrados`}
-        action={<button onClick={() => navigate('/imoveis/novo')} className="flex items-center gap-2 bg-[#0a2540] text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-[#06182c]"><Plus size={18} /> Novo Imóvel</button>}
+        action={<Pode acao="Criar"><button onClick={() => navigate('/imoveis/novo')} className="flex items-center gap-2 bg-[#0a2540] text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-[#06182c]"><Plus size={18} /> Novo Imóvel</button></Pode>}
       />
       <Card>
         <Toolbar>
@@ -193,8 +194,8 @@ export function ImoveisList() {
                               {i.tipo && <Badge className="bg-[#0a2540]/90 text-white">{i.tipo}</Badge>}
                             </div>
                             <div className="absolute right-2 top-2 flex gap-0.5 p-0.5 rounded-lg bg-white/90 shadow-sm opacity-100 sm:opacity-0 group-hover:opacity-100 transition" onClick={e => e.stopPropagation()}>
-                              <ActionButton tone="edit" title="Editar" onClick={() => navigate(`/imoveis/${i.id}/editar`)}><Edit2 size={15} /></ActionButton>
-                              <ActionButton tone="delete" title="Excluir" onClick={() => del.ask(i.id, i.titulo)}><Trash2 size={15} /></ActionButton>
+                              <Pode acao="Editar"><ActionButton tone="edit" title="Editar" onClick={() => navigate(`/imoveis/${i.id}/editar`)}><Edit2 size={15} /></ActionButton></Pode>
+                              <Pode acao="Excluir"><ActionButton tone="delete" title="Excluir" onClick={() => del.ask(i.id, i.titulo)}><Trash2 size={15} /></ActionButton></Pode>
                             </div>
                           </div>
                           <div className="p-4">

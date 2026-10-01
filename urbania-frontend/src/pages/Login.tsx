@@ -16,7 +16,7 @@ const destaques = [
 const acessosRapidos = [
   { label: 'Administrador', email: 'admin@urbania.com.br', senha: 'admin123', icon: <BadgeCheck size={16} /> },
   { label: 'Secretaria', email: 'fernanda@urbania.com.br', senha: 'sec123', icon: <Handshake size={16} /> },
-  { label: 'Visitante', email: 'visitante@urbania.com.br', senha: 'teste', icon: <UserRound size={16} /> },
+  { label: 'Visitante', email: 'visitante@urbania.com.br', senha: 'visitante123', icon: <UserRound size={16} /> },
 ];
 
 function Campo({ label, icon, children }: { label: string; icon: ReactNode; children: ReactNode }) {
@@ -56,8 +56,8 @@ export default function Login() {
 
   const enviar = (e: FormEvent) => {
     e.preventDefault();
-    if (!MODO_TESTE && (!email || !senha)) return setErro('Informe seu e-mail e sua senha.');
-    entrar(email || 'visitante@urbania.com.br', senha || 'teste', 'form');
+    // Protótipo: e-mail de funcionário entra com o perfil dele; qualquer outro (ou vazio) entra como Visitante
+    entrar(email, senha, 'form');
   };
 
   return (
@@ -114,7 +114,7 @@ export default function Login() {
           {MODO_TESTE && (
             <div className="mt-6 flex gap-3 p-4 rounded-xl bg-teal-50 border border-teal-200 text-teal-900">
               <FlaskConical size={20} className="shrink-0 text-teal-600 mt-0.5" />
-              <p className="text-sm"><strong>Ambiente de testes:</strong> use qualquer e-mail e senha, ou escolha um acesso rápido abaixo.</p>
+              <p className="text-sm"><strong>Ambiente de testes:</strong> use o e-mail de um funcionário para entrar com o perfil dele (qualquer senha). Outro e-mail, ou nenhum, entra como Visitante.</p>
             </div>
           )}
 

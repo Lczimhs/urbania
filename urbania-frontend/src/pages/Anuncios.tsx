@@ -12,6 +12,7 @@ import { parsePhotos } from '../lib/files';
 import { formatCurrency, todayISO } from '../lib/format';
 import { FINALIDADES_IMOVEL, SITUACOES_ANUNCIO, TIPOS_IMOVEL } from '../lib/options';
 import { enderecoCurto } from './Imoveis';
+import { Pode } from '../lib/auth';
 
 const situacaoColor = (s: unknown) => ({
   Ativo: 'bg-emerald-100 text-emerald-700',
@@ -52,7 +53,7 @@ export function AnunciosList() {
     <div className="space-y-6 max-w-7xl mx-auto">
       <PageHeader
         title="Anúncios" subtitle={`${rows.length} cadastrados`}
-        action={<button onClick={() => navigate('/anuncios/novo')} className="flex items-center gap-2 bg-[#0a2540] text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-[#06182c]"><Plus size={18} /> Cadastrar Anúncio</button>}
+        action={<Pode acao="Criar"><button onClick={() => navigate('/anuncios/novo')} className="flex items-center gap-2 bg-[#0a2540] text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-[#06182c]"><Plus size={18} /> Cadastrar Anúncio</button></Pode>}
       />
       <Card>
         <Toolbar>

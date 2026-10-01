@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { ChevronLeft, ChevronRight, Edit2, Eye, Search, Trash2 } from 'lucide-react';
+import { usePodeNaRota } from '../lib/auth';
 
 export type Column<T> = { key: string; label: string; render?: (row: T) => ReactNode; className?: string };
 
@@ -145,6 +146,10 @@ export function RowActions({
   deleteTitle?: string;
   children?: ReactNode;
 }) {
+  // Editar/Excluir só aparecem se o perfil tiver a permissão no módulo da página
+  const pode = usePodeNaRota();
+  if (!pode('Editar')) onEdit = undefined;
+  if (!pode('Excluir')) onDelete = undefined;
   return (
     <div className="inline-flex items-center gap-1.5">
       {onView && <ActionButton tone="view" title={viewTitle} onClick={onView}><Eye size={16} /></ActionButton>}

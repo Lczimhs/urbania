@@ -7,6 +7,7 @@ import { useFieldSearch } from '../components/FieldSearch';
 import { useDelete } from '../components/useDelete';
 import { useList } from '../lib/useApi';
 import { TIPOS_CANAL } from '../lib/options';
+import { Pode } from '../lib/auth';
 
 const tipoColor = (tipo: string) =>
   tipo === 'Site' ? 'bg-sky-100 text-sky-700' : tipo === 'Impresso' ? 'bg-amber-100 text-amber-700' : 'bg-violet-100 text-violet-700';
@@ -27,7 +28,7 @@ export function CanaisList() {
     <div className="space-y-6 max-w-7xl mx-auto">
       <PageHeader
         title="Canais de Publicação" subtitle={`${rows.length} cadastrados`}
-        action={<button onClick={() => navigate('/canais/novo')} className="flex items-center gap-2 bg-[#0a2540] text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-[#06182c]"><Plus size={18} /> Cadastrar Canal</button>}
+        action={<Pode acao="Criar"><button onClick={() => navigate('/canais/novo')} className="flex items-center gap-2 bg-[#0a2540] text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-[#06182c]"><Plus size={18} /> Cadastrar Canal</button></Pode>}
       />
       <Card>
         <Toolbar>{search.controls}</Toolbar>

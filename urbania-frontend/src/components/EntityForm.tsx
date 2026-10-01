@@ -15,7 +15,7 @@ type Form = Record<string, any>;
 export type FieldDef = {
   key: string;
   label: string;
-  type?: 'text' | 'email' | 'date' | 'time' | 'number' | 'textarea' | 'select' | 'search-select' | 'currency' | 'photo' | 'photos' | 'toggle' | 'custom';
+  type?: 'text' | 'email' | 'password' | 'date' | 'time' | 'number' | 'textarea' | 'select' | 'search-select' | 'currency' | 'photo' | 'photos' | 'toggle' | 'custom';
   // type 'custom': o próprio campo desenha o conteúdo (ex.: grid de serviços, modal de seleção)
   render?: (value: any, set: (value: any) => void, ctx: { form: Form; mode: Mode; disabled: boolean; invalid: boolean }) => ReactNode;
   options?: (string | Option)[];
@@ -169,6 +169,7 @@ export function EntityForm({ title, mode, initial, tabs, defaults = {}, onSubmit
       else if (f.type === 'date') text = formatDate(value);
       else if (f.type === 'select' || f.type === 'search-select') text = opts.find(o => String(o.value) === String(value))?.label ?? value;
       else if (f.type === 'toggle') text = value;
+      else if (f.type === 'password') text = '••••••••';
       else if (f.type === 'photo') return wrap(<Avatar src={value} name={form.nome} />);
       else if (f.type === 'photos') return wrap(<Gallery photos={parsePhotos(value)} />);
       if (!isEmpty(text) && f.suffix) text = `${text} ${f.suffix}`;

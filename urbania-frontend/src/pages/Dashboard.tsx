@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useList } from '../lib/useApi';
 import { useAuth } from '../lib/auth';
+import { acaoDaRota, moduloDaRota } from '../lib/permissoes';
 import { BarList, GroupedColumns } from '../components/Charts';
 import { formatCurrency, formatDate } from '../lib/format';
 import { onlyDigits } from '../lib/masks';
@@ -45,7 +46,7 @@ const greeting = () => {
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, pode } = useAuth();
   const clientes = useList('clientes');
   const proprietarios = useList('proprietarios');
   const imoveis = useList('imoveis');
@@ -220,7 +221,7 @@ export default function Dashboard() {
           { to: '/relatorios', title: 'Históricos & Relatórios', hint: 'Rastreabilidade e logs', icon: <BarChart3 size={20} /> },
           { to: '/notificacoes/novo', title: 'Nova notificação', hint: 'Regra de envio automático', icon: <Bell size={20} /> },
           { to: '/perfis', title: 'Perfis de acesso', hint: 'Matriz de permissões', icon: <ShieldCheck size={20} /> },
-        ].map(a => (
+        ].filter(a => { const m = moduloDaRota(a.to); return !m || pode(m, acaoDaRota(a.to)); }).map(a => (
           <Link key={a.to} to={a.to} className="bg-white p-4 rounded-2xl border border-slate-200/60 shadow-sm hover:shadow-md hover:border-sky-200 transition flex items-center gap-3 group">
             <div className="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center group-hover:bg-sky-100 transition shrink-0">{a.icon}</div>
             <div>

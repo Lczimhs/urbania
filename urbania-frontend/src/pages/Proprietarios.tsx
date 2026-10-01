@@ -10,6 +10,7 @@ import { useList } from '../lib/useApi';
 import { maskCnpj, maskCpf, maskPhone, maskRg, onlyDigits } from '../lib/masks';
 import { formatCurrency, formatDate, fullAddress } from '../lib/format';
 import { ESTADOS_CIVIS, SEXOS, TIPOS_CONTA, TIPOS_PESSOA, addressFields, statusColor } from '../lib/options';
+import { Pode } from '../lib/auth';
 
 const documento = (p: Record<string, any>) => (p.tipo === 'Jurídica' ? p.cnpj : p.cpfCnpj);
 
@@ -35,7 +36,7 @@ export function ProprietariosList() {
     <div className="space-y-6 max-w-7xl mx-auto">
       <PageHeader
         title="Proprietários" subtitle={`${rows.length} cadastros`}
-        action={<button onClick={() => navigate('/proprietarios/novo')} className="flex items-center gap-2 bg-[#0a2540] text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-[#06182c]"><Plus size={18} /> Novo Proprietário</button>}
+        action={<Pode acao="Criar"><button onClick={() => navigate('/proprietarios/novo')} className="flex items-center gap-2 bg-[#0a2540] text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-[#06182c]"><Plus size={18} /> Novo Proprietário</button></Pode>}
       />
       <Card>
         <Toolbar>

@@ -12,6 +12,7 @@ import { formatCurrency, formatDate } from '../lib/format';
 import {
   ESTADOS_CIVIS, FINALIDADES_BUSCA, ORIGENS_CLIENTE, SEXOS, TIPOS_CLIENTE, TIPOS_IMOVEL_BUSCA, addressFields, statusColor,
 } from '../lib/options';
+import { Pode } from '../lib/auth';
 
 const tipoColor = (tipo: string) =>
   tipo === 'Locatário' ? 'bg-amber-100 text-amber-700' : tipo === 'Interessado' ? 'bg-emerald-100 text-emerald-700' : 'bg-sky-100 text-sky-700';
@@ -33,7 +34,7 @@ export function ClientesList() {
     <div className="space-y-6 max-w-7xl mx-auto">
       <PageHeader
         title="Clientes" subtitle={`${rows.length} cadastros`}
-        action={<button onClick={() => navigate('/clientes/novo')} className="flex items-center gap-2 bg-[#0a2540] text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-[#06182c]"><Plus size={18} /> Novo Cliente</button>}
+        action={<Pode acao="Criar"><button onClick={() => navigate('/clientes/novo')} className="flex items-center gap-2 bg-[#0a2540] text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-[#06182c]"><Plus size={18} /> Novo Cliente</button></Pode>}
       />
       <Card>
         <Toolbar>

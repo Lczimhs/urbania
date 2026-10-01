@@ -4,7 +4,7 @@ import { EntityForm } from '../components/EntityForm';
 import type { TabDef } from '../components/EntityForm';
 import { apiError, useToast } from '../components/Toast';
 import { useConfig } from '../lib/config';
-import { MODO_TESTE } from '../lib/auth';
+import { MODO_TESTE, useAuth } from '../lib/auth';
 import { maskCnpj, maskPhone, onlyDigits } from '../lib/masks';
 import { INDICES_REAJUSTE, addressFields } from '../lib/options';
 
@@ -43,9 +43,8 @@ const tabs: TabDef[] = [
       <div className={`border rounded-xl p-5 ${MODO_TESTE ? 'bg-teal-50 border-teal-200' : 'bg-white'}`}>
         <p className="flex items-center gap-2 font-bold text-slate-800"><FlaskConical size={18} className="text-teal-600" /> Modo de testes {MODO_TESTE ? 'ativado' : 'desativado'}</p>
         <p className="text-sm text-slate-600 mt-2">
-          {MODO_TESTE
-            ? 'Qualquer e-mail e senha acessam o sistema. Para exigir login real, altere MODO_TESTE para false em src/lib/auth.tsx.'
-            : 'O acesso exige e-mail e senha cadastrados em Funcionários.'}
+          O e-mail de um funcionário entra com o perfil dele (a senha não é conferida); outro e-mail entra como Visitante. Cada tela respeita o perfil de acesso.
+          {MODO_TESTE && ' Os botões de acesso rápido do login podem ser removidos alterando MODO_TESTE para false em src/lib/auth.tsx.'}
         </p>
       </div>
       <div className="bg-white border rounded-xl p-5">
@@ -65,6 +64,7 @@ export default function Configuracoes() {
   const navigate = useNavigate();
   const toast = useToast();
   const { config, loading, salvar } = useConfig();
+  const { pode } = useAuth();
 
   if (loading) return <p className="text-slate-400 p-8">Carregando...</p>;
 
@@ -72,7 +72,7 @@ export default function Configuracoes() {
     <EntityForm
       key={config.id ?? 'novo'}
       title="Configurações"
-      mode="edit"
+      mode={pode('configuracoes', 'Editar') ? 'edit' : 'view'}
       hideId
       initial={config}
       tabs={tabs}

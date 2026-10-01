@@ -28,6 +28,7 @@ import {
   TIPOS_FINANCEIRO,
   statusColor,
 } from '../lib/options';
+import { Pode, usePodeNaRota } from '../lib/auth';
 
 const QUICK_FILTERS = ['Todos', 'Receitas', 'Despesas', 'Repasses', 'Pendentes', 'Pagos', 'Atrasados'] as const;
 type QuickFilter = typeof QUICK_FILTERS[number];
@@ -272,6 +273,7 @@ function EfetuarPagamentoModal({
 
 // Consultar Financeiro (RF F2 Consultar Despesa / F72 Efetuar Pagamento)
 export function FinanceiroList() {
+  const pode = usePodeNaRota();
   const navigate = useNavigate();
   const toast = useToast();
   const { rows, setRows, loading, reload } = useList('financeiro');
@@ -369,12 +371,12 @@ export function FinanceiroList() {
             >
               <FileSpreadsheet size={16} className="text-emerald-600" /> Exportar (.xlsx/CSV)
             </button>
-            <button
+            <Pode acao="Criar"><button
               onClick={() => navigate('/financeiro/novo')}
               className="flex items-center gap-2 bg-[#0a2540] text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-[#06182c] transition shadow-sm text-sm"
             >
               <Plus size={18} /> Novo Lançamento
-            </button>
+            </button></Pode>
           </div>
         }
       />
@@ -555,7 +557,7 @@ export function FinanceiroList() {
                     </button>
                   );
                 }
-                return (
+                return pode('Editar') ? (
                   <button
                     type="button"
                     onClick={e => {
@@ -566,7 +568,7 @@ export function FinanceiroList() {
                   >
                     <CheckCircle2 size={13} /> Dar Baixa
                   </button>
-                );
+                ) : <span className="text-xs text-slate-400">Pendente</span>;
               },
             },
           ]}

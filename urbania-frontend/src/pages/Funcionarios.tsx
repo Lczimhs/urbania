@@ -12,6 +12,7 @@ import { useList } from '../lib/useApi';
 import { maskCpf, maskPhone, maskRg, onlyDigits } from '../lib/masks';
 import { CARGOS, STATUS_FUNCIONARIO, addressFields } from '../lib/options';
 import { StatusDropdown } from './Visitas';
+import { Pode } from '../lib/auth';
 
 // Consultar Funcionários
 export function FuncionariosList() {
@@ -39,7 +40,7 @@ export function FuncionariosList() {
     <div className="space-y-6 max-w-7xl mx-auto">
       <PageHeader
         title="Funcionários" subtitle={`${rows.length} cadastrados`}
-        action={<button onClick={() => navigate('/funcionarios/novo')} className="flex items-center gap-2 bg-[#0a2540] text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-[#06182c]"><Plus size={18} /> Novo Funcionário</button>}
+        action={<Pode acao="Criar"><button onClick={() => navigate('/funcionarios/novo')} className="flex items-center gap-2 bg-[#0a2540] text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-[#06182c]"><Plus size={18} /> Novo Funcionário</button></Pode>}
       />
       <Card>
         <Toolbar>
@@ -146,6 +147,14 @@ export function FuncionarioPage({ mode }: { mode: Mode }) {
             label: `${p.nome}${Number(p.nativo) === 1 ? ' (Nativo)' : ''}`,
           })),
         },
+        // A senha nunca volta do servidor: na edição, em branco mantém a atual
+        {
+          key: 'senha',
+          label: 'Senha de Acesso ao Sistema',
+          type: 'password',
+          required: f => !f.id,
+          placeholder: mode === 'edit' ? 'Em branco mantém a senha atual' : 'Mínimo de 6 caracteres',
+        },
         ...(tabs[1].fields || []).slice(4),
       ],
     },
@@ -167,6 +176,7 @@ export function FuncionarioPage({ mode }: { mode: Mode }) {
       validate={f => {
         if (onlyDigits(f.cpf).length !== 11) return 'CPF inválido: informe os 11 dígitos.';
         if (onlyDigits(f.telefone).length < 10) return 'Celular inválido: informe DDD + número.';
+        if (f.senha && String(f.senha).length < 6) return 'A senha deve ter pelo menos 6 caracteres.';
         return null;
       }}
     />

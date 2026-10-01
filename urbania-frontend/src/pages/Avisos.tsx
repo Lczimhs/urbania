@@ -4,6 +4,7 @@ import { CheckCheck, Settings2 } from 'lucide-react';
 import { Card, PageHeader } from '../components/DataTable';
 import { AlertaItem } from '../components/HeaderMenus';
 import { useAlertas } from '../lib/alertas';
+import { Pode } from '../lib/auth';
 import type { Alerta } from '../lib/alertas';
 
 const FILTROS = [
@@ -28,9 +29,9 @@ export default function Avisos() {
       <PageHeader
         title="Notificações" subtitle={`${alertas.length} aviso(s) · ${naoLidas} não lido(s)`}
         action={
-          <Link to="/notificacoes" className="flex items-center gap-2 border border-slate-200 bg-white px-4 py-2.5 rounded-lg font-semibold text-slate-700 hover:bg-slate-50">
+          <Pode acao="Visualizar" modulo="notificacoes"><Link to="/notificacoes" className="flex items-center gap-2 border border-slate-200 bg-white px-4 py-2.5 rounded-lg font-semibold text-slate-700 hover:bg-slate-50">
             <Settings2 size={18} /> Gerenciar regras
-          </Link>
+          </Link></Pode>
         }
       />
       <Card>

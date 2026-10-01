@@ -23,6 +23,7 @@ import {
   DESTINATARIOS_NOTIFICACAO,
   GATILHOS_NOTIFICACAO,
 } from '../lib/options';
+import { Pode, usePodeNaRota } from '../lib/auth';
 
 // Parse do campo canais (suporta JSON string ou string simples)
 export const parseCanais = (canais: unknown): string[] => {
@@ -88,6 +89,7 @@ function ToggleSwitch({ checked, onChange, disabled }: { checked: boolean; onCha
 
 // Consultar Notificação (RF F14 - pág. 21)
 export function NotificacoesList() {
+  const pode = usePodeNaRota();
   const navigate = useNavigate();
   const toast = useToast();
   const { rows, setRows, loading, reload } = useList('notificacoes');
@@ -120,12 +122,12 @@ export function NotificacoesList() {
         title="Regras de Notificações"
         subtitle={`${rows.length} regras cadastradas (${rows.filter(r => r.status === 'Ativo').length} ativas)`}
         action={
-          <button
+          <Pode acao="Criar"><button
             onClick={() => navigate('/notificacoes/novo')}
             className="flex items-center gap-2 bg-[#0a2540] text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-[#06182c] transition shadow-sm"
           >
             <Plus size={18} /> Nova Regra
-          </button>
+          </button></Pode>
         }
       />
 
@@ -193,6 +195,7 @@ export function NotificacoesList() {
                 <div className="flex items-center gap-2.5">
                   <ToggleSwitch
                     checked={r.status === 'Ativo'}
+                    disabled={!pode('Editar')}
                     onChange={() => toggleStatus(r.id, r.status)}
                   />
                   <span className={`text-xs font-semibold ${r.status === 'Ativo' ? 'text-emerald-700' : 'text-slate-400'}`}>
