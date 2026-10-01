@@ -37,7 +37,7 @@ const schema = {
   },
   funcionarios: {
     nome: 'TEXT', cpf: 'TEXT', dataNascimento: 'TEXT', telefone: 'TEXT', telefoneFixo: 'TEXT', email: 'TEXT',
-    cargo: 'TEXT', creci: 'TEXT', foto: 'TEXT', rg: 'TEXT', orgaoEmissor: 'TEXT',
+    senha: 'TEXT', cargo: 'TEXT', creci: 'TEXT', foto: 'TEXT', rg: 'TEXT', orgaoEmissor: 'TEXT',
     cep: 'TEXT', logradouro: 'TEXT', numero: 'TEXT', bairro: 'TEXT', cidade: 'TEXT', uf: 'TEXT', complemento: 'TEXT',
     observacoes: 'TEXT', status: 'TEXT', dataAdmissao: 'TEXT', salario: 'REAL', perfilId: 'INTEGER',
   },

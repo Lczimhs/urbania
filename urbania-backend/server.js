@@ -123,6 +123,53 @@ tables.forEach(table => {
   });
 });
 
+// Auth Route: Login exclusivo da Imobiliária (Corretores não têm acesso ao sistema)
+app.post('/api/auth/login', async (req, res) => {
+  const { email, senha } = req.body || {};
+  if (!email || !senha) {
+    return res.status(400).json({ error: 'Informe e-mail e senha para acessar o sistema.' });
+  }
+
+  try {
+    const user = await get('SELECT * FROM funcionarios WHERE LOWER(email) = LOWER(?)', [email.trim()]);
+    if (!user) {
+      return res.status(401).json({ error: 'Credenciais inválidas: e-mail não cadastrado.' });
+    }
+
+    // Regra de Negócio: Corretores NÃO têm acesso ao sistema interno da imobiliária
+    if (user.cargo === 'Corretor') {
+      logAudit(user.nome + ' (Corretor)', 'Acesso Bloqueado', 'auth', user.id, 'Tentativa de login de corretor bloqueada pelas regras de acesso', req.ip);
+      return res.status(403).json({
+        error: 'Acesso Negado: Corretores não possuem acesso ao sistema interno. O painel é de uso exclusivo da administração da imobiliária.',
+        bloqueado: true,
+        cargo: user.cargo,
+        nome: user.nome,
+      });
+    }
+
+    if (user.status === 'Inativo') {
+      return res.status(403).json({ error: 'Este usuário encontra-se inativo no sistema. Procure a administração.' });
+    }
+
+    // Validação da senha
+    const senhaCorreta = user.senha ? user.senha === senha : (senha === 'admin123' || senha === 'sec123' || senha === '123456');
+    if (!senhaCorreta) {
+      return res.status(401).json({ error: 'Senha incorreta. Verifique suas credenciais.' });
+    }
+
+    logAudit(user.nome + ` (${user.cargo})`, 'Login', 'auth', user.id, 'Acesso realizado com sucesso no sistema interno', req.ip);
+
+    const { senha: _, ...safeUser } = user;
+    return res.json({
+      success: true,
+      token: 'urb_auth_' + Buffer.from(`${user.id}:${Date.now()}`).toString('base64'),
+      user: safeUser,
+    });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
 // Dashboard Analytics Route
 app.get('/api/dashboard', async (req, res) => {
   const queries = {

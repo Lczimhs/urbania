@@ -1,7 +1,9 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import type { ComponentType } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import type { ComponentType, ReactNode } from 'react';
 import Layout from './components/Layout';
 import { ToastProvider } from './components/Toast';
+import { AuthProvider, useAuth } from './lib/auth';
+import Login from './pages/Login';
 import type { Mode } from './components/EntityForm';
 import Dashboard from './pages/Dashboard';
 import { ClientePage, ClientesList } from './pages/Clientes';
@@ -32,45 +34,83 @@ const crudRoutes = (base: string, List: ComponentType, Page: ComponentType<{ mod
   <Route key={`${base}-editar`} path={`${base}/:id/editar`} element={<Page mode="edit" />} />,
 ];
 
+function AppShell({ children }: { children: ReactNode }) {
+  const loc = useLocation();
+  const { isAuthenticated, loading } = useAuth();
+
+  // A tela de login é exibida sem o Layout de painel
+  if (loc.pathname === '/login') {
+    return <>{children}</>;
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#071b2f] flex items-center justify-center text-white">
+        <div className="flex items-center gap-3">
+          <span className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-400"></span>
+          <span className="text-sm font-medium">Carregando painel Urbânia...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Redireciona para o login caso não autenticado
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Usuário autenticado da imobiliária acessa com Layout
+  return <Layout>{children}</Layout>;
+}
+
 export default function App() {
   return (
     <BrowserRouter>
-      <ToastProvider>
-        <Layout>
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            {crudRoutes('/clientes', ClientesList, ClientePage)}
-            {crudRoutes('/proprietarios', ProprietariosList, ProprietarioPage)}
-            {crudRoutes('/imoveis', ImoveisList, ImovelPage)}
-            {crudRoutes('/visitas', VisitasList, VisitaPage)}
-            {crudRoutes('/negociacoes', NegociacoesList, NegociacaoPage)}
-            {crudRoutes('/contratos', ContratosList, ContratoPage)}
-            {crudRoutes('/funcionarios', FuncionariosList, FuncionarioPage)}
+      <AuthProvider>
+        <ToastProvider>
+          <AppShell>
+            <Routes>
+              {/* Rota pública de Autenticação */}
+              <Route path="/login" element={<Login />} />
 
-            {/* Gestão Financeira e Comunicação (RF F72 / F13-F16) */}
-            {crudRoutes('/financeiro', FinanceiroList, FinanceiroPage)}
-            {crudRoutes('/notificacoes', NotificacoesList, NotificacaoPage)}
-            <Route path="/relatorios" element={<Relatorios />} />
+              {/* Rotas Privadas (Imobiliária) */}
+              <Route path="/" element={<Dashboard />} />
+              {crudRoutes('/clientes', ClientesList, ClientePage)}
+              {crudRoutes('/proprietarios', ProprietariosList, ProprietarioPage)}
+              {crudRoutes('/imoveis', ImoveisList, ImovelPage)}
+              {crudRoutes('/visitas', VisitasList, VisitaPage)}
+              {crudRoutes('/negociacoes', NegociacoesList, NegociacaoPage)}
+              {crudRoutes('/contratos', ContratosList, ContratoPage)}
+              {crudRoutes('/funcionarios', FuncionariosList, FuncionarioPage)}
 
-            {/* Manutenção e Divulgação */}
-            {crudRoutes('/servicos', ServicosList, ServicoPage)}
-            {crudRoutes('/prestadores', PrestadoresList, PrestadorPage)}
-            {crudRoutes('/reparos', ReparosList, ReparoPage)}
-            {crudRoutes('/canais', CanaisList, CanalPage)}
-            {crudRoutes('/anuncios', AnunciosList, AnuncioPage)}
+              {/* Gestão Financeira e Comunicação (RF F72 / F13-F16) */}
+              {crudRoutes('/financeiro', FinanceiroList, FinanceiroPage)}
+              {crudRoutes('/notificacoes', NotificacoesList, NotificacaoPage)}
+              <Route path="/relatorios" element={<Relatorios />} />
 
-            {/* Gestão Financeira, Multas e Despesas */}
-            {crudRoutes('/despesas', DespesasList, DespesaPage)}
-            {crudRoutes('/multas', MultasList, MultaPage)}
+              {/* Manutenção e Divulgação */}
+              {crudRoutes('/servicos', ServicosList, ServicoPage)}
+              {crudRoutes('/prestadores', PrestadoresList, PrestadorPage)}
+              {crudRoutes('/reparos', ReparosList, ReparoPage)}
+              {crudRoutes('/canais', CanaisList, CanalPage)}
+              {crudRoutes('/anuncios', AnunciosList, AnuncioPage)}
 
-            {/* Administração e Perfis de Acesso */}
-            {crudRoutes('/perfis', PerfisList, PerfilPage)}
+              {/* Gestão Financeira, Multas e Despesas */}
+              {crudRoutes('/despesas', DespesasList, DespesaPage)}
+              {crudRoutes('/multas', MultasList, MultaPage)}
 
-            {/* Auditoria de Acessos e Logs */}
-            <Route path="/auditoria" element={<GenericCrud entity="auditoria" title="Auditoria de Acessos" fields={[{key:'usuario',label:'Usuário'},{key:'acao',label:'Ação'},{key:'data',label:'Data'}]} />} />
-          </Routes>
-        </Layout>
-      </ToastProvider>
+              {/* Administração e Perfis de Acesso */}
+              {crudRoutes('/perfis', PerfisList, PerfilPage)}
+
+              {/* Auditoria de Acessos e Logs */}
+              <Route path="/auditoria" element={<GenericCrud entity="auditoria" title="Auditoria de Acessos" fields={[{key:'usuario',label:'Usuário'},{key:'acao',label:'Ação'},{key:'data',label:'Data'}]} />} />
+
+              {/* Redirecionamento padrão */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </AppShell>
+        </ToastProvider>
+      </AuthProvider>
     </BrowserRouter>
-  )
+  );
 }
