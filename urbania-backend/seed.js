@@ -17,13 +17,14 @@ async function seed() {
   // 1. Funcionários / Corretores
   const fCount = (await get('SELECT COUNT(*) as c FROM funcionarios')).c;
   if (fCount === 0) {
-    console.log('Criando corretores e funcionários padrão...');
+    console.log('Criando funcionários e equipe padrão...');
     await run(`
-      INSERT INTO funcionarios (nome, cpf, dataNascimento, telefone, email, cargo, creci, status, dataAdmissao)
+      INSERT INTO funcionarios (nome, cpf, dataNascimento, telefone, email, senha, cargo, creci, status, dataAdmissao, perfilId)
       VALUES 
-        ('Carlos Mendes', '123.456.789-01', '1988-04-12', '(69) 99312-4455', 'carlos.mendes@urbania.com.br', 'Corretor', 'CRECI-RO 4521-F', 'Ativo', '2023-01-15'),
-        ('Mariana Silva', '987.654.321-09', '1992-09-24', '(69) 99234-8899', 'mariana.silva@urbania.com.br', 'Corretor', 'CRECI-RO 6102-F', 'Ativo', '2023-05-10'),
-        ('Fernanda Oliveira', '555.444.333-22', '1995-11-03', '(69) 99876-1122', 'fernanda@urbania.com.br', 'Secretária', null, 'Ativo', '2024-02-01')
+        ('Diretoria Urbânia (Admin)', '000.111.222-33', '1982-05-15', '(69) 99888-7766', 'admin@urbania.com.br', 'admin123', 'Administrador', null, 'Ativo', '2022-01-01', 1),
+        ('Fernanda Oliveira', '555.444.333-22', '1995-11-03', '(69) 99876-1122', 'fernanda@urbania.com.br', 'sec123', 'Secretária', null, 'Ativo', '2024-02-01', 3),
+        ('Carlos Mendes', '123.456.789-01', '1988-04-12', '(69) 99312-4455', 'carlos.mendes@urbania.com.br', 'corretor123', 'Corretor', 'CRECI-RO 4521-F', 'Ativo', '2023-01-15', 2),
+        ('Mariana Silva', '987.654.321-09', '1992-09-24', '(69) 99234-8899', 'mariana.silva@urbania.com.br', 'corretor123', 'Corretor', 'CRECI-RO 6102-F', 'Ativo', '2023-05-10', 2)
     `);
   }
 
