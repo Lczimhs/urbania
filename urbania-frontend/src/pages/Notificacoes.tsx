@@ -613,9 +613,7 @@ export function NotificacaoPage({ mode }: { mode: 'create' | 'edit' | 'view' }) 
                   if (msgError && e.target.value.trim()) setMsgError(false);
                 }}
                 placeholder="Escreva a mensagem aqui... Use as pílulas acima para personalizar automaticamente com dados do cliente e imóvel."
-                className={`w-full p-3.5 border rounded-xl outline-none focus:ring-2 focus:ring-[#0a2540] text-sm leading-relaxed transition ${
-                  msgError ? 'border-red-500 bg-red-50 ring-2 ring-red-200' : 'bg-white border-slate-300'
-                }`}
+                aria-invalid={msgError} className={`w-full p-3.5 border ${msgError ? 'border-red-500' : 'border-slate-300'} rounded-xl bg-white outline-none focus:ring-2 focus:ring-[#0a2540] text-sm leading-relaxed transition`}
               />
 
               {/* Contador de caracteres para canal SMS (RNF 1.2 - pág. 29) */}
@@ -633,7 +631,7 @@ export function NotificacaoPage({ mode }: { mode: 'create' | 'edit' | 'view' }) 
             )}
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-4 border-t">
+          <div className="flex flex-wrap items-center justify-end gap-3 pt-4">
             <button
               type="button"
               onClick={() => navigate('/notificacoes')}
@@ -645,7 +643,7 @@ export function NotificacaoPage({ mode }: { mode: 'create' | 'edit' | 'view' }) 
               type="button"
               disabled={saving}
               onClick={handleSave}
-              className="px-6 py-2.5 bg-[#0a2540] text-white rounded-lg font-semibold text-sm hover:bg-[#06182c] transition shadow-md disabled:opacity-50"
+              className="save-action px-6 py-2.5 text-white rounded-lg font-semibold text-sm transition shadow-md disabled:opacity-50"
             >
               {saving ? 'Salvando...' : 'Salvar Regra'}
             </button>

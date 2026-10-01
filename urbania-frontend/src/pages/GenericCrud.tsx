@@ -47,7 +47,7 @@ export default function GenericCrud({ entity, title, fields }: { entity: string,
         ))}
         <div className="flex gap-2 pt-4">
           <button type="button" onClick={() => setForm(null)} className="px-4 py-2 border rounded-lg font-semibold text-slate-600 hover:bg-slate-50">Cancelar</button>
-          <button type="submit" className="px-4 py-2 bg-sky-600 text-white rounded-lg font-bold hover:bg-sky-700">Salvar Dados</button>
+          <button type="submit" className="save-action px-4 py-2 text-white rounded-lg font-bold">Salvar Dados</button>
         </div>
       </form>
     </div>

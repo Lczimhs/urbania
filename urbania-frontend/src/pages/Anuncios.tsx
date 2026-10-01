@@ -187,7 +187,7 @@ export function AnuncioPage({ mode }: { mode: Mode }) {
           if (disabled) return <p className="py-2 text-slate-800 font-medium border-b border-slate-100">{i ? `#${i.id} - ${i.titulo}` : '—'}</p>;
           return (
             <button type="button" onClick={() => setPicker(() => (imovel: any) => set(imovel.id))}
-              className={`w-full px-3 py-2 border rounded-lg text-left flex justify-between items-center outline-none focus:ring-2 focus:ring-[#0a2540] ${invalid ? 'border-red-500 bg-red-50' : 'bg-white'}`}>
+              aria-invalid={invalid} className={`w-full px-3 py-2 border ${invalid ? 'border-red-500' : 'border-slate-300'} rounded-lg bg-white text-left flex justify-between items-center outline-none focus:ring-2 focus:ring-[#0a2540]`}>
               <span className={i ? 'text-slate-800' : 'text-slate-400'}>{i ? `#${i.id} - ${i.titulo}` : 'Clique para selecionar o imóvel...'}</span>
               <ChevronDown size={16} className="text-slate-400" />
             </button>

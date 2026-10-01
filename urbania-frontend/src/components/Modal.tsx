@@ -1,10 +1,10 @@
 import type { ReactNode } from 'react';
 import { AlertTriangle, X } from 'lucide-react';
 
-export function Modal({ title, onClose, children, wide }: { title: string; onClose: () => void; children: ReactNode; wide?: boolean }) {
+export function Modal({ title, onClose, children, wide, spacious }: { title: string; onClose: () => void; children: ReactNode; wide?: boolean; spacious?: boolean }) {
   return (
     <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className={`bg-white rounded-xl shadow-2xl w-full ${wide ? 'max-w-4xl' : 'max-w-md'} max-h-[90vh] flex flex-col overflow-hidden`} onClick={e => e.stopPropagation()}>
+      <div className={`bg-white rounded-xl shadow-2xl w-full ${wide ? 'max-w-4xl' : spacious ? 'max-w-lg' : 'max-w-md'} max-h-[90vh] flex flex-col overflow-hidden`} onClick={e => e.stopPropagation()}>
         <div className="flex justify-between items-center px-6 py-4 border-b">
           <h2 className="text-lg font-bold text-slate-800">{title}</h2>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-700"><X size={22} /></button>

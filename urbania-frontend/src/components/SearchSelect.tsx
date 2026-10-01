@@ -25,7 +25,8 @@ export function SearchSelect({ value, onChange, options, placeholder = 'Selecion
     <div ref={ref} className="relative">
       <button
         type="button" disabled={disabled} onClick={() => { setOpen(!open); setTerm(''); }}
-        className={`w-full px-3 py-2 border rounded-lg text-left flex justify-between items-center outline-none focus:ring-2 focus:ring-[#0a2540] disabled:bg-slate-100 disabled:text-slate-500 ${invalid ? 'border-red-500 bg-red-50' : 'bg-white'}`}
+        aria-invalid={invalid}
+        className={`w-full px-3 py-2 border ${invalid ? 'border-red-500' : 'border-slate-300'} rounded-lg bg-white text-left flex justify-between items-center outline-none focus:ring-2 focus:ring-[#0a2540] disabled:bg-slate-100 disabled:text-slate-500`}
       >
         <span className={selected ? 'text-slate-800' : 'text-slate-400'}>{selected ? selected.label : placeholder}</span>
         <ChevronDown size={16} className="text-slate-400" />

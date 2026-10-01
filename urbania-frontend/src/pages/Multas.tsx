@@ -309,7 +309,7 @@ export function MultasList() {
               />
             </div>
 
-            <div className="pt-4 border-t flex justify-end gap-3">
+            <div className="pt-4 flex flex-wrap justify-end gap-3">
               <button
                 type="button"
                 onClick={() => {
@@ -323,7 +323,7 @@ export function MultasList() {
               <button
                 type="button"
                 onClick={handleUpdateStatus}
-                className="px-4 py-2 bg-[#0a2540] text-white rounded-lg font-semibold text-sm hover:bg-[#06182c]"
+                className="save-action px-4 py-2 text-white rounded-lg font-semibold text-sm"
               >
                 Confirmar Alteração
               </button>
