@@ -22,9 +22,10 @@ const pickColumns = (table, body) => {
 // Registros que impedem a exclusão (requisitos 1.5.4 / 1.5.3 / 1.7.1)
 const deleteGuards = {
   clientes: [['visitas', 'clienteId', 'visita(s)'], ['negociacoes', 'clienteId', 'negociação(ões)'], ['contratos', 'clienteId', 'contrato(s)']],
-  proprietarios: [['imoveis', 'proprietarioId', 'imóvel(is)'], ['negociacoes', 'proprietarioId', 'negociação(ões)']],
+  proprietarios: [['imoveis', 'proprietarioId', 'imóvel(is)'], ['negociacoes', 'proprietarioId', 'negociação(ões)'], ['contratos', 'proprietarioId', 'contrato(s)']],
   imoveis: [['visitas', 'imovelId', 'visita(s)'], ['negociacoes', 'imovelId', 'negociação(ões)'], ['contratos', 'imovelId', 'contrato(s)']],
-  funcionarios: [['visitas', 'corretorId', 'visita(s)'], ['negociacoes', 'corretorId', 'negociação(ões)'], ['imoveis', 'responsavelId', 'imóvel(is)']],
+  funcionarios: [['visitas', 'corretorId', 'visita(s)'], ['negociacoes', 'corretorId', 'negociação(ões)'], ['imoveis', 'responsavelId', 'imóvel(is)'], ['contratos', 'corretorId', 'contrato(s)']],
+  contratos: [['multas', 'contratoId', 'multa(s)']],
   // 4º item opcional: condição própria (prestadores.servicos é uma lista JSON de ids)
   servicos: [['reparos', 'servicoId', 'reparo(s)'], ['prestadores', 'servicos', 'prestador(es)', 'EXISTS (SELECT 1 FROM json_each(servicos) WHERE value = CAST(? AS INTEGER))']],
   prestadores: [['reparos', 'prestadorId', 'reparo(s)']],
@@ -114,6 +115,8 @@ app.get('/api/dashboard', async (req, res) => {
     visitasPendentes: "SELECT COUNT(*) as v FROM visitas WHERE status='Pendente'",
     negociacoesAndamento: "SELECT COUNT(*) as v FROM negociacoes WHERE status='Em Andamento'",
     totalNegociacoes: "SELECT COUNT(*) as v FROM negociacoes",
+    contratosAtivos: "SELECT COUNT(*) as v FROM contratos WHERE status='Ativo'",
+    totalContratos: "SELECT COUNT(*) as v FROM contratos",
   };
   try {
     const stats = {};

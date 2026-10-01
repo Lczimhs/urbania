@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Building2, CalendarPlus, Handshake, Plus } from 'lucide-react';
+import { Building2, CalendarPlus, FileText, Handshake, Plus } from 'lucide-react';
 import { useList } from '../lib/useApi';
 import { formatCurrency, formatDate } from '../lib/format';
 import { onlyDigits } from '../lib/masks';
@@ -18,8 +18,9 @@ export default function Dashboard() {
   const imoveis = useList('imoveis');
   const visitas = useList('visitas');
   const negociacoes = useList('negociacoes');
+  const contratos = useList('contratos');
 
-  const loading = clientes.loading || proprietarios.loading || imoveis.loading || visitas.loading || negociacoes.loading;
+  const loading = clientes.loading || proprietarios.loading || imoveis.loading || visitas.loading || negociacoes.loading || contratos.loading;
   const pf = clientes.rows.filter(c => onlyDigits(c.cpfCnpj).length !== 14).length;
   const pj = proprietarios.rows.filter(p => p.tipo === 'Jurídica').length;
   const aVenda = imoveis.rows.filter(i => i.finalidade === 'Venda' || i.finalidade === 'Venda e Aluguel');
@@ -27,6 +28,7 @@ export default function Dashboard() {
   const portfolio = aVenda.reduce((s, i) => s + Number(i.precoVenda || 0), 0);
   const pendentes = visitas.rows.filter(v => v.status === 'Pendente' || v.status === 'Confirmada');
   const emAndamentoNeg = negociacoes.rows.filter(n => n.status === 'Em Andamento');
+  const contratosAtivos = contratos.rows.filter(c => c.status === 'Ativo');
   const recentes = [...imoveis.rows].sort((a, b) => b.id - a.id).slice(0, 3);
   const n = (v: number) => (loading ? '…' : v);
 
@@ -36,6 +38,7 @@ export default function Dashboard() {
     { label: 'Imóveis', value: n(imoveis.rows.length), hint: `${aVenda.length} à venda - ${paraLocacao} p/ locação`, color: 'bg-teal-500', to: '/imoveis' },
     { label: 'Visitas agendadas', value: n(pendentes.length), hint: 'Pendentes ou confirmadas', color: 'bg-amber-500', to: '/visitas' },
     { label: 'Negociações ativas', value: n(emAndamentoNeg.length), hint: `${negociacoes.rows.length} registradas`, color: 'bg-indigo-600', to: '/negociacoes' },
+    { label: 'Contratos ativos', value: n(contratosAtivos.length), hint: `${contratos.rows.length} registrados`, color: 'bg-emerald-600', to: '/contratos' },
   ];
 
   return (
@@ -45,7 +48,7 @@ export default function Dashboard() {
         <p className="text-slate-500 mt-1">Aqui está um resumo do sistema Urbânia.</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
         {cards.map(c => (
           <Link key={c.label} to={c.to} className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm hover:shadow-md transition">
             <div className={`w-3 h-3 rounded-full ${c.color} mb-4`}></div>
@@ -112,13 +115,14 @@ export default function Dashboard() {
       </div>
 
       {/* AÇÕES RÁPIDAS */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
         {[
           { to: '/clientes/novo', title: 'Cadastrar cliente', hint: 'Adicionar ao CRM', icon: <Plus size={20} /> },
           { to: '/proprietarios/novo', title: 'Cadastrar proprietário', hint: 'Vincular imóveis', icon: <Plus size={20} /> },
           { to: '/imoveis/novo', title: 'Adicionar imóvel', hint: 'Com fotos e valores', icon: <Plus size={20} /> },
           { to: '/visitas/novo', title: 'Agendar visita', hint: 'Cliente + imóvel', icon: <CalendarPlus size={20} /> },
           { to: '/negociacoes/novo', title: 'Nova negociação', hint: 'Registrar proposta', icon: <Handshake size={20} /> },
+          { to: '/contratos/novo', title: 'Novo contrato', hint: 'Locação ou venda', icon: <FileText size={20} /> },
         ].map(a => (
           <Link key={a.to} to={a.to} className="bg-white p-4 rounded-2xl border border-slate-200/60 shadow-sm hover:shadow-md hover:border-sky-200 transition flex items-center gap-3 group">
             <div className="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center group-hover:bg-sky-100 transition shrink-0">{a.icon}</div>

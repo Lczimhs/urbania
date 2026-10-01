@@ -103,11 +103,27 @@ function ClienteHistorico({ clienteId }: { clienteId: number }) {
   const navigate = useNavigate();
   const visitas = useList('visitas', { clienteId });
   const negociacoes = useList('negociacoes', { clienteId });
+  const contratos = useList('contratos', { clienteId });
   const imoveis = useList('imoveis');
   const imovel = (id: number) => imoveis.rows.find(i => i.id === id);
 
   return (
     <>
+      <RelatedGrid title="Contratos Vinculados">
+        <DataTable
+          compact
+          rows={contratos.rows} loading={contratos.loading} empty="Nenhum contrato vinculado a este cliente."
+          columns={[
+            { key: 'id', label: 'ID Contrato', render: r => `#${r.id}`, className: 'font-mono text-slate-500' },
+            { key: 'imovel', label: 'Imóvel', render: r => imovel(r.imovelId)?.titulo || r.imovelTitulo || `#${r.imovelId}` },
+            { key: 'tipo', label: 'Tipo', render: r => <span className="font-semibold text-xs">{r.tipo}</span> },
+            { key: 'vigencia', label: 'Início Vigência', render: r => formatDate(r.dataInicio) },
+            { key: 'valor', label: 'Valor', render: r => formatCurrency(r.valor) },
+            { key: 'status', label: 'Status', render: r => <Badge className={statusColor(r.status)}>{r.status}</Badge> },
+          ]}
+          actions={r => <button type="button" onClick={() => navigate(`/contratos/${r.id}`)} className="inline-flex items-center gap-1 text-sky-600 font-semibold text-xs hover:underline"><Eye size={14} /> Visualizar</button>}
+        />
+      </RelatedGrid>
       <RelatedGrid title="Histórico de Visitas">
         <DataTable
           compact
