@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Building2, CalendarCheck, CalendarClock, Plus } from 'lucide-react';
 import { api } from '../api';
-import { Card, DataTable, FilterSelect, PageHeader, SearchInput, Toolbar, matches } from '../components/DataTable';
+import { Card, DataTable, FilterSelect, PageHeader, RowActions, SearchInput, Toolbar, matches } from '../components/DataTable';
 import { Avatar } from '../components/EntityForm';
 import type { Mode, TabDef } from '../components/EntityForm';
 import { EntityPage } from '../components/EntityPage';
@@ -11,7 +11,7 @@ import { useDelete } from '../components/useDelete';
 import { useList } from '../lib/useApi';
 import { maskCpf, maskPhone, maskRg, onlyDigits } from '../lib/masks';
 import { CARGOS, STATUS_FUNCIONARIO, addressFields } from '../lib/options';
-import { RowMenu, StatusDropdown } from './Visitas';
+import { StatusDropdown } from './Visitas';
 
 // Consultar Funcionários
 export function FuncionariosList() {
@@ -57,11 +57,11 @@ export function FuncionariosList() {
             { key: 'status', label: 'Status', render: r => <StatusDropdown value={r.status || 'Ativo'} options={STATUS_FUNCIONARIO} onChange={s => setStatus(r.id, s)} /> },
           ]}
           actions={r => (
-            <RowMenu items={[
-              { label: 'Visualizar', onClick: () => navigate(`/funcionarios/${r.id}`) },
-              { label: 'Editar', onClick: () => navigate(`/funcionarios/${r.id}/editar`) },
-              { label: 'Excluir', danger: true, onClick: () => del.ask(r.id, r.nome) },
-            ]} />
+            <RowActions
+              onView={() => navigate(`/funcionarios/${r.id}`)}
+              onEdit={() => navigate(`/funcionarios/${r.id}/editar`)}
+              onDelete={() => del.ask(r.id, r.nome)}
+            />
           )}
         />
       </Card>

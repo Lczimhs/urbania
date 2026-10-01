@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CalendarX2, MapPin, MoreVertical, Plus } from 'lucide-react';
 import { api } from '../api';
-import { Card, DataTable, PageHeader, SearchInput, Toolbar, matches } from '../components/DataTable';
+import { Card, DataTable, PageHeader, RowActions, SearchInput, Toolbar, matches } from '../components/DataTable';
 import type { Mode, TabDef } from '../components/EntityForm';
 import { EntityPage } from '../components/EntityPage';
 import { ConfirmModal } from '../components/Modal';
@@ -125,11 +125,12 @@ export function VisitasList() {
             { key: 'status', label: 'Status', render: r => <StatusDropdown value={r.status} options={STATUS_VISITA} onChange={s => setStatus(r.id, s)} /> },
           ]}
           actions={r => (
-            <RowMenu items={[
-              { label: 'Visualizar', onClick: () => navigate(`/visitas/${r.id}`) },
-              { label: 'Editar', onClick: () => navigate(`/visitas/${r.id}/editar`) },
-              { label: 'Cancelar visita', danger: true, hidden: r.status === 'Cancelada', onClick: () => setCancelar(r.id) },
-            ]} />
+            <RowActions
+              onView={() => navigate(`/visitas/${r.id}`)}
+              onEdit={() => navigate(`/visitas/${r.id}/editar`)}
+              onDelete={() => setCancelar(r.id)}
+              deleteTitle={r.status === 'Cancelada' ? 'Cancelar visita' : 'Cancelar visita'}
+            />
           )}
         />
       </Card>
