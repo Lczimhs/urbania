@@ -30,6 +30,16 @@ import { Pode } from '../lib/auth';
 const QUICK_FILTERS = ['Todas', 'Em Andamento', 'Realizadas', 'Canceladas'] as const;
 type QuickFilter = typeof QUICK_FILTERS[number];
 
+const tipoNegociacaoColor = (tipo: unknown) => {
+  const map: Record<string, string> = {
+    Locação: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+    Venda: 'bg-blue-50 text-blue-800 border-blue-200',
+    'Compra e Venda': 'bg-indigo-50 text-indigo-800 border-indigo-200',
+    Temporada: 'bg-amber-50 text-amber-800 border-amber-200',
+  };
+  return map[String(tipo)] || 'bg-slate-50 text-slate-700 border-slate-200';
+};
+
 // Exportação nativa para CSV / Excel (RNF 1.3 - pág. 32)
 function exportToCsv(data: any[], filename: string) {
   const headers = ['ID Proposta', 'Data', 'Cliente', 'Imóvel', 'Corretor', 'Tipo', 'Valor Proposto (R$)', 'Status', 'Forma de Pagamento', 'Observações'];
@@ -247,27 +257,29 @@ export function NegociacoesList() {
             {
               key: 'id',
               label: 'Código',
-              render: r => <span className="font-mono text-slate-500 font-medium">#{r.id}</span>,
-              className: 'w-20',
+              render: r => <span className="font-mono text-slate-500 font-medium whitespace-nowrap">#{r.id}</span>,
+              className: 'w-20 whitespace-nowrap',
             },
             {
               key: 'data',
               label: 'Data da Proposta',
-              render: r => <span className="font-semibold text-slate-800">{formatDate(r.data)}</span>,
+              className: 'whitespace-nowrap',
+              render: r => <span className="font-semibold text-slate-800 whitespace-nowrap">{formatDate(r.data)}</span>,
             },
             {
               key: 'cliente',
               label: 'Cliente',
+              className: 'whitespace-nowrap',
               render: r => {
                 const c = cliente(r.clienteId);
                 const nome = c?.nome || r.clienteNome || `#${r.clienteId}`;
                 return (
-                  <div className="flex items-center gap-2.5">
+                  <div
+                    className="flex items-center gap-2 whitespace-nowrap"
+                    title={c?.telefone ? `${nome} • ${c.telefone}` : nome}
+                  >
                     <Avatar src={c?.foto} name={nome} size="sm" />
-                    <div>
-                      <p className="font-semibold text-slate-800 text-sm">{nome}</p>
-                      {c?.telefone && <p className="text-[11px] text-slate-400">{c.telefone}</p>}
-                    </div>
+                    <span className="font-semibold text-slate-800 text-sm whitespace-nowrap">{nome}</span>
                   </div>
                 );
               },
@@ -275,13 +287,20 @@ export function NegociacoesList() {
             {
               key: 'imovel',
               label: 'Imóvel',
+              className: 'whitespace-nowrap',
               render: r => {
                 const imv = imovel(r.imovelId);
+                const titulo = imv?.titulo || r.imovelTitulo || `Imóvel #${r.imovelId}`;
+                const endereco = [imv?.bairro, imv?.cidade].filter(Boolean).join(' - ');
+                const tituloCompleto = endereco ? `${titulo} — ${endereco}` : titulo;
                 return (
-                  <div>
-                    <span className="font-mono text-slate-400 text-xs">#{r.imovelId} </span>
-                    <span className="font-medium text-slate-800">{imv?.titulo || r.imovelTitulo || `Imóvel #${r.imovelId}`}</span>
-                    {imv?.bairro && <p className="text-[11px] text-slate-400">{imv.bairro}{imv.cidade ? ` - ${imv.cidade}` : ''}</p>}
+                  <div
+                    className="truncate max-w-[240px] whitespace-nowrap overflow-hidden text-ellipsis text-sm"
+                    title={tituloCompleto}
+                  >
+                    <span className="font-mono text-slate-400 text-xs mr-1.5">#{r.imovelId}</span>
+                    <span className="font-medium text-slate-800">{titulo}</span>
+                    {endereco && <span className="text-slate-400 text-xs ml-1.5">— {endereco}</span>}
                   </div>
                 );
               },
@@ -289,13 +308,19 @@ export function NegociacoesList() {
             {
               key: 'corretor',
               label: 'Corretor Responsável',
-              render: r => <span className="text-slate-700 text-sm">{r.corretor || 'Não informado'}</span>,
+              className: 'whitespace-nowrap',
+              render: r => <span className="text-slate-700 text-sm whitespace-nowrap">{r.corretor || 'Não informado'}</span>,
             },
             {
               key: 'tipo',
               label: 'Tipo',
+              className: 'whitespace-nowrap',
               render: r => (
-                <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${r.tipo === 'Venda' ? 'bg-indigo-50 text-indigo-700' : 'bg-amber-50 text-amber-700'}`}>
+                <span
+                  className={`inline-flex items-center w-fit whitespace-nowrap px-2.5 py-1 rounded-full text-xs font-semibold border ${tipoNegociacaoColor(
+                    r.tipo
+                  )}`}
+                >
                   {r.tipo || 'Venda'}
                 </span>
               ),
@@ -303,6 +328,7 @@ export function NegociacoesList() {
             {
               key: 'valor',
               label: 'Valor Proposto',
+              className: 'whitespace-nowrap',
               render: r => (
                 <span className="font-bold text-teal-700 text-sm whitespace-nowrap">
                   {formatCurrency(r.valor)}
@@ -312,6 +338,7 @@ export function NegociacoesList() {
             {
               key: 'status',
               label: 'Status',
+              className: 'whitespace-nowrap',
               render: r => (
                 <StatusDropdown
                   value={r.status || 'Em Andamento'}

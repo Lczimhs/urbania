@@ -377,7 +377,7 @@ export function EntityForm({ title, mode, initial, tabs, defaults = {}, onSubmit
 export function Avatar({ src, name, size = 'lg' }: { src?: string; name?: string; size?: 'sm' | 'lg' }) {
   const cls = size === 'lg' ? 'w-24 h-24 text-2xl' : 'w-9 h-9 text-xs';
   return src
-    ? <img src={src} alt={name} className={`${cls} rounded-full object-cover border`} />
+    ? <img src={src} alt={name} className={`${cls} rounded-full object-cover border shrink-0`} />
     : <div className={`${cls} rounded-full bg-[#0a2540] text-white flex items-center justify-center font-bold shrink-0`}>{initials(name)}</div>;
 }
 

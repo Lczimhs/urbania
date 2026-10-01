@@ -44,11 +44,15 @@ import { Pode } from '../lib/auth';
 const QUICK_FILTERS = ['Todos', 'Ativo', 'Pendente', 'Finalizado', 'Rescindido', 'Cancelado'] as const;
 type QuickFilter = typeof QUICK_FILTERS[number];
 
-const tipoContratoColor = (tipo: unknown) => ({
-  Locação: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  'Compra e Venda': 'bg-indigo-50 text-indigo-700 border-indigo-200',
-  Temporada: 'bg-amber-50 text-amber-700 border-amber-200',
-}[String(tipo)] || 'bg-slate-50 text-slate-700 border-slate-200');
+const tipoContratoColor = (tipo: unknown) => {
+  const map: Record<string, string> = {
+    Locação: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+    Venda: 'bg-blue-50 text-blue-800 border-blue-200',
+    'Compra e Venda': 'bg-indigo-50 text-indigo-800 border-indigo-200',
+    Temporada: 'bg-amber-50 text-amber-800 border-amber-200',
+  };
+  return map[String(tipo)] || 'bg-slate-50 text-slate-700 border-slate-200';
+};
 
 // Exportação nativa para CSV / Excel (RNF 1.3 - pág. 32)
 function exportContratosToCsv(data: any[], filename: string) {
@@ -383,8 +387,8 @@ export function ContratosList() {
             {
               key: 'id',
               label: 'Código',
-              render: r => <span className="font-mono text-slate-500 font-medium">#{r.id}</span>,
-              className: 'w-20',
+              render: r => <span className="font-mono text-slate-500 font-medium whitespace-nowrap">#{r.id}</span>,
+              className: 'w-20 whitespace-nowrap',
             },
             {
               key: 'imovel',
@@ -397,9 +401,13 @@ export function ContratosList() {
                     <div className="w-10 h-10 rounded-lg overflow-hidden bg-slate-100 shrink-0 border border-slate-200/60 flex items-center justify-center">
                       {foto ? <img src={foto} alt="" className="w-full h-full object-cover" /> : <Building2 size={18} className="text-slate-400" />}
                     </div>
-                    <div>
-                      <p className="font-semibold text-slate-800 leading-snug">{imv?.titulo || r.imovelTitulo || `Imóvel #${r.imovelId}`}</p>
-                      <p className="text-xs text-slate-400 line-clamp-1">{enderecoCurto(imv)}</p>
+                    <div className="min-w-0 max-w-[260px]">
+                      <p className="font-semibold text-slate-800 leading-snug truncate" title={imv?.titulo || r.imovelTitulo || `Imóvel #${r.imovelId}`}>
+                        {imv?.titulo || r.imovelTitulo || `Imóvel #${r.imovelId}`}
+                      </p>
+                      <p className="text-xs text-slate-400 truncate" title={enderecoCurto(imv)}>
+                        {enderecoCurto(imv)}
+                      </p>
                     </div>
                   </div>
                 );
@@ -408,15 +416,19 @@ export function ContratosList() {
             {
               key: 'cliente',
               label: 'Inquilino / Comprador',
+              className: 'whitespace-nowrap',
               render: r => {
                 const c = cliente(r.clienteId);
                 const nome = c?.nome || r.clienteNome || `#${r.clienteId}`;
                 return (
-                  <div className="flex items-center gap-2.5">
+                  <div
+                    className="flex items-center gap-2.5 whitespace-nowrap"
+                    title={c?.telefone ? `${nome} • ${c.telefone}` : nome}
+                  >
                     <Avatar src={c?.foto} name={nome} size="sm" />
                     <div>
-                      <p className="font-semibold text-slate-800 text-sm">{nome}</p>
-                      {c?.telefone && <p className="text-[11px] text-slate-400">{c.telefone}</p>}
+                      <p className="font-semibold text-slate-800 text-sm whitespace-nowrap">{nome}</p>
+                      {c?.telefone && <p className="text-[11px] text-slate-400 whitespace-nowrap">{c.telefone}</p>}
                     </div>
                   </div>
                 );
@@ -425,8 +437,13 @@ export function ContratosList() {
             {
               key: 'tipo',
               label: 'Tipo',
+              className: 'whitespace-nowrap',
               render: r => (
-                <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border ${tipoContratoColor(r.tipo)}`}>
+                <span
+                  className={`inline-flex items-center w-fit whitespace-nowrap px-2.5 py-1 text-xs font-semibold rounded-full border ${tipoContratoColor(
+                    r.tipo
+                  )}`}
+                >
                   {r.tipo || 'Locação'}
                 </span>
               ),
@@ -434,8 +451,9 @@ export function ContratosList() {
             {
               key: 'periodo',
               label: 'Vigência',
+              className: 'whitespace-nowrap',
               render: r => (
-                <div className="text-xs">
+                <div className="text-xs whitespace-nowrap">
                   <p className="font-semibold text-slate-700">{formatDate(r.dataInicio)}</p>
                   <p className="text-slate-400">{r.dataFim ? `até ${formatDate(r.dataFim)}` : 'Indeterminado'}</p>
                 </div>
@@ -444,6 +462,7 @@ export function ContratosList() {
             {
               key: 'valor',
               label: 'Valor',
+              className: 'whitespace-nowrap',
               render: r => (
                 <div className="whitespace-nowrap">
                   <span className="font-bold text-teal-700 text-sm">
@@ -456,6 +475,7 @@ export function ContratosList() {
             {
               key: 'status',
               label: 'Status',
+              className: 'whitespace-nowrap',
               render: r => (
                 <StatusDropdown
                   value={r.status || 'Ativo'}
