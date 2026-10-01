@@ -21,6 +21,19 @@ interface AuthContextType {
   isAuthenticated: boolean;
 }
 
+export const MODO_TESTE = true;
+
+// "joao.silva@email.com" -> "Joao Silva"
+const nomeDoEmail = (email: string) =>
+  email.split('@')[0].split(/[._-]+/).filter(Boolean).map(p => p[0].toUpperCase() + p.slice(1)).join(' ') || 'Visitante';
+
+const usuarioDeTeste = (email: string, data?: { nome?: string; cargo?: string }): AuthUser => ({
+  id: 0,
+  nome: data?.nome || nomeDoEmail(email),
+  email: email || 'visitante@urbania.com.br',
+  cargo: data?.cargo || 'Administrador',
+});
+
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
 const STORAGE_USER_KEY = 'urbania_user';
@@ -59,30 +72,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [token]);
 
+  // PERÍODO DE TESTES: qualquer e-mail e senha entram.
+  // Se o e-mail existir no banco, usa o nome/cargo reais; se não existir, a senha estiver errada,
+  // for corretor ou o backend estiver fora do ar, entra como usuário de teste.
+  // Para voltar a exigir login de verdade, troque MODO_TESTE para false.
   const login = async (email: string, senha: string) => {
     setLoading(true);
     try {
-      const res = await api.post('/auth/login', { email, senha });
+      const res = await api.post('/auth/login', { email, senha }, { timeout: 4000 });
       if (res.data.success && res.data.user) {
         setUser(res.data.user);
         setToken(res.data.token);
-        setLoading(false);
         return { success: true };
       }
-      setLoading(false);
       return { success: false, error: 'Resposta inesperada do servidor.' };
     } catch (err: any) {
-      setLoading(false);
       const data = err.response?.data;
-      if (err.response?.status === 403 && data?.bloqueado) {
-        return {
-          success: false,
-          bloqueado: true,
-          error: data.error || 'Acesso Negado: Corretores não possuem acesso ao sistema interno.',
-        };
+      if (MODO_TESTE) {
+        setUser(usuarioDeTeste(email, data));
+        setToken('modo_teste');
+        return { success: true };
       }
-      const msg = data?.error || err.message || 'Falha ao realizar login. Tente novamente.';
-      return { success: false, error: msg };
+      if (err.response?.status === 403 && data?.bloqueado) {
+        return { success: false, bloqueado: true, error: data.error || 'Acesso Negado: Corretores não possuem acesso ao sistema interno.' };
+      }
+      return { success: false, error: data?.error || err.message || 'Falha ao realizar login. Tente novamente.' };
+    } finally {
+      setLoading(false);
     }
   };
 

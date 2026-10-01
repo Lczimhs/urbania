@@ -13,10 +13,30 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { useList } from '../lib/useApi';
+import { useAuth } from '../lib/auth';
+import { BarList, GroupedColumns } from '../components/Charts';
 import { formatCurrency, formatDate } from '../lib/format';
 import { onlyDigits } from '../lib/masks';
 import { parsePhotos } from '../lib/files';
 import { precoImovel } from './Imoveis';
+
+const MESES = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
+// Últimos 6 meses no formato "AAAA-MM"
+const ultimosMeses = () => Array.from({ length: 6 }, (_, i) => {
+  const d = new Date();
+  d.setDate(1);
+  d.setMonth(d.getMonth() - 5 + i);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+});
+
+// Conta quantos registros há em cada valor de um campo, do maior para o menor
+const contarPor = (rows: any[], campo: string) =>
+  Object.entries(rows.reduce<Record<string, number>>((acc, r) => {
+    const k = r[campo] || 'Não informado';
+    acc[k] = (acc[k] || 0) + 1;
+    return acc;
+  }, {})).map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value);
 
 const greeting = () => {
   const h = new Date().getHours();
@@ -25,6 +45,7 @@ const greeting = () => {
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const clientes = useList('clientes');
   const proprietarios = useList('proprietarios');
   const imoveis = useList('imoveis');
@@ -49,6 +70,17 @@ export default function Dashboard() {
   const recentes = [...imoveis.rows].sort((a, b) => b.id - a.id).slice(0, 3);
   const n = (v: number) => (loading ? '…' : v);
 
+  // Gráfico mensal: receitas recebidas x despesas (lançamentos financeiros + controle de despesas)
+  const mesDe = (r: any) => String(r.dataPagamento || r.dataVencimento || r.data || '').slice(0, 7);
+  const fluxoMensal = ultimosMeses().map(m => ({
+    label: MESES[Number(m.slice(5)) - 1],
+    fullLabel: `${MESES[Number(m.slice(5)) - 1]}/${m.slice(0, 4)}`,
+    values: [
+      financeiro.rows.filter(f => f.tipo === 'Receita' && mesDe(f) === m).reduce((s, f) => s + Number(f.valor || 0), 0),
+      [...despesas.rows, ...financeiro.rows.filter(f => f.tipo === 'Despesa')].filter(d => mesDe(d) === m).reduce((s, d) => s + Number(d.valor || 0), 0),
+    ],
+  }));
+
   const cards = [
     { label: 'Clientes', value: n(clientes.rows.length), hint: `${pf} PF - ${clientes.rows.length - pf} PJ`, color: 'bg-sky-600', to: '/clientes' },
     { label: 'Proprietários', value: n(proprietarios.rows.length), hint: `${pj} pessoa(s) jurídica(s)`, color: 'bg-sky-500', to: '/proprietarios' },
@@ -61,7 +93,7 @@ export default function Dashboard() {
   return (
     <div className="max-w-7xl mx-auto space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-slate-800">{greeting()}, Carlos Mendes!</h1>
+        <h1 className="text-3xl font-bold text-slate-800">{greeting()}, {user?.nome?.split(' (')[0] || 'bem-vindo'}!</h1>
         <p className="text-slate-500 mt-1">Aqui está um resumo do sistema Urbânia.</p>
       </div>
 
@@ -114,6 +146,15 @@ export default function Dashboard() {
             {despesas.rows.length} despesas lançadas · {multas.rows.filter(m => m.status === 'Pendente').length} multas em cobrança
           </p>
         </Link>
+      </div>
+
+      {/* GRÁFICOS (RF F73 - Exibir Dashboard) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="lg:col-span-2">
+          <GroupedColumns title="Receitas x Despesas" subtitle="Últimos 6 meses" series={['Receitas', 'Despesas']} groups={fluxoMensal} format={v => formatCurrency(v)} />
+        </div>
+        <BarList title="Imóveis por tipo" subtitle={`${imoveis.rows.length} no portfólio`} items={contarPor(imoveis.rows, 'tipo')} unit=" imóvel(is)" />
+        <BarList title="Negociações por status" subtitle={`${negociacoes.rows.length} registradas`} items={contarPor(negociacoes.rows, 'status')} unit=" negociação(ões)" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

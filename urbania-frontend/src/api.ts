@@ -1,7 +1,8 @@
 import axios from 'axios';
 
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
+  // Em desenvolvimento, "/api" é repassado pelo Vite para o backend (ver vite.config.ts)
+  baseURL: import.meta.env.VITE_API_URL || '/api',
 });
 
 // Interceptor para injetar token e identificação de usuário
