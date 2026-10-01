@@ -12,6 +12,7 @@ import { formatCurrency, todayISO } from '../lib/format';
 import { STATUS_REPARO } from '../lib/options';
 import { parseIds } from './Prestadores';
 import { NovoServicoModal } from './Servicos';
+import { Pode } from '../lib/auth';
 
 const reparoColor = (status: unknown) => ({
   Pendente: 'bg-amber-100 text-amber-700',
@@ -40,7 +41,7 @@ export function ReparosList() {
     <div className="space-y-6 max-w-7xl mx-auto">
       <PageHeader
         title="Reparos" subtitle={`${rows.length} cadastrados`}
-        action={<button onClick={() => navigate('/reparos/novo')} className="flex items-center gap-2 bg-[#0a2540] text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-[#06182c]"><Plus size={18} /> Cadastrar Reparo</button>}
+        action={<Pode acao="Criar"><button onClick={() => navigate('/reparos/novo')} className="flex items-center gap-2 bg-[#0a2540] text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-[#06182c]"><Plus size={18} /> Cadastrar Reparo</button></Pode>}
       />
       <Card>
         <Toolbar>{search.controls}</Toolbar>

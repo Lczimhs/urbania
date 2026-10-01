@@ -28,6 +28,7 @@ import {
   STATUS_DESPESA,
   statusColor,
 } from '../lib/options';
+import { Pode, usePodeNaRota } from '../lib/auth';
 
 // Cálculo automático de status conforme RF F1 NF 1.5
 export function calcularStatusDespesa(dataVencimento?: string, dataPagamento?: string): string {
@@ -61,6 +62,7 @@ function parseHistorico(val: any): StatusHistoryEntry[] {
 // 1. LISTAGEM DE DESPESAS (RF F2)
 // ==========================================
 export function DespesasList() {
+  const pode = usePodeNaRota();
   const navigate = useNavigate();
   const toast = useToast();
   const { rows, setRows, loading, reload } = useList('despesas');
@@ -135,12 +137,12 @@ export function DespesasList() {
         title="Controle de Despesas"
         subtitle={`${rows.length} lançamentos de custos e despesas operacionais`}
         action={
-          <button
+          <Pode acao="Criar"><button
             onClick={() => navigate('/despesas/novo')}
             className="flex items-center gap-2 bg-[#0a2540] text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-[#06182c] shadow-sm transition"
           >
             <Plus size={18} /> Nova Despesa
-          </button>
+          </button></Pode>
         }
       />
 
@@ -231,7 +233,7 @@ export function DespesasList() {
                 return (
                   <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
                     <Badge className={statusColor(s)}>{s}</Badge>
-                    {s !== 'Pago' && (
+                    {s !== 'Pago' && pode('Editar') && (
                       <button
                         type="button"
                         onClick={() => {

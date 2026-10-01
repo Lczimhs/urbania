@@ -1,11 +1,14 @@
 const express = require('express');
 const cors = require('cors');
 const db = require('./database');
+const { idVisitante, gerarToken, carregarSessao, autenticar, autorizar, filtrarFuncionario, garantirAcessosPadrao } = require('./permissoes');
 
 const app = express();
 app.use(cors());
 // Limite maior porque fotos são enviadas junto com o cadastro
 app.use(express.json({ limit: '25mb' }));
+// Toda rota /api (exceto o login) exige um token válido
+app.use(autenticar);
 
 const tables = Object.keys(db.schema);
 
@@ -39,6 +42,9 @@ const deleteGuards = {
 const get = (sql, params = []) => new Promise((resolve, reject) =>
   db.get(sql, params, (err, row) => (err ? reject(err) : resolve(row))));
 
+// Nome usado na auditoria: "Fulano (Cargo)"
+const quem = req => req.sessao ? `${req.sessao.user.nome} (${req.sessao.user.cargo})` : null;
+
 const logAudit = (usuario, acao, entidade, entidadeId, detalhes, ip) => {
   if (entidade === 'auditoria') return;
   const now = new Date();
@@ -46,11 +52,17 @@ const logAudit = (usuario, acao, entidade, entidadeId, detalhes, ip) => {
   const hora = now.toLocaleTimeString('pt-BR', { hour12: false });
   db.run(
     `INSERT INTO auditoria (usuario, acao, entidade, entidadeId, detalhes, data, hora, ip) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    [usuario || 'Carlos Mendes (Corretor)', acao, entidade, entidadeId || null, detalhes || '', data, hora, ip || '127.0.0.1']
+    [usuario || 'Sistema', acao, entidade, entidadeId || null, detalhes || '', data, hora, ip || '127.0.0.1']
   );
 };
 
 tables.forEach(table => {
+  // Cada método exige a ação correspondente no perfil (GET=Visualizar, POST=Criar, PUT=Editar, DELETE=Excluir)
+  app.use(`/api/${table}`, autorizar(table));
+
+  // Funcionários nunca expõem a senha; dados pessoais só para quem administra a equipe
+  const saida = (req, row) => (table === 'funcionarios' ? filtrarFuncionario(row, req.sessao.permissoes) : row);
+
   // GET ALL (aceita filtros simples: /api/visitas?clienteId=3)
   app.get(`/api/${table}`, (req, res) => {
     const filters = pickColumns(table, req.query);
@@ -58,7 +70,7 @@ tables.forEach(table => {
     const where = keys.length ? ' WHERE ' + keys.map(k => `${k} = ?`).join(' AND ') : '';
     db.all(`SELECT * FROM ${table}${where} ORDER BY id DESC`, Object.values(filters), (err, rows) => {
       if (err) return res.status(500).json({ error: err.message });
-      res.json(rows);
+      res.json(rows.map(row => saida(req, row)));
     });
   });
 
@@ -67,7 +79,7 @@ tables.forEach(table => {
     db.get(`SELECT * FROM ${table} WHERE id = ?`, [req.params.id], (err, row) => {
       if (err) return res.status(500).json({ error: err.message });
       if (!row) return res.status(404).json({ error: 'Registro não encontrado.' });
-      res.json(row);
+      res.json(saida(req, row));
     });
   });
 
@@ -81,22 +93,24 @@ tables.forEach(table => {
     db.run(sql, Object.values(data), function(err) {
       if (err) return res.status(500).json({ error: err.message });
       const newId = this.lastID;
-      logAudit(req.headers['x-user'], 'Criação', table, newId, `Registro cadastrado no módulo ${table}`, req.ip);
-      res.json({ id: newId, ...data });
+      logAudit(quem(req), 'Criação', table, newId, `Registro cadastrado no módulo ${table}`, req.ip);
+      res.json(saida(req, { id: newId, ...data }));
     });
   });
 
   // UPDATE (o id não pode ser alterado)
   app.put(`/api/${table}/:id`, (req, res) => {
     const data = pickColumns(table, req.body);
+    // A senha não volta para a tela: campo vazio na edição mantém a senha atual
+    if (table === 'funcionarios' && !data.senha) delete data.senha;
     const keys = Object.keys(data);
     if (!keys.length) return res.status(400).json({ error: 'Nenhum dado enviado.' });
     const sql = `UPDATE ${table} SET ${keys.map(k => `${k}=?`).join(',')} WHERE id=?`;
 
     db.run(sql, [...Object.values(data), req.params.id], function(err) {
       if (err) return res.status(500).json({ error: err.message });
-      logAudit(req.headers['x-user'], 'Alteração', table, Number(req.params.id), `Registro atualizado no módulo ${table}`, req.ip);
-      res.json({ id: Number(req.params.id), ...data });
+      logAudit(quem(req), 'Alteração', table, Number(req.params.id), `Registro atualizado no módulo ${table}`, req.ip);
+      res.json(saida(req, { id: Number(req.params.id), ...data }));
     });
   });
 
@@ -117,58 +131,31 @@ tables.forEach(table => {
 
     db.run(`DELETE FROM ${table} WHERE id=?`, [req.params.id], function(err) {
       if (err) return res.status(500).json({ error: err.message });
-      logAudit(req.headers['x-user'], 'Exclusão', table, Number(req.params.id), `Registro excluído do módulo ${table}`, req.ip);
+      logAudit(quem(req), 'Exclusão', table, Number(req.params.id), `Registro excluído do módulo ${table}`, req.ip);
       res.json({ deleted: this.changes });
     });
   });
 });
 
-// Auth Route: Login exclusivo da Imobiliária (Corretores não têm acesso ao sistema)
+// Login do protótipo: a senha não é conferida.
+// E-mail de um funcionário cadastrado -> entra com o perfil dele; qualquer outro (ou vazio) -> Visitante.
 app.post('/api/auth/login', async (req, res) => {
-  const { email, senha } = req.body || {};
-  if (!email || !senha) {
-    return res.status(400).json({ error: 'Informe e-mail e senha para acessar o sistema.' });
-  }
-
+  const email = String(req.body?.email || '').trim();
   try {
-    const user = await get('SELECT * FROM funcionarios WHERE LOWER(email) = LOWER(?)', [email.trim()]);
-    if (!user) {
-      return res.status(401).json({ error: 'Credenciais inválidas: e-mail não cadastrado.' });
-    }
+    const encontrado = email ? await get('SELECT id FROM funcionarios WHERE LOWER(email) = LOWER(?)', [email]) : null;
+    const userId = encontrado?.id || await idVisitante();
+    if (!userId) return res.status(500).json({ error: 'Usuário Visitante não encontrado. Rode o seed do banco (node seed.js).' });
 
-    // Regra de Negócio: Corretores NÃO têm acesso ao sistema interno da imobiliária
-    if (user.cargo === 'Corretor') {
-      logAudit(user.nome + ' (Corretor)', 'Acesso Bloqueado', 'auth', user.id, 'Tentativa de login de corretor bloqueada pelas regras de acesso', req.ip);
-      return res.status(403).json({
-        error: 'Acesso Negado: Corretores não possuem acesso ao sistema interno. O painel é de uso exclusivo da administração da imobiliária.',
-        bloqueado: true,
-        cargo: user.cargo,
-        nome: user.nome,
-      });
-    }
-
-    if (user.status === 'Inativo') {
-      return res.status(403).json({ error: 'Este usuário encontra-se inativo no sistema. Procure a administração.' });
-    }
-
-    // Validação da senha
-    const senhaCorreta = user.senha ? user.senha === senha : (senha === 'admin123' || senha === 'sec123' || senha === '123456');
-    if (!senhaCorreta) {
-      return res.status(401).json({ error: 'Senha incorreta. Verifique suas credenciais.' });
-    }
-
-    logAudit(user.nome + ` (${user.cargo})`, 'Login', 'auth', user.id, 'Acesso realizado com sucesso no sistema interno', req.ip);
-
-    const { senha: _, ...safeUser } = user;
-    return res.json({
-      success: true,
-      token: 'urb_auth_' + Buffer.from(`${user.id}:${Date.now()}`).toString('base64'),
-      user: safeUser,
-    });
+    const sessao = await carregarSessao(userId);
+    logAudit(`${sessao.user.nome} (${sessao.user.cargo})`, 'Login', 'auth', userId, 'Acesso realizado no sistema', req.ip);
+    return res.json({ success: true, token: gerarToken(userId), ...sessao });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
 });
+
+// Dados do usuário logado e permissões atualizadas (o frontend consulta ao abrir o sistema)
+app.get('/api/auth/me', (req, res) => res.json(req.sessao));
 
 // Dashboard Analytics Route
 app.get('/api/dashboard', async (req, res) => {
@@ -198,6 +185,7 @@ app.get('/api/dashboard', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
+garantirAcessosPadrao().catch(err => console.error('Erro ao criar acessos padrão:', err.message));
 app.listen(PORT, () => {
   console.log('Backend Urbânia rodando na porta ' + PORT);
 });

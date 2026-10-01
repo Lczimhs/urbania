@@ -39,6 +39,7 @@ import {
 } from '../lib/options';
 import { StatusDropdown } from './Visitas';
 import { enderecoCurto } from './Imoveis';
+import { Pode } from '../lib/auth';
 
 const QUICK_FILTERS = ['Todos', 'Ativo', 'Pendente', 'Finalizado', 'Rescindido', 'Cancelado'] as const;
 type QuickFilter = typeof QUICK_FILTERS[number];
@@ -268,12 +269,12 @@ export function ContratosList() {
       <p className="text-xs text-slate-400 max-w-sm text-center">
         Crie novos contratos de locação ou compra e venda para gerenciar prazos, garantias e repasses aos proprietários.
       </p>
-      <button
+      <Pode acao="Criar"><button
         onClick={() => navigate('/contratos/novo')}
         className="mt-2 flex items-center gap-2 bg-[#0a2540] text-white px-4 py-2 rounded-lg font-semibold text-sm hover:bg-[#06182c] transition"
       >
         <Plus size={16} /> Novo Contrato
-      </button>
+      </button></Pode>
     </div>
   );
 
@@ -291,12 +292,12 @@ export function ContratosList() {
             >
               <FileSpreadsheet size={16} className="text-emerald-600" /> Exportar (.xlsx/CSV)
             </button>
-            <button
+            <Pode acao="Criar"><button
               onClick={() => navigate('/contratos/novo')}
               className="flex items-center gap-2 bg-[#0a2540] text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-[#06182c] transition shadow-sm"
             >
               <Plus size={18} /> Novo Contrato
-            </button>
+            </button></Pode>
           </div>
         }
       />
@@ -583,13 +584,13 @@ function ContratoHistoricoERelacionamentos({ record }: { record: Record<string, 
       <RelatedGrid title="Multas e Ocorrências Vinculadas ao Contrato">
         <div className="p-3 bg-slate-50/50 border-b flex justify-between items-center">
           <p className="text-xs text-slate-500">Penalidades, juros por atraso ou danos registrados para este contrato.</p>
-          <button
+          <Pode acao="Criar" modulo="multas"><button
             type="button"
             onClick={() => navigate('/multas/novo', { state: { contratoId: record.id } })}
             className="text-xs font-semibold text-rose-700 bg-white hover:bg-rose-50 border border-rose-200 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition shadow-sm"
           >
             <Plus size={14} /> Aplicar Multa
-          </button>
+          </button></Pode>
         </div>
         <DataTable
           compact

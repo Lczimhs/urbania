@@ -11,6 +11,7 @@ import { useDelete } from '../components/useDelete';
 import { useList } from '../lib/useApi';
 import { maskCpfCnpj, maskPhone, onlyDigits } from '../lib/masks';
 import { TIPOS_CHAVE_PIX, UFS } from '../lib/options';
+import { Pode } from '../lib/auth';
 
 // Serviços do prestador ficam salvos como lista JSON de ids (ex.: "[1,3]")
 export const parseIds = (v: unknown): number[] => {
@@ -40,7 +41,7 @@ export function PrestadoresList() {
     <div className="space-y-6 max-w-7xl mx-auto">
       <PageHeader
         title="Prestadores de Serviço" subtitle={`${rows.length} cadastrados`}
-        action={<button onClick={() => navigate('/prestadores/novo')} className="flex items-center gap-2 bg-[#0a2540] text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-[#06182c]"><Plus size={18} /> Cadastrar Prestador</button>}
+        action={<Pode acao="Criar"><button onClick={() => navigate('/prestadores/novo')} className="flex items-center gap-2 bg-[#0a2540] text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-[#06182c]"><Plus size={18} /> Cadastrar Prestador</button></Pode>}
       />
       <Card>
         <Toolbar>{search.controls}</Toolbar>

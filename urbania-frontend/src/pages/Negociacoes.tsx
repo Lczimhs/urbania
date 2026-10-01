@@ -25,6 +25,7 @@ import { useList } from '../lib/useApi';
 import { formatCurrency, formatDate, fullAddress, todayISO } from '../lib/format';
 import { FORMAS_PAGAMENTO, STATUS_NEGOCIACAO, TIPOS_NEGOCIACAO, statusColor } from '../lib/options';
 import { StatusDropdown } from './Visitas';
+import { Pode } from '../lib/auth';
 
 const QUICK_FILTERS = ['Todas', 'Em Andamento', 'Realizadas', 'Canceladas'] as const;
 type QuickFilter = typeof QUICK_FILTERS[number];
@@ -143,12 +144,12 @@ export function NegociacoesList() {
       <p className="text-xs text-slate-400 max-w-sm text-center">
         Cadastre propostas e acompanhe o fluxo de negociação de compra, venda e locação entre clientes e corretores.
       </p>
-      <button
+      <Pode acao="Criar"><button
         onClick={() => navigate('/negociacoes/novo')}
         className="mt-2 flex items-center gap-2 bg-[#0a2540] text-white px-4 py-2 rounded-lg font-semibold text-sm hover:bg-[#06182c] transition"
       >
         <Plus size={16} /> Nova Negociação
-      </button>
+      </button></Pode>
     </div>
   );
 
@@ -168,12 +169,12 @@ export function NegociacoesList() {
             >
               <FileSpreadsheet size={16} className="text-emerald-600" /> Exportar (.xlsx/CSV)
             </button>
-            <button
+            <Pode acao="Criar"><button
               onClick={() => navigate('/negociacoes/novo')}
               className="flex items-center gap-2 bg-[#0a2540] text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-[#06182c] transition shadow-sm"
             >
               <Plus size={18} /> Nova Negociação
-            </button>
+            </button></Pode>
           </div>
         }
       />

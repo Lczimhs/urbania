@@ -25,6 +25,7 @@ import {
   TIPOS_MULTA,
   statusColor,
 } from '../lib/options';
+import { Pode, usePodeNaRota } from '../lib/auth';
 
 // Parser para histórico de status (RF F3 NF 1.3)
 interface StatusHistoryEntry {
@@ -50,6 +51,7 @@ function parseHistorico(val: any): StatusHistoryEntry[] {
 // 1. LISTAGEM DE MULTAS (RF F2)
 // ==========================================
 export function MultasList() {
+  const pode = usePodeNaRota();
   const navigate = useNavigate();
   const toast = useToast();
   const { rows, setRows, loading, reload } = useList('multas');
@@ -123,12 +125,12 @@ export function MultasList() {
         title="Gestão de Multas"
         subtitle={`${rows.length} penalidades contratuais registradas`}
         action={
-          <button
+          <Pode acao="Criar"><button
             onClick={() => navigate('/multas/novo')}
             className="flex items-center gap-2 bg-[#0a2540] text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-[#06182c] shadow-sm transition"
           >
             <Plus size={18} /> Nova Multa
-          </button>
+          </button></Pode>
         }
       />
 
@@ -234,7 +236,7 @@ export function MultasList() {
                 return (
                   <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
                     <Badge className={statusColor(s)}>{s}</Badge>
-                    {s === 'Pendente' && (
+                    {s === 'Pendente' && pode('Editar') && (
                       <button
                         type="button"
                         onClick={() => setModalStatus({ multa: r, novoStatus: 'Pago' })}
@@ -244,7 +246,7 @@ export function MultasList() {
                         <CheckCircle2 size={16} />
                       </button>
                     )}
-                    {s === 'Pendente' && (
+                    {s === 'Pendente' && pode('Editar') && (
                       <button
                         type="button"
                         onClick={() => setModalStatus({ multa: r, novoStatus: 'Cancelado' })}

@@ -5,21 +5,20 @@ export const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api',
 });
 
-// Interceptor para injetar token e identificação de usuário
+// Envia o token da sessão: o backend identifica o usuário e confere as permissões por ele
 api.interceptors.request.use((config) => {
-  try {
-    const token = localStorage.getItem('urbania_token');
-    const userStr = localStorage.getItem('urbania_user');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    if (userStr) {
-      const user = JSON.parse(userStr);
-      config.headers['x-user'] = user.email || user.nome;
-      config.headers['x-user-cargo'] = user.cargo;
-    }
-  } catch {
-    // ignorar falha ao ler storage
-  }
+  const token = localStorage.getItem('urbania_token');
+  if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
+
+// Usuário não identificado: avisa o AuthProvider, que encerra a sessão e volta ao login
+api.interceptors.response.use(
+  res => res,
+  err => {
+    if (err.response?.status === 401 && !err.config?.url?.includes('/auth/login')) {
+      window.dispatchEvent(new Event('urbania:sessao-expirada'));
+    }
+    return Promise.reject(err);
+  },
+);

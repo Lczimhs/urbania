@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, Bell, BellRing, CheckCheck, ChevronDown, LayoutGrid, LogOut, Settings, UserRound } from 'lucide-react';
-import { useAuth } from '../lib/auth';
+import { Pode, useAuth } from '../lib/auth';
 import { tempoRelativo, useAlertas } from '../lib/alertas';
 import type { Alerta } from '../lib/alertas';
 
@@ -80,7 +80,7 @@ export function NotificationsMenu() {
           </div>
 
           {/* Atalho para o gerenciamento das regras de notificação */}
-          <Link to="/notificacoes" onClick={() => setOpen(false)}
+          <Pode acao="Visualizar" modulo="notificacoes"><Link to="/notificacoes" onClick={() => setOpen(false)}
             className="mx-4 mb-3 flex items-center gap-3 p-2.5 rounded-xl bg-slate-50 border border-slate-200 hover:border-sky-300 hover:bg-sky-50/50 transition group">
             <span className="w-8 h-8 rounded-lg bg-white border border-slate-200 text-sky-600 flex items-center justify-center shrink-0"><LayoutGrid size={16} /></span>
             <span className="flex-1 min-w-0">
@@ -88,7 +88,7 @@ export function NotificationsMenu() {
               <span className="block text-[11px] text-slate-500">Gerenciar regras e envios automáticos</span>
             </span>
             <ArrowRight size={16} className="text-slate-400 group-hover:text-sky-600 group-hover:translate-x-0.5 transition" />
-          </Link>
+          </Link></Pode>
 
           <div className="max-h-[22rem] overflow-y-auto border-t border-slate-100">
             {loading && !alertas.length ? (
@@ -131,7 +131,7 @@ export function UserMenu() {
         <span className="w-8 h-8 rounded-full bg-[#0a2540] flex items-center justify-center text-white font-bold text-xs shadow-sm">{iniciais}</span>
         <span className="hidden sm:flex flex-col text-left">
           <span className="text-xs font-bold text-slate-800 leading-tight max-w-[12rem] truncate">{nome}</span>
-          <span className="text-[11px] text-teal-600 font-medium">{user?.cargo || 'Administrador'}</span>
+          <span className="text-[11px] text-teal-600 font-medium">{user?.perfilNome || user?.cargo}</span>
         </span>
         <ChevronDown size={14} className={`text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
@@ -143,7 +143,7 @@ export function UserMenu() {
             <p className="text-xs text-slate-500 truncate">{user?.email}</p>
           </div>
           <button type="button" onClick={() => ir('/perfil')} className={item}><UserRound size={16} className="text-slate-500" /> Perfil</button>
-          <button type="button" onClick={() => ir('/configuracoes')} className={item}><Settings size={16} className="text-slate-500" /> Configurações</button>
+          <Pode acao="Visualizar" modulo="configuracoes"><button type="button" onClick={() => ir('/configuracoes')} className={item}><Settings size={16} className="text-slate-500" /> Configurações</button></Pode>
           <div className="my-1.5 border-t border-slate-100" />
           <button type="button" onClick={sair} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-rose-600 hover:bg-rose-50 transition"><LogOut size={16} /> Sair</button>
         </Panel>

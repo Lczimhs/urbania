@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../lib/auth';
 import { useConfig } from '../lib/config';
+import { moduloDaRota } from '../lib/permissoes';
 import { NotificationsMenu, UserMenu } from './HeaderMenus';
 import logoImg from '../assets/logo.png';
 
@@ -93,8 +94,12 @@ const salvarPreferencia = (chave: string, valor: unknown) => {
 export default function Layout({ children }: { children: ReactNode }) {
   const loc = useLocation();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, pode } = useAuth();
   const { config } = useConfig();
+  // Menu só com os módulos que o perfil pode visualizar (seções vazias somem)
+  const visibleSections = sections
+    .map(s => ({ ...s, items: s.items.filter(i => { const m = moduloDaRota(i.path); return !m || pode(m); }) }))
+    .filter(s => s.items.length);
   const currentModule = allItems.find(x => isActive(x.path, loc.pathname));
   const [menuOpen, setMenuOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(() => lerPreferencia('urbania_menu_recolhido', false));
@@ -159,7 +164,7 @@ export default function Layout({ children }: { children: ReactNode }) {
 
         {/* Navegação */}
         <nav className="flex-1 overflow-y-auto overflow-x-hidden py-3 px-3 space-y-4">
-          {sections.map(section => {
+          {visibleSections.map(section => {
             const hasActive = section.items.some(i => isActive(i.path, loc.pathname));
             const open = !section.collapsible || mini || hasActive || !closedGroups.includes(section.id);
             return (

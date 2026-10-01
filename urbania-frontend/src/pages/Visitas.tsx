@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CalendarX2, MapPin, MoreVertical, Plus } from 'lucide-react';
 import { api } from '../api';
-import { Card, DataTable, PageHeader, RowActions, SearchInput, Toolbar, matches } from '../components/DataTable';
+import { Badge, Card, DataTable, PageHeader, RowActions, SearchInput, Toolbar, matches } from '../components/DataTable';
 import type { Mode, TabDef } from '../components/EntityForm';
 import { EntityPage } from '../components/EntityPage';
 import { ConfirmModal } from '../components/Modal';
@@ -10,6 +10,7 @@ import { apiError, useToast } from '../components/Toast';
 import { useList } from '../lib/useApi';
 import { formatDate, fullAddress, todayISO } from '../lib/format';
 import { STATUS_VISITA, statusColor } from '../lib/options';
+import { Pode, usePodeNaRota } from '../lib/auth';
 
 const QUICK_FILTERS = ['Todas', 'Hoje', 'Esta Semana', 'Pendentes'] as const;
 type QuickFilter = typeof QUICK_FILTERS[number];
@@ -49,6 +50,8 @@ export function RowMenu({ items }: { items: { label: string; onClick: () => void
 
 // Status editável direto na tabela
 export function StatusDropdown({ value, options, onChange }: { value: string; options: string[]; onChange: (v: string) => void }) {
+  const pode = usePodeNaRota();
+  if (!pode('Editar')) return <Badge className={statusColor(value)}>{value}</Badge>;
   return (
     <select value={value || ''} onChange={e => onChange(e.target.value)} onClick={e => e.stopPropagation()}
       className={`text-xs font-bold rounded-full px-2.5 py-1 border-0 outline-none cursor-pointer ${statusColor(value)}`}>
@@ -96,7 +99,7 @@ export function VisitasList() {
     <div className="py-6 flex flex-col items-center gap-3">
       <div className="w-16 h-16 rounded-full bg-sky-50 text-sky-500 flex items-center justify-center"><CalendarX2 size={32} /></div>
       <p className="font-semibold text-slate-600">Nenhuma visita encontrada para este filtro.</p>
-      <button onClick={() => navigate('/visitas/novo')} className="flex items-center gap-2 bg-[#0a2540] text-white px-4 py-2 rounded-lg font-semibold text-sm"><Plus size={16} /> Agendar nova visita</button>
+      <Pode acao="Criar"><button onClick={() => navigate('/visitas/novo')} className="flex items-center gap-2 bg-[#0a2540] text-white px-4 py-2 rounded-lg font-semibold text-sm"><Plus size={16} /> Agendar nova visita</button></Pode>
     </div>
   );
 
@@ -104,7 +107,7 @@ export function VisitasList() {
     <div className="space-y-6 max-w-7xl mx-auto">
       <PageHeader
         title="Visitas" subtitle={`${rows.length} registradas`}
-        action={<button onClick={() => navigate('/visitas/novo')} className="flex items-center gap-2 bg-[#0a2540] text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-[#06182c]"><Plus size={18} /> Agendar Visita</button>}
+        action={<Pode acao="Criar"><button onClick={() => navigate('/visitas/novo')} className="flex items-center gap-2 bg-[#0a2540] text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-[#06182c]"><Plus size={18} /> Agendar Visita</button></Pode>}
       />
       <Card>
         <Toolbar>

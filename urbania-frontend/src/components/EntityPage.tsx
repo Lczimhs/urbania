@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { api } from '../api';
 import { useRecord } from '../lib/useApi';
+import { useAuth } from '../lib/auth';
 import { EntityForm } from './EntityForm';
 import type { Mode, TabDef } from './EntityForm';
 import { apiError, useToast } from './Toast';
@@ -28,6 +29,7 @@ export function EntityPage({ mode, entity, basePath, singular, tabs, defaults = 
   const { id } = useParams();
   const navigate = useNavigate();
   const toast = useToast();
+  const { pode } = useAuth();
   const { record, loading, notFound } = useRecord(entity, mode === 'create' ? undefined : id);
 
   if (loading) return <p className="text-slate-400 p-8">Carregando...</p>;
@@ -64,7 +66,7 @@ export function EntityPage({ mode, entity, basePath, singular, tabs, defaults = 
       editLabel={editLabel}
       onSubmit={submit}
       onBack={() => navigate(basePath)}
-      onEdit={() => navigate(`${basePath}/${id}/editar`)}
+      onEdit={pode(entity, 'Editar') ? () => navigate(`${basePath}/${id}/editar`) : undefined}
     />
   );
 }

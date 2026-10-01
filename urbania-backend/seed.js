@@ -1,4 +1,5 @@
 const db = require('./database');
+const { MODULOS, garantirAcessosPadrao } = require('./permissoes');
 
 async function seed() {
   const run = (sql, params = []) => new Promise((resolve, reject) => {
@@ -231,9 +232,8 @@ async function seed() {
   if (perfCount === 0) {
     console.log('Criando perfis de acesso padrão...');
     const allActions = ['Visualizar', 'Criar', 'Editar', 'Excluir'];
-    const allModulesList = ['clientes', 'proprietarios', 'imoveis', 'visitas', 'negociacoes', 'contratos', 'financeiro', 'despesas', 'multas', 'relatorios', 'notificacoes', 'funcionarios', 'perfis', 'servicos', 'prestadores', 'reparos', 'canais', 'anuncios'];
     const adminPerms = {};
-    allModulesList.forEach(m => { adminPerms[m] = [...allActions]; });
+    MODULOS.forEach(m => { adminPerms[m] = [...allActions]; });
 
     const corretorPerms = {
       clientes: ['Visualizar', 'Criar', 'Editar'],
@@ -316,6 +316,9 @@ async function seed() {
         ('Campanha de Mídia Paga no Google Ads e Instagram', 1200.00, '2026-09-20', null, 'Atrasado', 'Marketing', null, null, 'Cartão de Crédito', 'Aguardando validação da fatura pelo gerente.', null, ?)
     `, [histD1, histD2, histD3]);
   }
+
+  // 19. Perfil e usuário Visitante (somente leitura)
+  await garantirAcessosPadrao();
 
   console.log('Seed finalizado com sucesso!');
   process.exit(0);

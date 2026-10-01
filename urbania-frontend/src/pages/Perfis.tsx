@@ -16,6 +16,7 @@ import { EntityPage, RelatedGrid } from '../components/EntityPage';
 import { useDelete } from '../components/useDelete';
 import { useList } from '../lib/useApi';
 import { MODULOS_SISTEMA, STATUS_PERFIL, statusColor } from '../lib/options';
+import { Pode } from '../lib/auth';
 
 // Parser seguro para as permissões
 function parsePermissoes(val: any): Record<string, string[]> {
@@ -56,12 +57,12 @@ export function PerfisList() {
         title="Perfis de Acesso"
         subtitle={`${rows.length} perfis cadastrados no sistema`}
         action={
-          <button
+          <Pode acao="Criar"><button
             onClick={() => navigate('/perfis/novo')}
             className="flex items-center gap-2 bg-[#0a2540] text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-[#06182c] shadow-sm transition"
           >
             <Plus size={18} /> Novo Perfil
-          </button>
+          </button></Pode>
         }
       />
 
@@ -322,6 +323,11 @@ function MatrizPermissoes({
                     {/* Ações individuais: Visualizar, Criar, Editar, Excluir */}
                     {['Visualizar', 'Criar', 'Editar', 'Excluir'].map(acao => {
                       const hasPerm = modActions.includes(acao);
+
+                      // Ação que não existe no módulo (ex.: "Criar" em Relatórios)
+                      if (!mod.acoes.includes(acao)) {
+                        return <td key={acao} className="py-3 px-3 text-center text-slate-300" title="Não se aplica a este módulo">—</td>;
+                      }
 
                       if (isView) {
                         // RF F11 NF 1.1: Somente leitura. Checkboxes desmarcados com opacidade reduzida destacando apenas os acessos concedidos

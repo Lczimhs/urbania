@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
+import { ShieldAlert } from 'lucide-react';
 import type { ComponentType, ReactNode } from 'react';
 import Layout from './components/Layout';
 import { ToastProvider } from './components/Toast';
@@ -29,6 +30,20 @@ import Avisos from './pages/Avisos';
 import Perfil from './pages/Perfil';
 import { ConfigProvider } from './lib/config';
 import GenericCrud from './pages/GenericCrud';
+import { acaoDaRota, moduloDaRota } from './lib/permissoes';
+
+const ACAO_TEXTO = { Visualizar: 'visualizar', Criar: 'cadastrar', Editar: 'editar', Excluir: 'excluir' };
+
+function AcessoNegado({ acao }: { acao: keyof typeof ACAO_TEXTO }) {
+  return (
+    <div className="max-w-lg mx-auto mt-16 bg-white border border-slate-200 rounded-2xl p-8 text-center shadow-sm">
+      <div className="w-14 h-14 mx-auto rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center"><ShieldAlert size={28} /></div>
+      <h1 className="mt-4 text-xl font-bold text-slate-800">Acesso negado</h1>
+      <p className="mt-2 text-sm text-slate-500">Seu perfil de acesso não permite {ACAO_TEXTO[acao]} neste módulo. Se precisar, procure a administração da imobiliária.</p>
+      <Link to="/" className="inline-block mt-6 px-5 py-2.5 rounded-lg bg-[#0a2540] text-white font-semibold hover:bg-[#06182c]">Voltar ao painel</Link>
+    </div>
+  );
+}
 
 // Gera as 4 rotas de um módulo: consultar, cadastrar, visualizar e editar
 const crudRoutes = (base: string, List: ComponentType, Page: ComponentType<{ mode: Mode }>) => [
@@ -40,7 +55,7 @@ const crudRoutes = (base: string, List: ComponentType, Page: ComponentType<{ mod
 
 function AppShell({ children }: { children: ReactNode }) {
   const loc = useLocation();
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, pode } = useAuth();
 
   // A tela de login é exibida sem o Layout de painel
   if (loc.pathname === '/login') {
@@ -63,8 +78,13 @@ function AppShell({ children }: { children: ReactNode }) {
     return <Navigate to="/login" replace />;
   }
 
+  // Bloqueia a tela quando o perfil não tem a permissão exigida pela rota (ex.: /clientes/novo exige "Criar")
+  const modulo = moduloDaRota(loc.pathname);
+  const acao = acaoDaRota(loc.pathname);
+  const permitido = !modulo || pode(modulo, acao);
+
   // Usuário autenticado da imobiliária acessa com Layout
-  return <ConfigProvider><Layout>{children}</Layout></ConfigProvider>;
+  return <ConfigProvider><Layout>{permitido ? children : <AcessoNegado acao={acao} />}</Layout></ConfigProvider>;
 }
 
 export default function App() {
