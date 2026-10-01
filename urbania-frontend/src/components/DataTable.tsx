@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
-import type { ReactNode } from 'react';
-import { ChevronLeft, ChevronRight, Edit2, Eye, Search, Trash2 } from 'lucide-react';
+import { createContext, useContext, useEffect, useId, useMemo, useRef, useState } from 'react';
+import type { KeyboardEvent, ReactNode } from 'react';
+import { ChevronDown, ChevronLeft, ChevronRight, Edit2, Eye, RotateCcw, Search, Trash2 } from 'lucide-react';
 import { usePodeNaRota } from '../lib/auth';
 
 export type Column<T> = { key: string; label: string; render?: (row: T) => ReactNode; className?: string };
@@ -160,13 +160,43 @@ export function RowActions({
   );
 }
 
+// ===== Busca com botão =====
+// Dentro de uma <Toolbar>, os campos de busca e filtros guardam um rascunho e só são aplicados
+// ao clicar em "Buscar" (ou Enter). Sem nenhum filtro preenchido, a busca traz todos os registros.
+// Fora de uma Toolbar, os campos continuam filtrando na hora.
+type CampoDeBusca = { aplicar: () => void; limpar: () => void };
+type BuscaCtx = { registrar: (id: string, campo: CampoDeBusca) => () => void };
+const BuscaContext = createContext<BuscaCtx | null>(null);
+
+function useCampoDeBusca(value: string, onChange: (v: string) => void) {
+  const ctx = useContext(BuscaContext);
+  const id = useId();
+  const [rascunho, setRascunho] = useState(value);
+  const atual = useRef({ rascunho, onChange });
+  atual.current = { rascunho, onChange };
+
+  // Acompanha mudanças feitas pela própria tela (ex.: filtro aplicado ou limpo)
+  useEffect(() => setRascunho(value), [value]);
+
+  useEffect(() => ctx?.registrar(id, {
+    aplicar: () => atual.current.onChange(atual.current.rascunho),
+    limpar: () => { setRascunho(''); atual.current.onChange(''); },
+  }), [ctx, id]);
+
+  return ctx ? { valor: rascunho, mudar: setRascunho } : { valor: value, mudar: onChange };
+}
+
+const campoBase = 'h-11 border rounded-xl text-sm bg-white outline-none transition shadow-xs focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10';
+
 export function SearchInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder: string }) {
+  const { valor, mudar } = useCampoDeBusca(value, onChange);
   return (
-    <div className="relative w-full md:w-80">
-      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+    <div className="relative w-full md:flex-1 md:min-w-[16rem]">
+      <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18} />
       <input
-        className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm bg-white outline-none focus:ring-2 focus:ring-[#0a2540]/20 focus:border-[#0a2540]"
-        placeholder={placeholder} value={value} onChange={e => onChange(e.target.value)}
+        type="search"
+        className={`${campoBase} w-full pl-10 pr-4 border-slate-200 text-slate-800 placeholder:text-slate-400`}
+        placeholder={placeholder} value={valor} onChange={e => mudar(e.target.value)}
       />
     </div>
   );
@@ -175,18 +205,67 @@ export function SearchInput({ value, onChange, placeholder }: { value: string; o
 export function FilterSelect({ value, onChange, options, placeholder }: {
   value: string; onChange: (v: string) => void; options: (string | { value: string; label: string })[]; placeholder: string;
 }) {
+  const { valor, mudar } = useCampoDeBusca(value, onChange);
+  // Filtro preenchido fica destacado para o usuário ver o que está selecionado
+  const ativo = valor !== '';
   return (
-    <select value={value} onChange={e => onChange(e.target.value)} className="border border-slate-200 text-slate-600 text-sm rounded-lg px-3 py-2 bg-white outline-none">
-      <option value="">{placeholder}</option>
-      {options.map(o => typeof o === 'string'
-        ? <option key={o} value={o}>{o}</option>
-        : <option key={o.value} value={o.value}>{o.label}</option>)}
-    </select>
+    <div className="relative w-full md:w-auto">
+      <select
+        value={valor} onChange={e => mudar(e.target.value)} title={placeholder}
+        className={`${campoBase} w-full md:w-auto md:min-w-[10rem] appearance-none cursor-pointer pl-3.5 pr-10 ${ativo ? 'border-sky-300 bg-sky-50 text-sky-800 font-semibold' : 'border-slate-200 text-slate-600'}`}
+      >
+        <option value="">{placeholder}</option>
+        {options.map(o => typeof o === 'string'
+          ? <option key={o} value={o}>{o}</option>
+          : <option key={o.value} value={o.value}>{o.label}</option>)}
+      </select>
+      <ChevronDown size={16} className={`absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none ${ativo ? 'text-sky-600' : 'text-slate-400'}`} />
+    </div>
   );
 }
 
 export function Toolbar({ children }: { children: ReactNode }) {
-  return <div className="p-4 border-b border-slate-100 flex flex-col md:flex-row flex-wrap gap-3 md:items-center bg-slate-50/50">{children}</div>;
+  const campos = useRef(new Map<string, CampoDeBusca>());
+  const [temCampos, setTemCampos] = useState(false);
+
+  const ctx = useMemo<BuscaCtx>(() => ({
+    registrar: (id, campo) => {
+      campos.current.set(id, campo);
+      setTemCampos(true);
+      return () => { campos.current.delete(id); setTemCampos(campos.current.size > 0); };
+    },
+  }), []);
+
+  const buscar = () => campos.current.forEach(c => c.aplicar());
+  const limpar = () => campos.current.forEach(c => c.limpar());
+
+  // Enter em qualquer campo faz a busca (sem enviar o formulário da página, quando a busca está dentro de um)
+  const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Enter' && (e.target as HTMLElement).tagName === 'INPUT') {
+      e.preventDefault();
+      buscar();
+    }
+  };
+
+  return (
+    <BuscaContext.Provider value={ctx}>
+      <div onKeyDown={onKeyDown} className="p-4 border-b border-slate-100 flex flex-col md:flex-row flex-wrap gap-3 md:items-center bg-slate-50/60">
+        {children}
+        {temCampos && (
+          <div className="flex gap-2 md:ml-auto">
+            <button type="button" onClick={limpar} title="Limpar filtros e mostrar todos"
+              className="h-11 px-4 flex-1 md:flex-none inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-800 transition">
+              <RotateCcw size={16} /> Limpar
+            </button>
+            <button type="button" onClick={buscar} title="Buscar (sem filtros, mostra todos)"
+              className="h-11 px-5 flex-1 md:flex-none inline-flex items-center justify-center gap-2 rounded-xl bg-[#0a2540] text-sm font-semibold text-white shadow-sm hover:bg-[#06182c] active:scale-[0.98] transition">
+              <Search size={16} /> Buscar
+            </button>
+          </div>
+        )}
+      </div>
+    </BuscaContext.Provider>
+  );
 }
 
 export function Card({ children, title, className = '' }: { children: ReactNode; title?: ReactNode; className?: string }) {
