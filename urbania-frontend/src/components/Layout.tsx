@@ -9,6 +9,7 @@ const mainModules = [
   { path: '/proprietarios', label: 'Proprietários', icon: <UserSquare2 size={20} /> },
   { path: '/imoveis', label: 'Imóveis', icon: <Building2 size={20} /> },
   { path: '/visitas', label: 'Visitas', icon: <Calendar size={20} /> },
+  { path: '/negociacoes', label: 'Negociações', icon: <Handshake size={20} /> },
   { path: '/funcionarios', label: 'Funcionários', icon: <BadgeCheck size={20} /> },
 ];
 
@@ -16,7 +17,6 @@ const mainModules = [
 const isActive = (path: string, current: string) => (path === '/' ? current === '/' : current === path || current.startsWith(path + '/'));
 
 const upcomingModules = [
-  { label: 'Negociações', icon: <Handshake size={20} /> },
   { label: 'Contratos', icon: <FileText size={20} /> },
   { label: 'Financeiro', icon: <DollarSign size={20} /> },
   { label: 'Relatórios', icon: <BarChart3 size={20} /> },

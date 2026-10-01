@@ -106,7 +106,7 @@ function ProprietarioVinculos({ proprietarioId }: { proprietarioId: number }) {
   const imoveis = useList('imoveis', { proprietarioId });
   const negociacoes = useList('negociacoes');
   const ids = imoveis.rows.map(i => i.id);
-  const minhasNegociacoes = negociacoes.rows.filter(n => ids.includes(n.imovelId));
+  const minhasNegociacoes = negociacoes.rows.filter(n => ids.includes(n.imovelId) || Number(n.proprietarioId) === Number(proprietarioId));
   const situacao = (imovelId: number) =>
     minhasNegociacoes.some(n => n.imovelId === imovelId && n.status === 'Realizada') ? 'Negociado' : 'Disponível';
 
@@ -136,7 +136,7 @@ function ProprietarioVinculos({ proprietarioId }: { proprietarioId: number }) {
             { key: 'valor', label: 'Valor', render: r => formatCurrency(r.valor) },
             { key: 'status', label: 'Status', render: r => <Badge className={statusColor(r.status)}>{r.status}</Badge> },
           ]}
-          actions={() => <span title="A tela de negociações ainda não foi desenvolvida" className="text-slate-300 text-xs font-semibold">Visualizar</span>}
+          actions={r => <button type="button" onClick={() => navigate(`/negociacoes/${r.id}`)} className="inline-flex items-center gap-1 text-sky-600 font-semibold text-xs hover:underline"><Eye size={14} /> Visualizar</button>}
         />
       </RelatedGrid>
     </>

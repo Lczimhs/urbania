@@ -14,6 +14,15 @@ export const SEXOS = ['Masculino', 'Feminino', 'Outro'];
 export const ESTADOS_CIVIS = ['Solteiro(a)', 'Casado(a)', 'Divorciado(a)', 'Viúvo(a)', 'União Estável'];
 export const STATUS_VISITA = ['Pendente', 'Confirmada', 'Realizada', 'Cancelada'];
 export const STATUS_NEGOCIACAO = ['Em Andamento', 'Realizada', 'Cancelada'];
+export const TIPOS_NEGOCIACAO = ['Venda', 'Locação', 'Temporada'];
+export const FORMAS_PAGAMENTO = [
+  'À Vista (PIX / Transferência)',
+  'Financiamento Bancário',
+  'Parcelamento Direto com Proprietário',
+  'Carta de Crédito / Consórcio',
+  'Permuta Parcial',
+  'Outro',
+];
 export const CARGOS = ['Corretor', 'Secretária', 'Gerente', 'Financeiro', 'Administrador'];
 export const STATUS_FUNCIONARIO = ['Ativo', 'Inativo'];
 export const UFS = ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'];

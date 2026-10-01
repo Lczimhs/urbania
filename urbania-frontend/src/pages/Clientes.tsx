@@ -132,7 +132,7 @@ function ClienteHistorico({ clienteId }: { clienteId: number }) {
             { key: 'valor', label: 'Valor Proposto', render: r => formatCurrency(r.valor) },
             { key: 'status', label: 'Status', render: r => <Badge className={statusColor(r.status)}>{r.status}</Badge> },
           ]}
-          actions={() => <span title="A tela de negociações ainda não foi desenvolvida" className="text-slate-300 text-xs font-semibold">Visualizar</span>}
+          actions={r => <button type="button" onClick={() => navigate(`/negociacoes/${r.id}`)} className="inline-flex items-center gap-1 text-sky-600 font-semibold text-xs hover:underline"><Eye size={14} /> Visualizar</button>}
         />
       </RelatedGrid>
     </>

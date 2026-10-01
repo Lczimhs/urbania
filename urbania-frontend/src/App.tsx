@@ -9,6 +9,7 @@ import { ProprietarioPage, ProprietariosList } from './pages/Proprietarios';
 import { ImovelPage, ImoveisList } from './pages/Imoveis';
 import { VisitaPage, VisitasList } from './pages/Visitas';
 import { FuncionarioPage, FuncionariosList } from './pages/Funcionarios';
+import { NegociacaoPage, NegociacoesList } from './pages/Negociacoes';
 import GenericCrud from './pages/GenericCrud';
 
 // Gera as 4 rotas de um módulo: consultar, cadastrar, visualizar e editar
@@ -30,6 +31,7 @@ export default function App() {
             {crudRoutes('/proprietarios', ProprietariosList, ProprietarioPage)}
             {crudRoutes('/imoveis', ImoveisList, ImovelPage)}
             {crudRoutes('/visitas', VisitasList, VisitaPage)}
+            {crudRoutes('/negociacoes', NegociacoesList, NegociacaoPage)}
             {crudRoutes('/funcionarios', FuncionariosList, FuncionarioPage)}
 
             {/* Módulos ainda no CRUD genérico (a desenvolver conforme o Documento de Requisitos) */}

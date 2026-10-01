@@ -42,7 +42,9 @@ const schema = {
     observacoes: 'TEXT', status: 'TEXT', dataAdmissao: 'TEXT', salario: 'REAL', perfilId: 'INTEGER',
   },
   negociacoes: {
-    clienteId: 'INTEGER', imovelId: 'INTEGER', data: 'TEXT', valor: 'REAL', status: 'TEXT', observacoes: 'TEXT',
+    clienteId: 'INTEGER', clienteNome: 'TEXT', imovelId: 'INTEGER', imovelTitulo: 'TEXT',
+    proprietarioId: 'INTEGER', proprietarioNome: 'TEXT', corretorId: 'INTEGER', corretor: 'TEXT',
+    tipo: 'TEXT', data: 'TEXT', valor: 'REAL', status: 'TEXT', formaPagamento: 'TEXT', observacoes: 'TEXT',
   },
   contratos: {
     clienteId: 'INTEGER', imovelId: 'INTEGER', tipo: 'TEXT', dataInicio: 'TEXT', dataFim: 'TEXT', valor: 'REAL', status: 'TEXT',
