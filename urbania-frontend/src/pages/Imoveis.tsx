@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bath, BedDouble, Building2, Car, Edit2, Eye, LayoutGrid, LayoutList, Maximize, Plus, Trash2 } from 'lucide-react';
-import { Badge, Card, DataTable, FilterSelect, PageHeader, Pager, RowActions, SearchInput, Toolbar, matches } from '../components/DataTable';
+import { Bath, BedDouble, Building2, Car, Edit2, LayoutGrid, LayoutList, Maximize, Plus, Trash2 } from 'lucide-react';
+import { ActionButton, Badge, Card, DataTable, FilterSelect, PageHeader, Pager, RowActions, SearchInput, Toolbar, matches } from '../components/DataTable';
 import type { Mode, TabDef } from '../components/EntityForm';
 import { EntityPage, RelatedGrid } from '../components/EntityPage';
 import { SearchSelect } from '../components/SearchSelect';
@@ -193,8 +193,8 @@ export function ImoveisList() {
                               {i.tipo && <Badge className="bg-[#0a2540]/90 text-white">{i.tipo}</Badge>}
                             </div>
                             <div className="absolute right-2 top-2 flex gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition" onClick={e => e.stopPropagation()}>
-                              <button title="Editar" onClick={() => navigate(`/imoveis/${i.id}/editar`)} className="p-1.5 rounded-lg bg-white/90 text-slate-600 hover:text-amber-600"><Edit2 size={16} /></button>
-                              <button title="Excluir" onClick={() => del.ask(i.id, i.titulo)} className="p-1.5 rounded-lg bg-white/90 text-slate-600 hover:text-red-600"><Trash2 size={16} /></button>
+                              <ActionButton tone="edit" title="Editar" onClick={() => navigate(`/imoveis/${i.id}/editar`)}><Edit2 size={15} /></ActionButton>
+                              <ActionButton tone="delete" title="Excluir" onClick={() => del.ask(i.id, i.titulo)}><Trash2 size={15} /></ActionButton>
                             </div>
                           </div>
                           <div className="p-4">
@@ -250,7 +250,7 @@ function ImovelRelacionamentos({ imovelId }: { imovelId: number }) {
             { key: 'valor', label: 'Valor', render: r => formatCurrency(r.valor) },
             { key: 'status', label: 'Status', render: r => <Badge className={statusColor(r.status)}>{r.status}</Badge> },
           ]}
-          actions={r => <button type="button" onClick={() => navigate(`/contratos/${r.id}`)} className="inline-flex items-center gap-1 text-sky-600 font-semibold text-xs hover:underline"><Eye size={14} /> Visualizar</button>}
+          actions={r => <RowActions onView={() => navigate(`/contratos/${r.id}`)} />}
         />
       </RelatedGrid>
       <RelatedGrid title="Visitas">
@@ -263,7 +263,7 @@ function ImovelRelacionamentos({ imovelId }: { imovelId: number }) {
             { key: 'data', label: 'Data', render: r => formatDate(r.data) },
             { key: 'status', label: 'Status', render: r => <Badge className={statusColor(r.status)}>{r.status}</Badge> },
           ]}
-          actions={r => <button type="button" onClick={() => navigate(`/visitas/${r.id}`)} className="inline-flex items-center gap-1 text-sky-600 font-semibold text-xs hover:underline"><Eye size={14} /> Visualizar</button>}
+          actions={r => <RowActions onView={() => navigate(`/visitas/${r.id}`)} />}
         />
       </RelatedGrid>
       <RelatedGrid title="Negociações">
@@ -277,7 +277,7 @@ function ImovelRelacionamentos({ imovelId }: { imovelId: number }) {
             { key: 'valor', label: 'Valor', render: r => formatCurrency(r.valor) },
             { key: 'status', label: 'Status', render: r => <Badge className={statusColor(r.status)}>{r.status}</Badge> },
           ]}
-          actions={r => <button type="button" onClick={() => navigate(`/negociacoes/${r.id}`)} className="inline-flex items-center gap-1 text-sky-600 font-semibold text-xs hover:underline"><Eye size={14} /> Visualizar</button>}
+          actions={r => <RowActions onView={() => navigate(`/negociacoes/${r.id}`)} />}
         />
       </RelatedGrid>
     </>

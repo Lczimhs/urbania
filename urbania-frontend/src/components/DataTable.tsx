@@ -108,6 +108,25 @@ export function Pager({ page, setPage, total, pageSize }: { page: number; setPag
   );
 }
 
+// Cores dos botões de ação: fundo suave em repouso, cor cheia ao passar o mouse
+const ACTION_TONES = {
+  view: 'bg-sky-50 text-sky-600 ring-sky-100 hover:bg-sky-600 hover:text-white hover:ring-sky-600',
+  edit: 'bg-amber-50 text-amber-600 ring-amber-100 hover:bg-amber-500 hover:text-white hover:ring-amber-500',
+  delete: 'bg-rose-50 text-rose-600 ring-rose-100 hover:bg-rose-600 hover:text-white hover:ring-rose-600',
+};
+
+export function ActionButton({ tone, title, onClick, children }: { tone: keyof typeof ACTION_TONES; title: string; onClick: () => void; children: ReactNode }) {
+  return (
+    <button
+      type="button" title={title} aria-label={title}
+      onClick={e => { e.stopPropagation(); onClick(); }}
+      className={`w-8 h-8 inline-flex items-center justify-center rounded-lg ring-1 transition-all duration-150 hover:shadow-md hover:-translate-y-px active:translate-y-0 ${ACTION_TONES[tone]}`}
+    >
+      {children}
+    </button>
+  );
+}
+
 // Botões Visualizar / Editar / Excluir de cada linha (padrão de ações da listagem)
 export function RowActions({
   onView,
@@ -127,37 +146,10 @@ export function RowActions({
   children?: ReactNode;
 }) {
   return (
-    <div className="inline-flex items-center gap-2 text-slate-400">
-      {onView && (
-        <button
-          type="button"
-          title={viewTitle}
-          onClick={e => { e.stopPropagation(); onView(); }}
-          className="p-1 rounded hover:text-sky-600 transition"
-        >
-          <Eye size={17} />
-        </button>
-      )}
-      {onEdit && (
-        <button
-          type="button"
-          title={editTitle}
-          onClick={e => { e.stopPropagation(); onEdit(); }}
-          className="p-1 rounded hover:text-sky-600 transition"
-        >
-          <Edit2 size={17} />
-        </button>
-      )}
-      {onDelete && (
-        <button
-          type="button"
-          title={deleteTitle}
-          onClick={e => { e.stopPropagation(); onDelete(); }}
-          className="p-1 rounded hover:text-red-500 transition"
-        >
-          <Trash2 size={17} />
-        </button>
-      )}
+    <div className="inline-flex items-center gap-1.5">
+      {onView && <ActionButton tone="view" title={viewTitle} onClick={onView}><Eye size={16} /></ActionButton>}
+      {onEdit && <ActionButton tone="edit" title={editTitle} onClick={onEdit}><Edit2 size={15} /></ActionButton>}
+      {onDelete && <ActionButton tone="delete" title={deleteTitle} onClick={onDelete}><Trash2 size={15} /></ActionButton>}
       {children}
     </div>
   );

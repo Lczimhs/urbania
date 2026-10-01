@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { Badge, Card, DataTable, FilterSelect, PageHeader, RowActions, SearchInput, Toolbar, matches } from '../components/DataTable';
 import { Avatar } from '../components/EntityForm';
 import type { Mode, TabDef } from '../components/EntityForm';
@@ -127,7 +127,7 @@ function ProprietarioVinculos({ proprietarioId }: { proprietarioId: number }) {
             { key: 'repasse', label: 'Repasse Líquido Estimado', render: r => <span className="font-bold text-emerald-700">{formatCurrency(r.repasseProprietario || r.valor)}</span> },
             { key: 'status', label: 'Status', render: r => <Badge className={statusColor(r.status)}>{r.status}</Badge> },
           ]}
-          actions={r => <button type="button" onClick={() => navigate(`/contratos/${r.id}`)} className="inline-flex items-center gap-1 text-sky-600 font-semibold text-xs hover:underline"><Eye size={14} /> Visualizar</button>}
+          actions={r => <RowActions onView={() => navigate(`/contratos/${r.id}`)} />}
         />
       </RelatedGrid>
       <RelatedGrid title="Imóveis">
@@ -141,7 +141,7 @@ function ProprietarioVinculos({ proprietarioId }: { proprietarioId: number }) {
             { key: 'participacao', label: 'Participação (%)', render: () => '100%' },
             { key: 'situacao', label: 'Situação', render: r => <Badge className={situacao(r.id) === 'Disponível' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-700'}>{situacao(r.id)}</Badge> },
           ]}
-          actions={r => <button type="button" onClick={() => navigate(`/imoveis/${r.id}`)} className="inline-flex items-center gap-1 text-sky-600 font-semibold text-xs hover:underline"><Eye size={14} /> Visualizar</button>}
+          actions={r => <RowActions onView={() => navigate(`/imoveis/${r.id}`)} />}
         />
       </RelatedGrid>
       <RelatedGrid title="Negociações">
@@ -154,7 +154,7 @@ function ProprietarioVinculos({ proprietarioId }: { proprietarioId: number }) {
             { key: 'valor', label: 'Valor', render: r => formatCurrency(r.valor) },
             { key: 'status', label: 'Status', render: r => <Badge className={statusColor(r.status)}>{r.status}</Badge> },
           ]}
-          actions={r => <button type="button" onClick={() => navigate(`/negociacoes/${r.id}`)} className="inline-flex items-center gap-1 text-sky-600 font-semibold text-xs hover:underline"><Eye size={14} /> Visualizar</button>}
+          actions={r => <RowActions onView={() => navigate(`/negociacoes/${r.id}`)} />}
         />
       </RelatedGrid>
     </>

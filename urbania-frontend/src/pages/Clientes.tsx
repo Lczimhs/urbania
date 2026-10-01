@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { Badge, Card, DataTable, FilterSelect, PageHeader, RowActions, SearchInput, Toolbar, matches } from '../components/DataTable';
 import { Avatar } from '../components/EntityForm';
 import type { Mode, TabDef } from '../components/EntityForm';
@@ -121,7 +121,7 @@ function ClienteHistorico({ clienteId }: { clienteId: number }) {
             { key: 'valor', label: 'Valor', render: r => formatCurrency(r.valor) },
             { key: 'status', label: 'Status', render: r => <Badge className={statusColor(r.status)}>{r.status}</Badge> },
           ]}
-          actions={r => <button type="button" onClick={() => navigate(`/contratos/${r.id}`)} className="inline-flex items-center gap-1 text-sky-600 font-semibold text-xs hover:underline"><Eye size={14} /> Visualizar</button>}
+          actions={r => <RowActions onView={() => navigate(`/contratos/${r.id}`)} />}
         />
       </RelatedGrid>
       <RelatedGrid title="Histórico de Visitas">
@@ -135,7 +135,7 @@ function ClienteHistorico({ clienteId }: { clienteId: number }) {
             { key: 'cep', label: 'CEP do Imóvel', render: r => imovel(r.imovelId)?.cep },
             { key: 'tipo', label: 'Tipo do Imóvel', render: r => imovel(r.imovelId)?.tipo },
           ]}
-          actions={r => <button type="button" onClick={() => navigate(`/visitas/${r.id}`)} className="inline-flex items-center gap-1 text-sky-600 font-semibold text-xs hover:underline"><Eye size={14} /> Visualizar</button>}
+          actions={r => <RowActions onView={() => navigate(`/visitas/${r.id}`)} />}
         />
       </RelatedGrid>
       <RelatedGrid title="Histórico de Negociações">
@@ -148,7 +148,7 @@ function ClienteHistorico({ clienteId }: { clienteId: number }) {
             { key: 'valor', label: 'Valor Proposto', render: r => formatCurrency(r.valor) },
             { key: 'status', label: 'Status', render: r => <Badge className={statusColor(r.status)}>{r.status}</Badge> },
           ]}
-          actions={r => <button type="button" onClick={() => navigate(`/negociacoes/${r.id}`)} className="inline-flex items-center gap-1 text-sky-600 font-semibold text-xs hover:underline"><Eye size={14} /> Visualizar</button>}
+          actions={r => <RowActions onView={() => navigate(`/negociacoes/${r.id}`)} />}
         />
       </RelatedGrid>
     </>
