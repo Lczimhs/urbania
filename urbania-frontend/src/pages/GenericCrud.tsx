@@ -1,6 +1,7 @@
 
 import { useEffect, useState } from 'react';
 import { api } from '../api';
+import { RowActions } from '../components/DataTable';
 
 export default function GenericCrud({ entity, title, fields }: { entity: string, title: string, fields: any[] }) {
   const [data, setData] = useState<any[]>([]);
@@ -77,9 +78,8 @@ export default function GenericCrud({ entity, title, fields }: { entity: string,
               <tr key={row.id} className="hover:bg-slate-50">
                 <td className="px-4 py-3 font-mono text-slate-500">#{row.id}</td>
                 {fields.map(f => <td key={f.key} className="px-4 py-3 font-medium text-slate-800">{row[f.key]}</td>)}
-                <td className="px-4 py-3 text-right space-x-2">
-                  <button onClick={() => setForm(row)} className="text-sky-600 font-semibold hover:underline">Editar</button>
-                  <button onClick={() => remove(row.id)} className="text-red-600 font-semibold hover:underline">Excluir</button>
+                <td className="px-4 py-3 text-right">
+                  <RowActions onEdit={() => setForm(row)} onDelete={() => remove(row.id)} />
                 </td>
               </tr>
             ))}

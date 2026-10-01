@@ -14,7 +14,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { api } from '../api';
-import { Card, DataTable, FilterSelect, PageHeader, SearchInput, Toolbar, matches } from '../components/DataTable';
+import { Card, DataTable, FilterSelect, PageHeader, RowActions, SearchInput, Toolbar, matches } from '../components/DataTable';
 import { Avatar } from '../components/EntityForm';
 import type { Mode, TabDef } from '../components/EntityForm';
 import { EntityPage, RelatedGrid } from '../components/EntityPage';
@@ -24,7 +24,7 @@ import { useDelete } from '../components/useDelete';
 import { useList } from '../lib/useApi';
 import { formatCurrency, formatDate, fullAddress, todayISO } from '../lib/format';
 import { FORMAS_PAGAMENTO, STATUS_NEGOCIACAO, TIPOS_NEGOCIACAO, statusColor } from '../lib/options';
-import { RowMenu, StatusDropdown } from './Visitas';
+import { StatusDropdown } from './Visitas';
 
 const QUICK_FILTERS = ['Todas', 'Em Andamento', 'Realizadas', 'Canceladas'] as const;
 type QuickFilter = typeof QUICK_FILTERS[number];
@@ -321,27 +321,10 @@ export function NegociacoesList() {
             },
           ]}
           actions={r => (
-            <RowMenu
-              items={[
-                { label: 'Visualizar', onClick: () => navigate(`/negociacoes/${r.id}`) },
-                { label: 'Editar', onClick: () => navigate(`/negociacoes/${r.id}/editar`) },
-                {
-                  label: 'Concluir (Realizada)',
-                  hidden: r.status === 'Realizada',
-                  onClick: () => setStatus(r.id, 'Realizada'),
-                },
-                {
-                  label: 'Cancelar negociação',
-                  danger: true,
-                  hidden: r.status === 'Cancelada',
-                  onClick: () => setCancelarId(r.id),
-                },
-                {
-                  label: 'Excluir',
-                  danger: true,
-                  onClick: () => del.ask(r.id, `Proposta #${r.id} (${formatCurrency(r.valor)})`),
-                },
-              ]}
+            <RowActions
+              onView={() => navigate(`/negociacoes/${r.id}`)}
+              onEdit={() => navigate(`/negociacoes/${r.id}/editar`)}
+              onDelete={() => del.ask(r.id, `Proposta #${r.id} (${formatCurrency(r.valor)})`)}
             />
           )}
         />

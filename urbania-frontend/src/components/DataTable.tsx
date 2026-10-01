@@ -108,13 +108,57 @@ export function Pager({ page, setPage, total, pageSize }: { page: number; setPag
   );
 }
 
-// Botões Visualizar / Editar / Excluir de cada linha
-export function RowActions({ onView, onEdit, onDelete }: { onView?: () => void; onEdit?: () => void; onDelete?: () => void }) {
+// Botões Visualizar / Editar / Excluir de cada linha (padrão de ações da listagem)
+export function RowActions({
+  onView,
+  onEdit,
+  onDelete,
+  viewTitle = 'Visualizar',
+  editTitle = 'Editar',
+  deleteTitle = 'Excluir',
+  children,
+}: {
+  onView?: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
+  viewTitle?: string;
+  editTitle?: string;
+  deleteTitle?: string;
+  children?: ReactNode;
+}) {
   return (
     <div className="inline-flex items-center gap-2 text-slate-400">
-      {onView && <button type="button" title="Visualizar" onClick={onView} className="p-1 rounded hover:text-sky-600 transition"><Eye size={17} /></button>}
-      {onEdit && <button type="button" title="Editar" onClick={onEdit} className="p-1 rounded hover:text-sky-600 transition"><Edit2 size={17} /></button>}
-      {onDelete && <button type="button" title="Excluir" onClick={onDelete} className="p-1 rounded hover:text-red-500 transition"><Trash2 size={17} /></button>}
+      {onView && (
+        <button
+          type="button"
+          title={viewTitle}
+          onClick={e => { e.stopPropagation(); onView(); }}
+          className="p-1 rounded hover:text-sky-600 transition"
+        >
+          <Eye size={17} />
+        </button>
+      )}
+      {onEdit && (
+        <button
+          type="button"
+          title={editTitle}
+          onClick={e => { e.stopPropagation(); onEdit(); }}
+          className="p-1 rounded hover:text-sky-600 transition"
+        >
+          <Edit2 size={17} />
+        </button>
+      )}
+      {onDelete && (
+        <button
+          type="button"
+          title={deleteTitle}
+          onClick={e => { e.stopPropagation(); onDelete(); }}
+          className="p-1 rounded hover:text-red-500 transition"
+        >
+          <Trash2 size={17} />
+        </button>
+      )}
+      {children}
     </div>
   );
 }
