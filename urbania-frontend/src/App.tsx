@@ -10,6 +10,11 @@ import { ImovelPage, ImoveisList } from './pages/Imoveis';
 import { VisitaPage, VisitasList } from './pages/Visitas';
 import { FuncionarioPage, FuncionariosList } from './pages/Funcionarios';
 import { NegociacaoPage, NegociacoesList } from './pages/Negociacoes';
+import { ServicoPage, ServicosList } from './pages/Servicos';
+import { PrestadorPage, PrestadoresList } from './pages/Prestadores';
+import { ReparoPage, ReparosList } from './pages/Reparos';
+import { CanalPage, CanaisList } from './pages/Canais';
+import { AnuncioPage, AnunciosList } from './pages/Anuncios';
 import GenericCrud from './pages/GenericCrud';
 
 // Gera as 4 rotas de um módulo: consultar, cadastrar, visualizar e editar
@@ -34,12 +39,16 @@ export default function App() {
             {crudRoutes('/negociacoes', NegociacoesList, NegociacaoPage)}
             {crudRoutes('/funcionarios', FuncionariosList, FuncionarioPage)}
 
+            {/* Manutenção e Divulgação */}
+            {crudRoutes('/servicos', ServicosList, ServicoPage)}
+            {crudRoutes('/prestadores', PrestadoresList, PrestadorPage)}
+            {crudRoutes('/reparos', ReparosList, ReparoPage)}
+            {crudRoutes('/canais', CanaisList, CanalPage)}
+            {crudRoutes('/anuncios', AnunciosList, AnuncioPage)}
+
             {/* Módulos ainda no CRUD genérico (a desenvolver conforme o Documento de Requisitos) */}
             <Route path="/perfis" element={<GenericCrud entity="perfis" title="Perfis de Acesso" fields={[{key:'nome',label:'Perfil'},{key:'descricao',label:'Descrição'}]} />} />
             <Route path="/notificacoes" element={<GenericCrud entity="notificacoes" title="Notificações" fields={[{key:'titulo',label:'Título'},{key:'canal',label:'Canal'},{key:'status',label:'Status'}]} />} />
-            <Route path="/prestadores" element={<GenericCrud entity="prestadores" title="Prestadores de Serviço" fields={[{key:'nome',label:'Nome'},{key:'especialidade',label:'Especialidade'}]} />} />
-            <Route path="/reparos" element={<GenericCrud entity="reparos" title="Gestão de Reparos" fields={[{key:'descricao',label:'Descrição'},{key:'status',label:'Status'},{key:'valor',label:'Valor'}]} />} />
-            <Route path="/anuncios" element={<GenericCrud entity="anuncios" title="Canais de Anúncios" fields={[{key:'canal',label:'Canal'},{key:'status',label:'Status'}]} />} />
             <Route path="/despesas" element={<GenericCrud entity="despesas" title="Controle de Despesas" fields={[{key:'descricao',label:'Descrição'},{key:'valor',label:'Valor'},{key:'status',label:'Status'}]} />} />
             <Route path="/multas" element={<GenericCrud entity="multas" title="Gestão de Multas" fields={[{key:'motivo',label:'Motivo'},{key:'valor',label:'Valor'},{key:'status',label:'Status'}]} />} />
             <Route path="/financeiro" element={<GenericCrud entity="financeiro" title="Operações Financeiras" fields={[{key:'tipo',label:'Tipo'},{key:'descricao',label:'Descrição'},{key:'valor',label:'Valor'},{key:'status',label:'Status'}]} />} />

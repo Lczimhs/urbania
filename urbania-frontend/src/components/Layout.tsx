@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Users, UserSquare2, Building2, Calendar, BadgeCheck, Handshake, FileText, DollarSign, BarChart3, Settings, Bell, ChevronDown, Menu } from 'lucide-react';
+import { Home, Users, UserSquare2, Building2, Calendar, BadgeCheck, Handshake, FileText, DollarSign, BarChart3, Settings, Bell, ChevronDown, Menu, ClipboardList, HardHat, Wrench, Radio, Megaphone } from 'lucide-react';
 
 const mainModules = [
   { path: '/', label: 'Dashboard', icon: <Home size={20} /> },
@@ -16,6 +16,14 @@ const mainModules = [
 // Módulo ativo também nas subpáginas (ex.: /clientes/3/editar)
 const isActive = (path: string, current: string) => (path === '/' ? current === '/' : current === path || current.startsWith(path + '/'));
 
+const maintenanceModules = [
+  { path: '/servicos', label: 'Serviços', icon: <ClipboardList size={20} /> },
+  { path: '/prestadores', label: 'Prestadores', icon: <HardHat size={20} /> },
+  { path: '/reparos', label: 'Reparos', icon: <Wrench size={20} /> },
+  { path: '/canais', label: 'Canais de Publicação', icon: <Radio size={20} /> },
+  { path: '/anuncios', label: 'Anúncios', icon: <Megaphone size={20} /> },
+];
+
 const upcomingModules = [
   { label: 'Contratos', icon: <FileText size={20} /> },
   { label: 'Financeiro', icon: <DollarSign size={20} /> },
@@ -25,7 +33,7 @@ const upcomingModules = [
 
 export default function Layout({ children }: { children: ReactNode }) {
   const loc = useLocation();
-  const currentModule = mainModules.find(x => isActive(x.path, loc.pathname));
+  const currentModule = [...mainModules, ...maintenanceModules].find(x => isActive(x.path, loc.pathname));
   const [menuOpen, setMenuOpen] = useState(false);
 
   // No celular o menu fecha sozinho ao trocar de página
@@ -63,6 +71,23 @@ export default function Layout({ children }: { children: ReactNode }) {
                   </Link>
                 )
               })}
+            </nav>
+          </div>
+
+          {/* Manutenção e Divulgação */}
+          <div className="px-4 mt-8">
+            <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-3 ml-2">Manutenção e Divulgação</p>
+            <nav className="space-y-1">
+              {maintenanceModules.map(item => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${isActive(item.path, loc.pathname) ? 'bg-sky-600 text-white shadow-md' : 'hover:bg-white/10 hover:text-white'}`}
+                >
+                  {item.icon}
+                  {item.label}
+                </Link>
+              ))}
             </nav>
           </div>
 
