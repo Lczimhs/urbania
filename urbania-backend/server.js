@@ -22,8 +22,9 @@ const pickColumns = (table, body) => {
 // Registros que impedem a exclusão (requisitos 1.5.4 / 1.5.3 / 1.7.1)
 const deleteGuards = {
   clientes: [['visitas', 'clienteId', 'visita(s)'], ['negociacoes', 'clienteId', 'negociação(ões)'], ['contratos', 'clienteId', 'contrato(s)']],
-  proprietarios: [['imoveis', 'proprietarioId', 'imóvel(is)']],
+  proprietarios: [['imoveis', 'proprietarioId', 'imóvel(is)'], ['negociacoes', 'proprietarioId', 'negociação(ões)']],
   imoveis: [['visitas', 'imovelId', 'visita(s)'], ['negociacoes', 'imovelId', 'negociação(ões)'], ['contratos', 'imovelId', 'contrato(s)']],
+  funcionarios: [['visitas', 'corretorId', 'visita(s)'], ['negociacoes', 'corretorId', 'negociação(ões)'], ['imoveis', 'responsavelId', 'imóvel(is)']],
 };
 
 const get = (sql, params = []) => new Promise((resolve, reject) =>
@@ -107,6 +108,8 @@ app.get('/api/dashboard', async (req, res) => {
     valorPortfolio: 'SELECT COALESCE(SUM(precoVenda), 0) as v FROM imoveis',
     receitaMes: "SELECT COALESCE(SUM(valor), 0) as v FROM financeiro WHERE status='Pago' AND tipo='Receita'",
     visitasPendentes: "SELECT COUNT(*) as v FROM visitas WHERE status='Pendente'",
+    negociacoesAndamento: "SELECT COUNT(*) as v FROM negociacoes WHERE status='Em Andamento'",
+    totalNegociacoes: "SELECT COUNT(*) as v FROM negociacoes",
   };
   try {
     const stats = {};
