@@ -693,9 +693,7 @@ export function ContratoPage({ mode }: { mode: Mode }) {
                           set(null);
                         }
                       }}
-                      className={`w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-[#0a2540] disabled:bg-slate-100 disabled:text-slate-500 ${
-                        invalid ? 'border-red-500 bg-red-50' : 'bg-white'
-                      }`}
+                      aria-invalid={invalid} className={`w-full px-3 py-2 border ${invalid ? 'border-red-500' : 'border-slate-300'} rounded-lg bg-white outline-none focus:ring-2 focus:ring-[#0a2540] disabled:bg-slate-100 disabled:text-slate-500`}
                     >
                       <option value="">Selecione um imóvel...</option>
                       {imoveis.rows.map(i => (

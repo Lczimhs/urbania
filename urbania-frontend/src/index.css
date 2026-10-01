@@ -1,1 +1,19 @@
 @import "tailwindcss";
+
+@theme {
+  --color-cadastro: #0a2540;
+  --color-cadastro-hover: #06182c;
+}
+
+.save-action {
+  background-color: var(--color-cadastro);
+}
+
+.save-action:hover:not(:disabled) {
+  background-color: var(--color-cadastro-hover);
+}
+
+.save-action:focus-visible {
+  outline: 2px solid var(--color-cadastro);
+  outline-offset: 2px;
+}

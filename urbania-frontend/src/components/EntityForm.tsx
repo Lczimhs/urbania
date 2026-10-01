@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
-import { ArrowLeft, Camera, Check, ChevronLeft, ChevronRight, ImagePlus, Loader2, X } from 'lucide-react';
+import { ArrowLeft, Building2, CalendarDays, Camera, Check, ChevronLeft, ChevronRight, ClipboardList, FileText, History, ImagePlus, Loader2, MapPin, Settings, ShieldCheck, UserRound, Wallet, X } from 'lucide-react';
 import { formatCurrency, formatDate, initials, parseCurrencyInput } from '../lib/format';
 import { imageToDataUrl, parsePhotos } from '../lib/files';
 import { buscarCep } from '../lib/cep';
@@ -32,6 +32,7 @@ export type FieldDef = {
 
 export type TabDef = {
   label: string;
+  icon?: ReactNode;
   fields?: FieldDef[];
   render?: (form: Form, mode: Mode) => ReactNode;
   locked?: (form: Form) => string | null;   // devolve o motivo enquanto a aba estiver bloqueada
@@ -42,8 +43,23 @@ const isRequired = (f: FieldDef, form: Form) => (typeof f.required === 'function
 const isDisabled = (f: FieldDef, form: Form, mode: Mode) => (typeof f.disabled === 'function' ? f.disabled(form, mode) : !!f.disabled);
 const isEmpty = (v: unknown) => v === null || v === undefined || String(v).trim() === '';
 
-const inputClass = (invalid: boolean) =>
-  `w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-[#0a2540] disabled:bg-slate-100 disabled:text-slate-500 ${invalid ? 'border-red-500 bg-red-50' : 'bg-white'}`;
+const inputClass = (invalid = false) =>
+  `w-full px-3 py-2 border ${invalid ? 'border-red-500' : 'border-slate-300'} rounded-lg bg-white outline-none focus:ring-2 focus:ring-[#0a2540] disabled:bg-slate-100 disabled:text-slate-500`;
+
+const stepIcon = (label: string) => {
+  const name = label.toLocaleLowerCase('pt-BR');
+  if (/endere|localiza/.test(name)) return <MapPin size={20} />;
+  if (/foto|imagem/.test(name)) return <Camera size={20} />;
+  if (/hist|vínculo|relacion/.test(name)) return <History size={20} />;
+  if (/financ|banc|pagamento|valor/.test(name)) return <Wallet size={20} />;
+  if (/garantia|permiss|acesso/.test(name)) return <ShieldCheck size={20} />;
+  if (/imóvel|imóveis|caracter/.test(name)) return <Building2 size={20} />;
+  if (/data|prazo|vigência|agenda/.test(name)) return <CalendarDays size={20} />;
+  if (/pessoa|cliente|propriet|contato|funcion/.test(name)) return <UserRound size={20} />;
+  if (/config|prefer/.test(name)) return <Settings size={20} />;
+  if (/contrat|document|observ/.test(name)) return <FileText size={20} />;
+  return <ClipboardList size={20} />;
+};
 
 // Formulário em abas reaproveitado nas telas de Cadastrar, Editar e Visualizar
 export function EntityForm({ title, mode, initial, tabs, defaults = {}, onSubmit, onBack, onEdit, validate, showClear = true, cancelConfirm, submitLabel = 'Salvar', editLabel = 'Editar', hideId = false }: {
@@ -67,8 +83,13 @@ export function EntityForm({ title, mode, initial, tabs, defaults = {}, onSubmit
   const [errors, setErrors] = useState<Record<string, boolean>>({});
   const [saving, setSaving] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
+  const activeStep = useRef<HTMLButtonElement>(null);
   const toast = useToast();
   const view = mode === 'view';
+
+  useEffect(() => {
+    activeStep.current?.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+  }, [tab]);
 
   const allFields = tabs.flatMap((t, i) => (t.fields || []).map(f => ({ ...f, tab: i })));
 
@@ -132,7 +153,7 @@ export function EntityForm({ title, mode, initial, tabs, defaults = {}, onSubmit
     const opts = toOptions(f.options);
     const wrap = (content: ReactNode) => (
       <div key={f.key} className={f.full || f.type === 'textarea' || f.type === 'photos' ? 'sm:col-span-2' : ''}>
-        <label className={`block text-xs font-semibold uppercase mb-1 ${invalid ? 'text-red-600' : 'text-slate-500'}`}>
+        <label className="block text-xs font-semibold uppercase mb-1 text-slate-500">
           {f.label}{!view && isRequired(f, form) && <span className="text-red-500"> *</span>}
         </label>
         {content}
@@ -156,10 +177,10 @@ export function EntityForm({ title, mode, initial, tabs, defaults = {}, onSubmit
 
     switch (f.type) {
       case 'textarea':
-        return wrap(<textarea rows={3} disabled={disabled} className={inputClass(invalid)} value={value ?? ''} onChange={e => set(f, e.target.value)} placeholder={f.placeholder} />);
+        return wrap(<textarea rows={3} disabled={disabled} aria-invalid={invalid} className={inputClass(invalid)} value={value ?? ''} onChange={e => set(f, e.target.value)} placeholder={f.placeholder} />);
       case 'select':
         return wrap(
-          <select disabled={disabled} className={inputClass(invalid)} value={value ?? ''} onChange={e => set(f, e.target.value)}>
+          <select disabled={disabled} aria-invalid={invalid} className={inputClass(invalid)} value={value ?? ''} onChange={e => set(f, e.target.value)}>
             <option value="">Selecione...</option>
             {opts.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
@@ -167,7 +188,7 @@ export function EntityForm({ title, mode, initial, tabs, defaults = {}, onSubmit
       case 'search-select':
         return wrap(<SearchSelect value={value} options={opts} disabled={disabled} invalid={invalid} onChange={v => set(f, v)} />);
       case 'currency':
-        return wrap(<input disabled={disabled} inputMode="numeric" className={inputClass(invalid)} value={formatCurrency(value)} placeholder="R$ 0,00" onChange={e => set(f, parseCurrencyInput(e.target.value))} />);
+        return wrap(<input disabled={disabled} aria-invalid={invalid} inputMode="numeric" className={inputClass(invalid)} value={formatCurrency(value)} placeholder="R$ 0,00" onChange={e => set(f, parseCurrencyInput(e.target.value))} />);
       case 'toggle': {
         const [on, off] = opts.map(o => o.value);
         const active = value === on;
@@ -181,14 +202,14 @@ export function EntityForm({ title, mode, initial, tabs, defaults = {}, onSubmit
         );
       }
       case 'photo':
-        return wrap(<PhotoInput value={value} name={form.nome} disabled={disabled} onChange={v => set(f, v)} />);
+        return wrap(<PhotoInput value={value} name={form.nome} disabled={disabled} invalid={invalid} onChange={v => set(f, v)} />);
       case 'photos':
         return wrap(<PhotosInput value={parsePhotos(value)} onChange={v => set(f, JSON.stringify(v))} />);
       default:
         return wrap(
           <div className="relative">
             <input
-              type={f.type || 'text'} disabled={disabled} className={inputClass(invalid)} placeholder={f.placeholder}
+              type={f.type || 'text'} disabled={disabled} aria-invalid={invalid} className={inputClass(invalid)} placeholder={f.placeholder}
               value={value ?? ''} onChange={e => set(f, f.mask ? f.mask(e.target.value) : e.target.value)}
             />
             {f.suffix && <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">{f.suffix}</span>}
@@ -200,7 +221,7 @@ export function EntityForm({ title, mode, initial, tabs, defaults = {}, onSubmit
   const current = tabs[tab];
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-[70rem] mx-auto">
       <div className="flex items-center gap-3 mb-5">
         <button onClick={onBack} className="p-2 rounded-lg hover:bg-white text-slate-500" title="Voltar"><ArrowLeft size={20} /></button>
         <h1 className="text-2xl font-bold text-slate-800">{title}</h1>
@@ -208,34 +229,44 @@ export function EntityForm({ title, mode, initial, tabs, defaults = {}, onSubmit
 
       <form onSubmit={submit} className="bg-white border border-slate-200/60 rounded-xl shadow-sm overflow-hidden">
         {tabs.length > 1 && (
-          <div className="flex border-b px-4 sm:px-6 pt-3 gap-5 text-sm font-semibold text-slate-500 overflow-x-auto">
-            {tabs.map((t, i) => {
-              const hasError = allFields.some(f => f.tab === i && errors[f.key]);
-              const lockedReason = t.locked?.(form);
-              return (
-                <button type="button" key={t.label} onClick={() => (lockedReason ? toast.error(lockedReason) : setTab(i))} title={lockedReason || undefined}
-                  className={`pb-3 border-b-2 whitespace-nowrap transition-colors ${tab === i ? 'border-[#0a2540] text-[#0a2540]' : 'border-transparent hover:text-slate-800'} ${hasError ? 'text-red-600' : ''} ${lockedReason ? 'opacity-40 cursor-not-allowed' : ''}`}>
-                  {t.label}{hasError && ' •'}
-                </button>
-              );
-            })}
-          </div>
+          <nav aria-label="Etapas do formulário" className="overflow-x-auto px-4 sm:px-6 py-6">
+            <ol className="mx-auto flex w-full max-w-4xl min-w-max sm:min-w-0">
+              {tabs.map((t, i) => {
+                const lockedReason = t.locked?.(form);
+                const active = tab === i;
+                return (
+                  <li key={t.label} className="relative flex-1 min-w-28">
+                    {i > 0 && <span aria-hidden="true" className={`absolute left-0 right-1/2 top-5 h-0.5 ${i <= tab ? 'bg-cadastro' : 'bg-slate-200'}`} />}
+                    {i < tabs.length - 1 && <span aria-hidden="true" className={`absolute left-1/2 right-0 top-5 h-0.5 ${i < tab ? 'bg-cadastro' : 'bg-slate-200'}`} />}
+                    <button ref={active ? activeStep : undefined} type="button" aria-current={active ? 'step' : undefined} aria-disabled={!!lockedReason}
+                      onClick={() => (lockedReason ? toast.error(lockedReason) : setTab(i))} title={lockedReason || undefined}
+                      className={`relative w-full flex flex-col items-center gap-2 px-2 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-cadastro focus-visible:ring-offset-2 ${lockedReason ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer group'}`}>
+                      <span aria-hidden="true" className={`relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${i <= tab ? 'border-cadastro bg-cadastro text-white' : 'border-slate-200 bg-white text-slate-400 group-hover:border-cadastro group-hover:text-cadastro'}`}>
+                        {t.icon || stepIcon(t.label)}
+                      </span>
+                      <span className={`text-xs sm:text-sm text-center leading-snug ${active ? 'font-bold text-cadastro' : 'font-medium text-slate-500 group-hover:text-cadastro'}`}>{t.label}</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ol>
+          </nav>
         )}
 
         <div className="p-4 sm:p-6 bg-slate-50/60 min-h-[18rem]">
-          {tab === 0 && !hideId && (
+          {tab === 0 && !hideId && mode !== 'create' && (
             <div className="mb-4 max-w-[12rem]">
               <label className="block text-xs font-semibold uppercase mb-1 text-slate-500">ID</label>
               {view
                 ? <p className="py-2 font-mono text-slate-800 border-b border-slate-100">#{form.id}</p>
-                : <input disabled className={inputClass(false)} value={form.id ? `#${form.id}` : 'Automático'} />}
+                : <input disabled className={inputClass()} value={form.id ? `#${form.id}` : 'Automático'} />}
             </div>
           )}
           {current.fields && <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">{current.fields.map(renderField)}</div>}
           {current.render?.(form, mode)}
         </div>
 
-        <div className="px-4 sm:px-6 py-4 border-t bg-white flex flex-wrap items-center justify-between gap-3">
+        <div className="px-4 sm:px-6 py-4 bg-white flex flex-wrap items-center justify-between gap-3">
           {view ? (
             <>
               <div className="flex flex-wrap items-center gap-3">
@@ -301,7 +332,7 @@ export function EntityForm({ title, mode, initial, tabs, defaults = {}, onSubmit
                   <button
                     type="button"
                     onClick={goNext}
-                    className="px-6 py-2.5 bg-[#0a2540] text-white rounded-lg font-bold hover:bg-[#06182c] flex items-center gap-2 transition shadow-sm"
+                    className="px-6 py-2.5 bg-cadastro text-white rounded-lg font-bold hover:bg-cadastro-hover flex items-center gap-2 transition shadow-sm"
                   >
                     Próximo <ChevronRight size={18} />
                   </button>
@@ -323,7 +354,7 @@ export function EntityForm({ title, mode, initial, tabs, defaults = {}, onSubmit
                   <button
                     type="submit"
                     disabled={saving}
-                    className="px-6 py-2.5 bg-emerald-600 text-white rounded-lg font-bold hover:bg-emerald-700 disabled:opacity-60 flex items-center gap-2 transition shadow-sm"
+                    className="save-action px-6 py-2.5 text-white rounded-lg font-bold disabled:opacity-60 flex items-center gap-2 transition shadow-sm"
                   >
                     {saving ? <Loader2 size={16} className="animate-spin" /> : <Check size={18} />}
                     {submitLabel}
@@ -349,24 +380,35 @@ export function Avatar({ src, name, size = 'lg' }: { src?: string; name?: string
     : <div className={`${cls} rounded-full bg-[#0a2540] text-white flex items-center justify-center font-bold shrink-0`}>{initials(name)}</div>;
 }
 
-function PhotoInput({ value, name, disabled, onChange }: { value?: string; name?: string; disabled?: boolean; onChange: (v: string | null) => void }) {
+function PhotoInput({ value, name, disabled, invalid, onChange }: { value?: string; name?: string; disabled?: boolean; invalid?: boolean; onChange: (v: string | null) => void }) {
   const toast = useToast();
+  const fileInput = useRef<HTMLInputElement>(null);
+  const [loading, setLoading] = useState(false);
   return (
-    <div className="flex items-center gap-4">
-      <Avatar src={value} name={name} />
-      {!disabled && (
-        <div className="flex flex-col gap-2">
-          <label className="inline-flex items-center gap-2 px-3 py-2 border rounded-lg text-sm font-semibold text-slate-600 bg-white hover:bg-slate-50 cursor-pointer">
-            <Camera size={16} /> Escolher foto
-            <input type="file" accept="image/png,image/jpeg" className="hidden" onChange={async e => {
-              const file = e.target.files?.[0];
-              if (file) onChange(await imageToDataUrl(file, 400).catch(() => { toast.error('Não foi possível ler a imagem.'); return null; }));
-              e.target.value = '';
-            }} />
-          </label>
-          {value && <button type="button" onClick={() => onChange(null)} className="text-xs text-red-600 hover:underline text-left">Remover foto</button>}
-        </div>
-      )}
+    <div className="w-full max-w-36 sm:max-w-44">
+      <button type="button" disabled={disabled || loading} aria-invalid={invalid}
+        aria-label={value ? 'Alterar foto' : 'Inserir foto'} onClick={() => fileInput.current?.click()}
+        className={`relative aspect-[3/4] w-full overflow-hidden rounded-2xl border bg-white flex flex-col items-center justify-center gap-2 text-cadastro transition-colors outline-none focus-visible:ring-2 focus-visible:ring-cadastro focus-visible:ring-offset-2 disabled:cursor-default ${invalid ? 'border-red-500' : 'border-slate-300 enabled:hover:border-cadastro'} enabled:cursor-pointer`}>
+        {value && <img src={value} alt={name ? `Foto de ${name}` : 'Foto selecionada'} className="absolute inset-0 h-full w-full object-cover" />}
+        {loading ? <Loader2 size={28} className="relative animate-spin" /> : value ? (
+          <span className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-2 bg-cadastro/85 p-3 text-xs font-semibold text-white"><Camera size={16} /> Alterar foto</span>
+        ) : (
+          <><Camera size={28} /><span className="text-sm font-semibold">Inserir foto</span><span className="text-xs text-slate-400">JPG ou PNG</span></>
+        )}
+      </button>
+      <input ref={fileInput} type="file" accept="image/png,image/jpeg" disabled={disabled || loading} className="hidden" onChange={async e => {
+        const file = e.target.files?.[0];
+        e.target.value = '';
+        if (!file) return;
+        setLoading(true);
+        try {
+          onChange(await imageToDataUrl(file, 400));
+        } catch {
+          toast.error('Não foi possível ler a imagem. Use arquivos JPG ou PNG.');
+        } finally {
+          setLoading(false);
+        }
+      }} />
     </div>
   );
 }
@@ -374,6 +416,7 @@ function PhotoInput({ value, name, disabled, onChange }: { value?: string; name?
 function PhotosInput({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
   const toast = useToast();
   const [loading, setLoading] = useState(false);
+  const fileInput = useRef<HTMLInputElement>(null);
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
       {value.map((src, i) => (
@@ -383,11 +426,13 @@ function PhotosInput({ value, onChange }: { value: string[]; onChange: (v: strin
           <button type="button" onClick={() => onChange(value.filter((_, j) => j !== i))} className="absolute right-2 top-2 bg-white/90 rounded-full p-1 text-red-600 hover:bg-white"><X size={14} /></button>
         </div>
       ))}
-      <label className="aspect-[4/3] rounded-lg border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-500 text-sm cursor-pointer hover:border-sky-500 hover:text-sky-600 bg-white">
+      <button type="button" disabled={loading} onClick={() => fileInput.current?.click()}
+        className="aspect-[3/4] w-full max-w-36 sm:max-w-44 rounded-2xl border border-slate-300 flex flex-col items-center justify-center text-cadastro text-sm cursor-pointer hover:border-cadastro bg-white outline-none focus-visible:ring-2 focus-visible:ring-cadastro focus-visible:ring-offset-2 disabled:cursor-wait">
         {loading ? <Loader2 className="animate-spin" /> : <ImagePlus />}
         <span className="mt-1 font-semibold">Adicionar fotos</span>
         <span className="text-xs text-slate-400">JPG ou PNG</span>
-        <input type="file" multiple accept="image/png,image/jpeg" className="hidden" onChange={async e => {
+      </button>
+        <input ref={fileInput} type="file" multiple accept="image/png,image/jpeg" disabled={loading} className="hidden" onChange={async e => {
           const files = Array.from(e.target.files || []);
           e.target.value = '';
           setLoading(true);
@@ -399,7 +444,6 @@ function PhotosInput({ value, onChange }: { value: string[]; onChange: (v: strin
             setLoading(false);
           }
         }} />
-      </label>
     </div>
   );
 }

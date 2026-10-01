@@ -71,7 +71,7 @@ export function NovoServicoModal({ onClose, onCreated }: { onClose: () => void; 
   const [form, setForm] = useState({ nome: '', categoria: '', descricao: '' });
   const [saving, setSaving] = useState(false);
   const [invalid, setInvalid] = useState(false);
-  const input = (bad: boolean) => `w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-[#0a2540] ${bad ? 'border-red-500 bg-red-50' : 'bg-white'}`;
+  const input = (bad = false) => `w-full px-3 py-2 border ${bad ? 'border-red-500' : 'border-slate-300'} rounded-lg bg-white outline-none focus:ring-2 focus:ring-[#0a2540]`;
 
   const save = async () => {
     if (!form.nome.trim() || !form.categoria) {
@@ -91,27 +91,27 @@ export function NovoServicoModal({ onClose, onCreated }: { onClose: () => void; 
   };
 
   return (
-    <Modal title="Cadastrar Serviço" onClose={onClose}>
+    <Modal title="Cadastrar Serviço" onClose={onClose} spacious>
       <div className="p-6 space-y-4">
         <div>
           <label className="block text-xs font-semibold uppercase mb-1 text-slate-500">Nome <span className="text-red-500">*</span></label>
-          <input autoFocus className={input(invalid && !form.nome.trim())} value={form.nome} onChange={e => setForm({ ...form, nome: e.target.value })} />
+          <input autoFocus aria-invalid={invalid && !form.nome.trim()} className={input(invalid && !form.nome.trim())} value={form.nome} onChange={e => setForm({ ...form, nome: e.target.value })} />
         </div>
         <div>
           <label className="block text-xs font-semibold uppercase mb-1 text-slate-500">Categoria <span className="text-red-500">*</span></label>
-          <select className={input(invalid && !form.categoria)} value={form.categoria} onChange={e => setForm({ ...form, categoria: e.target.value })}>
+          <select aria-invalid={invalid && !form.categoria} className={input(invalid && !form.categoria)} value={form.categoria} onChange={e => setForm({ ...form, categoria: e.target.value })}>
             <option value="">Selecione...</option>
             {CATEGORIAS_SERVICO.map(c => <option key={c}>{c}</option>)}
           </select>
         </div>
         <div>
           <label className="block text-xs font-semibold uppercase mb-1 text-slate-500">Descrição</label>
-          <textarea rows={3} className={input(false)} value={form.descricao} onChange={e => setForm({ ...form, descricao: e.target.value })} />
+          <textarea rows={3} className={input()} value={form.descricao} onChange={e => setForm({ ...form, descricao: e.target.value })} />
         </div>
       </div>
-      <div className="px-6 py-4 border-t flex justify-end gap-3 bg-slate-50">
+      <div className="px-6 py-4 flex flex-wrap justify-end gap-3 bg-slate-50">
         <button type="button" onClick={onClose} className="px-5 py-2.5 border border-slate-300 rounded-lg font-semibold text-slate-600 hover:bg-white">Cancelar</button>
-        <button type="button" onClick={save} disabled={saving} className="px-6 py-2.5 bg-emerald-600 text-white rounded-lg font-bold hover:bg-emerald-700 disabled:opacity-60 flex items-center gap-2">
+        <button type="button" onClick={save} disabled={saving} className="save-action px-6 py-2.5 text-white rounded-lg font-bold disabled:opacity-60 flex items-center gap-2">
           {saving ? <Loader2 size={16} className="animate-spin" /> : <Check size={18} />} Salvar
         </button>
       </div>

@@ -248,7 +248,7 @@ function EfetuarPagamentoModal({
           <span>Transação protegida por protocolo seguro SSL/TLS com conciliação automática.</span>
         </div>
 
-        <div className="flex justify-end gap-2 pt-2 border-t">
+        <div className="flex flex-wrap justify-end gap-2 pt-2">
           <button
             type="button"
             onClick={onClose}
@@ -260,7 +260,7 @@ function EfetuarPagamentoModal({
             type="button"
             disabled={processing}
             onClick={handleProcessar}
-            className="px-5 py-2 bg-emerald-600 text-white rounded-lg font-semibold text-xs hover:bg-emerald-700 transition disabled:opacity-50"
+            className="save-action px-5 py-2 text-white rounded-lg font-semibold text-xs transition disabled:opacity-50"
           >
             {processing ? 'Processando Gateway...' : 'Confirmar e Baixar'}
           </button>
@@ -562,7 +562,7 @@ export function FinanceiroList() {
                       e.stopPropagation();
                       setPagamentoModal(r);
                     }}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-600 text-white hover:bg-emerald-700 rounded-lg text-xs font-bold transition shadow-xs"
+                    className="save-action inline-flex items-center gap-1 px-2.5 py-1 text-white rounded-lg text-xs font-bold transition shadow-xs"
                   >
                     <CheckCircle2 size={13} /> Dar Baixa
                   </button>
