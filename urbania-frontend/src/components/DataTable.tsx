@@ -7,7 +7,7 @@ import { usePodeNaRota } from '../lib/auth';
 export type Column<T> = { key: string; label: string; render?: (row: T) => ReactNode; className?: string };
 
 // Grid de listagem com altura estruturada e paginação permanente (RNF 1.6 das consultas)
-export function DataTable<T extends { id: number }>({ columns, rows, loading, onRowClick, empty, pageSize = 10, compact = false, layoutFixed = false, actions }: {
+export function DataTable<T extends { id: number }>({ columns, rows, loading, onRowClick, empty, pageSize = 10, compact = false, layoutFixed = false, dense = false, actions }: {
   columns: Column<T>[];
   rows: T[];
   loading?: boolean;
@@ -16,6 +16,7 @@ export function DataTable<T extends { id: number }>({ columns, rows, loading, on
   pageSize?: number;
   compact?: boolean;
   layoutFixed?: boolean;
+  dense?: boolean;
   actions?: (row: T) => ReactNode;
 }) {
   const [page, setPage] = useState(1);
@@ -27,7 +28,7 @@ export function DataTable<T extends { id: number }>({ columns, rows, loading, on
   const colSpan = columns.length + (actions ? 1 : 0);
 
   return (
-    <div className={`flex flex-col justify-between ${compact ? 'min-h-0' : 'min-h-[560px] lg:min-h-[calc(100vh-250px)]'}`}>
+    <div className={`flex flex-col justify-between ${dense ? 'data-table-dense' : ''} ${compact ? 'min-h-0' : 'min-h-[560px] lg:min-h-[calc(100vh-250px)]'}`}>
       <div className={`${layoutFixed ? 'overflow-x-hidden' : 'overflow-x-auto'} flex-1`}>
         <table className={`w-full text-sm text-left ${layoutFixed ? 'table-fixed' : ''}`}>
           <thead className="bg-white border-b border-slate-100 text-slate-500 text-[11px] font-bold uppercase tracking-wider">
@@ -137,9 +138,9 @@ export function Pager({ page, setPage, total, pageSize }: { page: number; setPag
 
 // Cores dos botões de ação: só o ícone colorido; escurece e cresce um pouco ao passar o mouse
 const ACTION_TONES = {
-  view: 'text-sky-700 hover:text-sky-900',
-  edit: 'text-amber-600 hover:text-amber-800',
-  delete: 'text-red-600 hover:text-red-800',
+  view: 'text-cadastro hover:text-cadastro-hover',
+  edit: 'text-cadastro hover:text-cadastro-hover',
+  delete: 'text-cadastro hover:text-cadastro-hover',
 };
 
 export function ActionButton({ tone, title, onClick, children }: { tone: keyof typeof ACTION_TONES; title: string; onClick: () => void; children: ReactNode }) {

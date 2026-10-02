@@ -38,19 +38,10 @@ import {
   TIPOS_IMOVEL,
   statusColor,
 } from '../lib/options';
-import { StatusDropdown } from './Visitas';
+import { StatusDropdown } from '../components/StatusDropdown';
 import { enderecoCurto } from './Imoveis';
 import { Pode } from '../lib/auth';
 
-const tipoContratoColor = (tipo: unknown) => {
-  const map: Record<string, string> = {
-    Locação: 'bg-emerald-50 text-emerald-800 border-emerald-200',
-    Venda: 'bg-blue-50 text-blue-800 border-blue-200',
-    'Compra e Venda': 'bg-indigo-50 text-indigo-800 border-indigo-200',
-    Temporada: 'bg-amber-50 text-amber-800 border-amber-200',
-  };
-  return map[String(tipo)] || 'bg-slate-50 text-slate-700 border-slate-200';
-};
 
 // Exportação nativa para CSV / Excel (RNF 1.3 - pág. 32)
 function exportContratosToCsv(data: any[], filename: string) {
@@ -166,7 +157,7 @@ function SelecionarImovelContratoModal({
               );
             },
           },
-          { key: 'tipo', label: 'Tipo' },
+          { key: 'tipo', label: 'Tipo', render: r => <span className="text-xs font-semibold text-cadastro">{r.tipo}</span> },
           { key: 'finalidade', label: 'Finalidade' },
           {
             key: 'precos',
@@ -349,6 +340,8 @@ export function ContratosList() {
         </Toolbar>
 
         <DataTable
+          dense
+          layoutFixed
           rows={filtered}
           loading={loading || clientes.loading || imoveis.loading}
           empty={empty}
@@ -358,17 +351,17 @@ export function ContratosList() {
               key: 'id',
               label: 'Código',
               render: r => <span className="font-mono text-slate-500 font-medium whitespace-nowrap">#{r.id}</span>,
-              className: 'w-16 whitespace-nowrap',
+              className: 'w-14',
             },
             {
               key: 'imovel',
               label: 'Imóvel',
-              className: 'min-w-[180px]',
+              className: 'text-slate-700',
               render: r => {
                 const imv = imovel(r.imovelId);
                 const foto = parsePhotos(imv?.fotos)[0];
                 return (
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 min-w-0">
                     <div className="w-10 h-10 rounded-lg overflow-hidden bg-slate-100 shrink-0 border border-slate-200/60 flex items-center justify-center">
                       {foto ? <img src={foto} alt="" className="w-full h-full object-cover" /> : <Building2 size={18} className="text-slate-400" />}
                     </div>
@@ -387,18 +380,18 @@ export function ContratosList() {
             {
               key: 'cliente',
               label: 'Inquilino / Comprador',
-              className: 'whitespace-nowrap',
+              className: 'text-slate-700',
               render: r => {
                 const c = cliente(r.clienteId);
                 const nome = c?.nome || r.clienteNome || `#${r.clienteId}`;
                 return (
                   <div
-                    className="flex items-center gap-2.5 whitespace-nowrap"
+                    className="flex items-center gap-2 min-w-0"
                     title={c?.telefone ? `${nome} • ${c.telefone}` : nome}
                   >
                     <Avatar src={c?.foto} name={nome} size="sm" />
-                    <div>
-                      <p className="font-semibold text-slate-800 text-sm whitespace-nowrap">{nome}</p>
+                    <div className="min-w-0">
+                      <p className="font-semibold text-slate-800 text-sm break-words">{nome}</p>
                       {c?.telefone && <p className="text-[11px] text-slate-400 whitespace-nowrap">{c.telefone}</p>}
                     </div>
                   </div>
@@ -408,23 +401,17 @@ export function ContratosList() {
             {
               key: 'tipo',
               label: 'Tipo',
-              className: 'whitespace-nowrap',
+              className: 'w-28',
               render: r => (
-                <span
-                  className={`inline-flex items-center w-fit whitespace-nowrap px-2.5 py-1 text-xs font-semibold rounded-full border ${tipoContratoColor(
-                    r.tipo
-                  )}`}
-                >
-                  {r.tipo || 'Locação'}
-                </span>
+                <span className="text-xs font-semibold text-cadastro">{r.tipo || 'Locação'}</span>
               ),
             },
             {
               key: 'valor',
               label: 'Valor',
-              className: 'whitespace-nowrap',
+              className: 'w-28',
               render: r => (
-                <div className="whitespace-nowrap">
+                <div>
                   <span className="font-bold text-cadastro text-sm">
                     {formatCurrency(r.valor)}
                   </span>
@@ -435,7 +422,7 @@ export function ContratosList() {
             {
               key: 'status',
               label: 'Status',
-              className: 'whitespace-nowrap',
+              className: 'w-40',
               render: r => (
                 <StatusDropdown
                   value={r.status || 'Ativo'}

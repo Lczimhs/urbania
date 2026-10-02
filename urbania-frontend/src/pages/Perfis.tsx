@@ -1,3 +1,4 @@
+import { RecordStatusDropdown } from '../components/StatusDropdown';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -140,9 +141,7 @@ export function PerfisList() {
               key: 'status',
               label: 'Status',
               render: r => (
-                <Badge className={statusColor(r.status || 'Ativo')}>
-                  {r.status || 'Ativo'}
-                </Badge>
+                <RecordStatusDropdown entity="perfis" record={r} options={STATUS_PERFIL} onSaved={reload} />
               ),
             },
           ]}

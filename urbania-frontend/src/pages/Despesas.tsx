@@ -1,3 +1,4 @@
+import { StatusDropdown } from '../components/StatusDropdown';
 import { Select } from '../components/Select';
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -29,7 +30,7 @@ import {
   STATUS_DESPESA,
   statusColor,
 } from '../lib/options';
-import { Pode, usePodeNaRota } from '../lib/auth';
+import { Pode } from '../lib/auth';
 
 // Cálculo automático de status conforme RF F1 NF 1.5
 export function calcularStatusDespesa(dataVencimento?: string, dataPagamento?: string): string {
@@ -63,7 +64,6 @@ function parseHistorico(val: any): StatusHistoryEntry[] {
 // 1. LISTAGEM DE DESPESAS (RF F2)
 // ==========================================
 export function DespesasList() {
-  const pode = usePodeNaRota();
   const navigate = useNavigate();
   const toast = useToast();
   const { rows, setRows, loading, reload } = useList('despesas');
@@ -88,6 +88,28 @@ export function DespesasList() {
     const matchImovel = (r.imovelTitulo || '').toLowerCase().includes(termClean);
     return matchCat || matchDesc || matchImovel;
   });
+
+  const changeStatus = async (record: any, status: string) => {
+    if (status === 'Pago') {
+      setModalBaixa(record);
+      setDataPagamentoBaixa(todayISO());
+      return;
+    }
+    const historicoStatus = JSON.stringify([...parseHistorico(record.historicoStatus), {
+      de: record.status || calcularStatusDespesa(record.dataVencimento, record.dataPagamento),
+      para: status,
+      data: new Date().toISOString().replace('T', ' ').slice(0, 16),
+      usuario: 'Carlos Mendes (Operador)',
+    }]);
+    const payload = { status, dataPagamento: null, historicoStatus };
+    try {
+      await api.put(`/despesas/${record.id}`, payload);
+      setRows(previous => previous.map(item => item.id === record.id ? { ...item, ...payload } : item));
+      toast.success('Status atualizado com sucesso!');
+    } catch (err) {
+      toast.error(apiError(err, 'Erro ao atualizar o status.'));
+    }
+  };
 
   // Baixa / Pagamento de Despesa com registro no histórico
   const handleBaixa = async () => {
@@ -232,22 +254,7 @@ export function DespesasList() {
               render: r => {
                 const s = r.status || calcularStatusDespesa(r.dataVencimento, r.dataPagamento);
                 return (
-                  <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
-                    <Badge className={statusColor(s)}>{s}</Badge>
-                    {s !== 'Pago' && pode('Editar') && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setModalBaixa(r);
-                          setDataPagamentoBaixa(todayISO());
-                        }}
-                        title="Registrar Pagamento / Baixa"
-                        className="p-1 rounded hover:bg-emerald-50 text-emerald-600 transition"
-                      >
-                        <CheckCircle2 size={16} />
-                      </button>
-                    )}
-                  </div>
+                  <StatusDropdown value={s} options={STATUS_DESPESA} onChange={status => changeStatus(r, status)} />
                 );
               },
             },

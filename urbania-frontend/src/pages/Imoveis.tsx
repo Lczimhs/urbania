@@ -93,7 +93,7 @@ export function ImoveisList() {
     {
       key: 'tipo',
       label: 'Tipo',
-      render: (r: any) => r.tipo && <Badge className="bg-[#0a2540]/10 text-[#0a2540]">{r.tipo}</Badge>,
+      render: (r: any) => r.tipo && <span className="text-xs font-semibold text-cadastro">{r.tipo}</span>,
     },
     {
       key: 'finalidade',
@@ -248,7 +248,7 @@ export function ImoveisList() {
                             {/* Badge Superior Direito: Tipo do Imóvel (Apartamento, Casa, etc.) */}
                             {i.tipo && (
                               <div className="absolute top-3 right-3">
-                                <span className="bg-white/95 text-slate-800 text-xs font-semibold px-2.5 py-1 rounded-md shadow-xs border border-white/80">
+                                <span className="text-xs font-semibold text-cadastro">
                                   {i.tipo}
                                 </span>
                               </div>
@@ -317,7 +317,7 @@ export function ImoveisList() {
                                 type="button"
                                 title="Editar Imóvel"
                                 onClick={() => navigate(`/imoveis/${i.id}/editar`)}
-                                className="p-1.5 text-sky-600 hover:text-sky-800 hover:bg-sky-50 rounded-lg transition"
+                                className="p-1.5 text-cadastro hover:text-cadastro-hover hover:bg-cadastro/5 rounded-lg transition"
                               >
                                 <Edit2 size={16} />
                               </button>
@@ -327,7 +327,7 @@ export function ImoveisList() {
                                 type="button"
                                 title="Excluir Imóvel"
                                 onClick={() => del.ask(i.id, i.titulo)}
-                                className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition"
+                                className="p-1.5 text-cadastro hover:text-cadastro-hover hover:bg-cadastro/5 rounded-lg transition"
                               >
                                 <Trash2 size={16} />
                               </button>
@@ -367,7 +367,7 @@ function ImovelRelacionamentos({ imovelId }: { imovelId: number }) {
           columns={[
             { key: 'id', label: 'ID Contrato', render: r => `#${r.id}`, className: 'font-mono text-slate-500' },
             { key: 'cliente', label: 'Inquilino / Comprador', render: r => r.clienteNome || cliente(r.clienteId) },
-            { key: 'tipo', label: 'Tipo', render: r => <span className="font-semibold text-xs">{r.tipo}</span> },
+            { key: 'tipo', label: 'Tipo', render: r => <span className="text-xs font-semibold text-cadastro">{r.tipo}</span> },
             { key: 'vigencia', label: 'Início Vigência', render: r => formatDate(r.dataInicio) },
             { key: 'valor', label: 'Valor', render: r => formatCurrency(r.valor) },
             { key: 'status', label: 'Status', render: r => <Badge className={statusColor(r.status)}>{r.status}</Badge> },

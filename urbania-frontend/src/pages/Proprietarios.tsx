@@ -51,7 +51,7 @@ export function ProprietariosList() {
             { key: 'email', label: 'E-mail', render: r => <span className="text-slate-600">{r.email || '-'}</span> },
             { key: 'telefone', label: 'Telefone', render: r => <span className="text-slate-600 font-medium">{r.telefone || '-'}</span> },
             { key: 'documento', label: 'CPF/CNPJ', render: documento },
-            { key: 'tipo', label: 'Tipo', render: r => r.tipo && <Badge className={r.tipo === 'Jurídica' ? 'bg-indigo-100 text-indigo-700' : 'bg-sky-100 text-sky-700'}>{r.tipo}</Badge> },
+            { key: 'tipo', label: 'Tipo', render: r => r.tipo && <span className="text-xs font-semibold text-cadastro">{r.tipo}</span> },
           ]}
           actions={r => (
             <RowActions onView={() => navigate(`/proprietarios/${r.id}`)} onEdit={() => navigate(`/proprietarios/${r.id}/editar`)} onDelete={() => del.ask(r.id, r.nome)} />
@@ -118,7 +118,7 @@ function ProprietarioVinculos({ proprietarioId }: { proprietarioId: number }) {
             { key: 'id', label: 'ID Contrato', render: r => `#${r.id}`, className: 'font-mono text-slate-500' },
             { key: 'imovel', label: 'Imóvel', render: r => r.imovelTitulo || `#${r.imovelId}` },
             { key: 'cliente', label: 'Inquilino / Comprador', render: r => r.clienteNome || `#${r.clienteId}` },
-            { key: 'tipo', label: 'Tipo', render: r => <span className="font-semibold text-xs">{r.tipo}</span> },
+            { key: 'tipo', label: 'Tipo', render: r => <span className="text-xs font-semibold text-cadastro">{r.tipo}</span> },
             { key: 'repasse', label: 'Repasse Líquido Estimado', render: r => <span className="font-bold text-emerald-700">{formatCurrency(r.repasseProprietario || r.valor)}</span> },
             { key: 'status', label: 'Status', render: r => <Badge className={statusColor(r.status)}>{r.status}</Badge> },
           ]}
@@ -131,7 +131,7 @@ function ProprietarioVinculos({ proprietarioId }: { proprietarioId: number }) {
           rows={imoveis.rows} loading={imoveis.loading} empty="Nenhum imóvel vinculado."
           columns={[
             { key: 'id', label: 'ID', render: r => `#${r.id}`, className: 'font-mono text-slate-500' },
-            { key: 'tipo', label: 'Tipo do Imóvel' },
+            { key: 'tipo', label: 'Tipo do Imóvel', render: r => <span className="text-xs font-semibold text-cadastro">{r.tipo}</span> },
             { key: 'endereco', label: 'Endereço', render: r => fullAddress(r) },
             { key: 'participacao', label: 'Participação (%)', render: () => '100%' },
             { key: 'situacao', label: 'Situação', render: r => <Badge className={situacao(r.id) === 'Disponível' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-700'}>{situacao(r.id)}</Badge> },

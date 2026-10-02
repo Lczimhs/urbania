@@ -3,11 +3,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   AlertTriangle,
-  ArrowDownCircle,
-  ArrowUpCircle,
   CheckCircle2,
   FileSpreadsheet,
-  Landmark,
   Plus,
   Printer,
   Receipt,
@@ -343,27 +340,6 @@ export function FinanceiroList() {
     toast.success('Extrato financeiro exportado com sucesso (.csv / Excel).');
   };
 
-  const tipoBadge = (tipo: string) => {
-    if (tipo === 'Receita') {
-      return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-          <ArrowUpCircle size={13} /> Receita
-        </span>
-      );
-    }
-    if (tipo === 'Despesa') {
-      return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
-          <ArrowDownCircle size={13} /> Despesa
-        </span>
-      );
-    }
-    return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-50 text-sky-700 border border-sky-200">
-        <Landmark size={13} /> Repasse
-      </span>
-    );
-  };
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -483,7 +459,7 @@ export function FinanceiroList() {
             {
               key: 'tipo',
               label: 'Tipo',
-              render: r => tipoBadge(r.tipo),
+              render: r => <span className="text-xs font-semibold text-cadastro">{r.tipo}</span>,
             },
             {
               key: 'descricao',

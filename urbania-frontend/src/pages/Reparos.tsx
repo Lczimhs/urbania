@@ -1,7 +1,8 @@
+import { RecordStatusDropdown } from '../components/StatusDropdown';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
-import { Badge, Card, DataTable, FilterSelect, PageHeader, RowActions, Toolbar } from '../components/DataTable';
+import { Card, DataTable, FilterSelect, PageHeader, RowActions, Toolbar } from '../components/DataTable';
 import type { Mode, TabDef } from '../components/EntityForm';
 import { EntityPage } from '../components/EntityPage';
 import { useFieldSearch } from '../components/FieldSearch';
@@ -65,7 +66,7 @@ export function ReparosList() {
             { key: 'servico', label: 'Serviço', render: r => nome(servicos.rows, r.servicoId) || '-' },
             { key: 'prestador', label: 'Prestador', render: r => nome(prestadores.rows, r.prestadorId) || '-' },
             { key: 'valor', label: 'Orçamento', render: r => <span className="font-semibold">{formatCurrency(r.valor) || '-'}</span> },
-            { key: 'status', label: 'Status', render: r => r.status && <Badge className={reparoColor(r.status)}>{r.status}</Badge> },
+            { key: 'status', label: 'Status', render: r => <RecordStatusDropdown entity="reparos" record={r} options={STATUS_REPARO} color={reparoColor} onSaved={reload} /> },
           ]}
           actions={r => (
             <RowActions onView={() => navigate(`/reparos/${r.id}`)} onEdit={() => navigate(`/reparos/${r.id}/editar`)} onDelete={() => del.ask(r.id, `Reparo #${r.id}`)} />

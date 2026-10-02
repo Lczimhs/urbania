@@ -1,7 +1,8 @@
+import { RecordStatusDropdown } from '../components/StatusDropdown';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Building2, ChevronDown, Plus } from 'lucide-react';
-import { Badge, Card, DataTable, FilterSelect, PageHeader, RowActions, SearchInput, Toolbar, matches } from '../components/DataTable';
+import { Card, DataTable, FilterSelect, PageHeader, RowActions, SearchInput, Toolbar, matches } from '../components/DataTable';
 import type { Mode, TabDef } from '../components/EntityForm';
 import { EntityPage } from '../components/EntityPage';
 import { useFieldSearch } from '../components/FieldSearch';
@@ -84,7 +85,7 @@ export function AnunciosList() {
             { key: 'canal', label: 'Canal', render: r => canais.rows.find(c => c.id === r.canalId)?.nome || r.canal || '-' },
             { key: 'quartos', label: 'Quartos', render: r => imovel(r.imovelId).quartos ?? '-' },
             { key: 'valor', label: 'Valor', render: r => <span className="font-bold text-cadastro whitespace-nowrap">{formatCurrency(r.valor) || '-'}</span> },
-            { key: 'status', label: 'Situação', render: r => r.status && <Badge className={situacaoColor(r.status)}>{r.status}</Badge> },
+            { key: 'status', label: 'Situação', render: r => <RecordStatusDropdown entity="anuncios" record={r} options={SITUACOES_ANUNCIO} color={situacaoColor} onSaved={reload} /> },
           ]}
           actions={r => (
             <RowActions onView={() => navigate(`/anuncios/${r.id}`)} onEdit={() => navigate(`/anuncios/${r.id}/editar`)} onDelete={() => del.ask(r.id, `Anúncio #${r.id}`)} />
@@ -130,7 +131,7 @@ function SelecionarImovelModal({ imoveis, onSelect, onClose }: { imoveis: any[];
               <p className="text-xs text-slate-400">{enderecoCurto(r)}</p>
             </div>
           ) },
-          { key: 'tipo', label: 'Tipo' },
+          { key: 'tipo', label: 'Tipo', render: r => <span className="text-xs font-semibold text-cadastro">{r.tipo}</span> },
           { key: 'finalidade', label: 'Finalidade' },
           { key: 'quartos', label: 'Quartos' },
         ]}

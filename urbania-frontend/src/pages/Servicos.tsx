@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Check, Loader2, Plus } from 'lucide-react';
 import { api } from '../api';
-import { Badge, Card, DataTable, FilterSelect, PageHeader, RowActions, Toolbar } from '../components/DataTable';
+import { Card, DataTable, FilterSelect, PageHeader, RowActions, Toolbar } from '../components/DataTable';
 import type { Mode, TabDef } from '../components/EntityForm';
 import { EntityPage } from '../components/EntityPage';
 import { useFieldSearch } from '../components/FieldSearch';
@@ -46,7 +46,7 @@ export function ServicosList() {
           columns={[
             { key: 'id', label: 'ID', render: r => `#${r.id}`, className: 'font-mono text-slate-500 w-20' },
             { key: 'nome', label: 'Nome', className: 'font-semibold text-slate-800' },
-            { key: 'categoria', label: 'Categoria', render: r => r.categoria && <Badge className="bg-sky-100 text-sky-700">{r.categoria}</Badge> },
+            { key: 'categoria', label: 'Categoria', render: r => r.categoria && <span className="text-xs font-semibold text-cadastro">{r.categoria}</span> },
             { key: 'descricao', label: 'Descrição', render: r => <span className="text-slate-500 line-clamp-1">{r.descricao || '-'}</span> },
           ]}
           actions={r => (
