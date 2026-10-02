@@ -14,9 +14,6 @@ import {
 } from '../lib/options';
 import { Pode } from '../lib/auth';
 
-const tipoColor = (tipo: string) =>
-  tipo === 'Locatário' ? 'bg-amber-100 text-amber-700' : tipo === 'Interessado' ? 'bg-emerald-100 text-emerald-700' : 'bg-sky-100 text-sky-700';
-
 // Consultar Clientes
 export function ClientesList() {
   const navigate = useNavigate();
@@ -54,7 +51,7 @@ export function ClientesList() {
             ) },
             { key: 'email', label: 'E-mail', render: r => <span className="text-slate-600">{r.email || '-'}</span> },
             { key: 'telefone', label: 'Telefone', render: r => <span className="text-slate-600 font-medium">{r.telefone || '-'}</span> },
-            { key: 'tipo', label: 'Tipo', render: r => r.tipo && <Badge className={tipoColor(r.tipo)}>{r.tipo}</Badge> },
+            { key: 'tipo', label: 'Tipo', render: r => r.tipo && <span className="text-xs font-semibold text-cadastro">{r.tipo}</span> },
             { key: 'origem', label: 'Origem', className: 'text-slate-500' },
           ]}
           actions={r => (
@@ -117,7 +114,7 @@ function ClienteHistorico({ clienteId }: { clienteId: number }) {
           columns={[
             { key: 'id', label: 'ID Contrato', render: r => `#${r.id}`, className: 'font-mono text-slate-500' },
             { key: 'imovel', label: 'Imóvel', render: r => imovel(r.imovelId)?.titulo || r.imovelTitulo || `#${r.imovelId}` },
-            { key: 'tipo', label: 'Tipo', render: r => <span className="font-semibold text-xs">{r.tipo}</span> },
+            { key: 'tipo', label: 'Tipo', render: r => <span className="text-xs font-semibold text-cadastro">{r.tipo}</span> },
             { key: 'vigencia', label: 'Início Vigência', render: r => formatDate(r.dataInicio) },
             { key: 'valor', label: 'Valor', render: r => formatCurrency(r.valor) },
             { key: 'status', label: 'Status', render: r => <Badge className={statusColor(r.status)}>{r.status}</Badge> },
@@ -134,7 +131,7 @@ function ClienteHistorico({ clienteId }: { clienteId: number }) {
             { key: 'imovel', label: 'Imóvel', render: r => imovel(r.imovelId)?.titulo || `#${r.imovelId}` },
             { key: 'data', label: 'Data', render: r => formatDate(r.data) },
             { key: 'cep', label: 'CEP do Imóvel', render: r => imovel(r.imovelId)?.cep },
-            { key: 'tipo', label: 'Tipo do Imóvel', render: r => imovel(r.imovelId)?.tipo },
+            { key: 'tipo', label: 'Tipo do Imóvel', render: r => <span className="text-xs font-semibold text-cadastro">{imovel(r.imovelId)?.tipo}</span> },
           ]}
           actions={r => <RowActions onView={() => navigate(`/visitas/${r.id}`)} />}
         />

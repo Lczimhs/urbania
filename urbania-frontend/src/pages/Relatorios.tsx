@@ -232,7 +232,7 @@ export default function Relatorios() {
               { key: 'cliente', label: 'Cliente', render: r => <span className="font-semibold text-slate-800">{r.clienteNome || `#${r.clienteId}`}</span> },
               { key: 'imovel', label: 'Imóvel Negociado', render: r => r.imovelTitulo || `#${r.imovelId}` },
               { key: 'corretor', label: 'Corretor', render: r => r.corretor || '—' },
-              { key: 'tipo', label: 'Tipo', render: r => <Badge className="bg-slate-100 text-slate-700">{r.tipo}</Badge> },
+              { key: 'tipo', label: 'Tipo', render: r => <span className="text-xs font-semibold text-cadastro">{r.tipo}</span> },
               { key: 'valor', label: 'Valor Proposto', render: r => <span className="font-bold text-teal-700">{formatCurrency(r.valor)}</span> },
               { key: 'status', label: 'Status', render: r => <Badge className={statusColor(r.status)}>{r.status}</Badge> },
             ]}
@@ -267,7 +267,7 @@ export default function Relatorios() {
             empty="Nenhum lançamento financeiro localizado no período."
             columns={[
               { key: 'id', label: 'ID', render: r => <span className="font-mono text-slate-400">#{r.id}</span>, className: 'w-16' },
-              { key: 'tipo', label: 'Tipo', render: r => <Badge className={r.tipo === 'Receita' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}>{r.tipo}</Badge> },
+              { key: 'tipo', label: 'Tipo', render: r => <span className="text-xs font-semibold text-cadastro">{r.tipo}</span> },
               { key: 'descricao', label: 'Descrição & Categoria', render: r => (
                 <div>
                   <p className="font-semibold text-slate-800">{r.descricao}</p>
@@ -296,7 +296,7 @@ export default function Relatorios() {
                   <p className="text-xs text-slate-400">{r.bairro} - {r.cidade}/{r.uf}</p>
                 </div>
               ) },
-              { key: 'tipo', label: 'Tipo / Finalidade', render: r => `${r.tipo} (${r.finalidade})` },
+              { key: 'tipo', label: 'Tipo / Finalidade', render: r => <span className="text-xs font-semibold text-cadastro">{`${r.tipo} (${r.finalidade})`}</span> },
               { key: 'proprietario', label: 'Proprietário Legal', render: r => {
                 const prop = proprietarios.rows.find(p => p.id === r.proprietarioId);
                 return <span className="font-semibold text-slate-700">{prop?.nome || '—'}</span>;

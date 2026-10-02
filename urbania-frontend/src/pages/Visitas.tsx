@@ -1,17 +1,18 @@
-import { Select } from '../components/Select';
+import { StatusDropdown } from '../components/StatusDropdown';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CalendarX2, MapPin, MoreVertical, Plus } from 'lucide-react';
 import { api } from '../api';
-import { Badge, Card, DataTable, FilterSelect, PageHeader, RowActions, SearchInput, Toolbar, matches } from '../components/DataTable';
+import { Card, DataTable, FilterSelect, PageHeader, RowActions, SearchInput, Toolbar, matches } from '../components/DataTable';
+import { Avatar } from '../components/EntityForm';
 import type { Mode, TabDef } from '../components/EntityForm';
 import { EntityPage } from '../components/EntityPage';
 import { ConfirmModal } from '../components/Modal';
 import { apiError, useToast } from '../components/Toast';
 import { useList } from '../lib/useApi';
 import { formatDate, fullAddress, todayISO } from '../lib/format';
-import { STATUS_VISITA, statusColor } from '../lib/options';
-import { Pode, usePodeNaRota } from '../lib/auth';
+import { STATUS_VISITA } from '../lib/options';
+import { Pode } from '../lib/auth';
 
 const PERIODOS_VISITA = [
   { value: 'Hoje', label: 'Hoje' },
@@ -48,21 +49,6 @@ export function RowMenu({ items }: { items: { label: string; onClick: () => void
         </div>
       )}
     </div>
-  );
-}
-
-// Status editável direto na tabela
-export function StatusDropdown({ value, options, onChange }: { value: string; options: string[]; onChange: (v: string) => void }) {
-  const pode = usePodeNaRota();
-  if (!pode('Editar')) return <Badge className={statusColor(value)}>{value}</Badge>;
-  // Compact selector for inline status changes.
-  return (
-    <span className={`relative inline-flex items-center rounded-full transition hover:brightness-95 focus-within:ring-2 focus-within:ring-current/25 ${statusColor(value)}`}>
-      <Select value={value || ''} onChange={selectedValue => onChange(selectedValue)} onClick={e => e.stopPropagation()} title="Alterar status"
-        className="system-select-compact text-xs font-medium">
-        {options.map(o => <option key={o} value={o} className="bg-white text-slate-700">{o}</option>)}
-      </Select>
-    </span>
   );
 }
 
@@ -123,13 +109,51 @@ export function VisitasList() {
           <FilterSelect value={status} onChange={setStatusFiltro} options={STATUS_VISITA} placeholder="Todos os status" />
         </Toolbar>
         <DataTable
+          layoutFixed
           rows={filtered} loading={loading} empty={empty}
           onRowClick={r => navigate(`/visitas/${r.id}`)}
           columns={[
             { key: 'data', label: 'Data / Hora', className: 'w-44 whitespace-nowrap', render: r => <span className="font-semibold">{formatDate(r.data)} <span className="text-slate-400 font-normal">{r.hora}</span></span> },
-            { key: 'cliente', label: 'Cliente', className: 'whitespace-nowrap', render: r => cliente(r.clienteId)?.nome || r.clienteNome || `#${r.clienteId}` },
-            { key: 'imovel', label: 'Imóvel', className: 'min-w-[180px]', render: r => <span><span className="font-mono text-slate-400">#{r.imovelId}</span> {imovel(r.imovelId)?.titulo}</span> },
-            { key: 'status', label: 'Status', className: 'w-36 whitespace-nowrap', render: r => <StatusDropdown value={r.status} options={STATUS_VISITA} onChange={s => setStatus(r.id, s)} /> },
+            {
+              key: 'cliente',
+              label: 'Cliente',
+              className: 'w-44 lg:w-48 min-w-[120px]',
+              render: r => {
+                const c = cliente(r.clienteId);
+                const nome = c?.nome || r.clienteNome || `#${r.clienteId}`;
+                return (
+                  <div
+                    className="flex items-center gap-2 min-w-0"
+                    title={c?.telefone ? `${nome} • ${c.telefone}` : nome}
+                  >
+                    <Avatar src={c?.foto} name={nome} size="sm" />
+                    <span className="font-semibold text-slate-800 text-sm truncate">{nome}</span>
+                  </div>
+                );
+              },
+            },
+            {
+              key: 'imovel',
+              label: 'Imóvel',
+              className: 'min-w-[140px]',
+              render: r => {
+                const imv = imovel(r.imovelId);
+                const titulo = imv?.titulo || r.imovelTitulo || `Imóvel #${r.imovelId}`;
+                const endereco = [imv?.bairro, imv?.cidade].filter(Boolean).join(' - ');
+                const tituloCompleto = endereco ? `${titulo} — ${endereco}` : titulo;
+                return (
+                  <div
+                    className="truncate min-w-0 text-sm"
+                    title={tituloCompleto}
+                  >
+                    <span className="font-mono text-slate-400 text-xs mr-1">#{r.imovelId}</span>
+                    <span className="font-medium text-slate-800">{titulo}</span>
+                    {endereco && <span className="text-slate-400 text-xs ml-1">— {endereco}</span>}
+                  </div>
+                );
+              },
+            },
+            { key: 'status', label: 'Status', className: 'w-44 whitespace-nowrap', render: r => <StatusDropdown value={r.status} options={STATUS_VISITA} onChange={s => setStatus(r.id, s)} /> },
           ]}
           actions={r => (
             <RowActions

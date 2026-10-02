@@ -24,7 +24,7 @@ import { useDelete } from '../components/useDelete';
 import { useList } from '../lib/useApi';
 import { formatCurrency, formatDate, fullAddress, todayISO } from '../lib/format';
 import { FORMAS_PAGAMENTO, STATUS_NEGOCIACAO, TIPOS_NEGOCIACAO, statusColor } from '../lib/options';
-import { StatusDropdown } from './Visitas';
+import { StatusDropdown } from '../components/StatusDropdown';
 import { Pode } from '../lib/auth';
 
 const PERIODOS_NEGOCIACAO = [
@@ -35,15 +35,6 @@ const PERIODOS_NEGOCIACAO = [
   { value: 'ultimos_30', label: 'Últimos 30 dias' },
 ];
 
-const tipoNegociacaoColor = (tipo: unknown) => {
-  const map: Record<string, string> = {
-    Locação: 'bg-emerald-50 text-emerald-800 border-emerald-200',
-    Venda: 'bg-blue-50 text-blue-800 border-blue-200',
-    'Compra e Venda': 'bg-indigo-50 text-indigo-800 border-indigo-200',
-    Temporada: 'bg-amber-50 text-amber-800 border-amber-200',
-  };
-  return map[String(tipo)] || 'bg-slate-50 text-slate-700 border-slate-200';
-};
 
 // Exportação nativa para CSV / Excel (RNF 1.3 - pág. 32)
 function exportToCsv(data: any[], filename: string) {
@@ -297,13 +288,7 @@ export function NegociacoesList() {
               label: 'Tipo',
               className: 'w-24 whitespace-nowrap',
               render: r => (
-                <span
-                  className={`inline-flex items-center w-fit whitespace-nowrap px-2.5 py-0.5 rounded-full text-xs font-semibold border ${tipoNegociacaoColor(
-                    r.tipo
-                  )}`}
-                >
-                  {r.tipo || 'Venda'}
-                </span>
+                <span className="text-xs font-semibold text-cadastro">{r.tipo || 'Venda'}</span>
               ),
             },
             {

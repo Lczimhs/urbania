@@ -11,7 +11,7 @@ import { useDelete } from '../components/useDelete';
 import { useList } from '../lib/useApi';
 import { maskCpf, maskPhone, maskRg, onlyDigits } from '../lib/masks';
 import { CARGOS, STATUS_FUNCIONARIO, addressFields } from '../lib/options';
-import { StatusDropdown } from './Visitas';
+import { StatusDropdown } from '../components/StatusDropdown';
 import { Pode } from '../lib/auth';
 
 // Consultar Funcionários

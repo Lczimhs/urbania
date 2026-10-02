@@ -1,3 +1,4 @@
+import { StatusDropdown } from '../components/StatusDropdown';
 import { Select } from '../components/Select';
 import { useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -24,7 +25,7 @@ import {
   DESTINATARIOS_NOTIFICACAO,
   GATILHOS_NOTIFICACAO,
 } from '../lib/options';
-import { Pode, usePodeNaRota } from '../lib/auth';
+import { Pode } from '../lib/auth';
 
 // Parse do campo canais (suporta JSON string ou string simples)
 export const parseCanais = (canais: unknown): string[] => {
@@ -62,35 +63,8 @@ export const canalBadge = (c: string) => {
   );
 };
 
-// Toggle Switch Liga/Desliga conforme RNF 1.2 (pág. 21)
-function ToggleSwitch({ checked, onChange, disabled }: { checked: boolean; onChange: (next: boolean) => void; disabled?: boolean }) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      disabled={disabled}
-      onClick={e => {
-        e.stopPropagation();
-        onChange(!checked);
-      }}
-      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-        checked ? 'bg-emerald-500' : 'bg-slate-300'
-      } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-    >
-      <span
-        aria-hidden="true"
-        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
-          checked ? 'translate-x-5' : 'translate-x-0'
-        }`}
-      />
-    </button>
-  );
-}
-
 // Consultar Notificação (RF F14 - pág. 21)
 export function NotificacoesList() {
-  const pode = usePodeNaRota();
   const navigate = useNavigate();
   const toast = useToast();
   const { rows, setRows, loading, reload } = useList('notificacoes');
@@ -99,8 +73,7 @@ export function NotificacoesList() {
   const del = useDelete('notificacoes', 'Regra de Notificação', reload);
 
   // Toggle do status diretamente na grid (RNF 1.2)
-  const toggleStatus = async (id: number, currentStatus: string) => {
-    const nextStatus = currentStatus === 'Ativo' ? 'Inativo' : 'Ativo';
+  const setStatus = async (id: number, nextStatus: string) => {
     try {
       await api.put(`/notificacoes/${id}`, { status: nextStatus });
       setRows(rs => rs.map(r => (r.id === id ? { ...r, status: nextStatus } : r)));
@@ -191,18 +164,9 @@ export function NotificacoesList() {
             },
             {
               key: 'status',
-              label: 'Status (Chave Liga/Desliga)',
+              label: 'Status',
               render: r => (
-                <div className="flex items-center gap-2.5">
-                  <ToggleSwitch
-                    checked={r.status === 'Ativo'}
-                    disabled={!pode('Editar')}
-                    onChange={() => toggleStatus(r.id, r.status)}
-                  />
-                  <span className={`text-xs font-semibold ${r.status === 'Ativo' ? 'text-emerald-700' : 'text-slate-400'}`}>
-                    {r.status || 'Ativo'}
-                  </span>
-                </div>
+                <StatusDropdown value={r.status || 'Ativo'} options={['Ativo', 'Inativo']} onChange={status => setStatus(r.id, status)} />
               ),
             },
           ]}

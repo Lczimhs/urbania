@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
-import { Badge, Card, DataTable, FilterSelect, PageHeader, RowActions, Toolbar } from '../components/DataTable';
+import { Card, DataTable, FilterSelect, PageHeader, RowActions, Toolbar } from '../components/DataTable';
 import type { Mode, TabDef } from '../components/EntityForm';
 import { EntityPage } from '../components/EntityPage';
 import { useFieldSearch } from '../components/FieldSearch';
@@ -9,9 +9,6 @@ import { useDelete } from '../components/useDelete';
 import { useList } from '../lib/useApi';
 import { TIPOS_CANAL } from '../lib/options';
 import { Pode } from '../lib/auth';
-
-const tipoColor = (tipo: string) =>
-  tipo === 'Site' ? 'bg-sky-100 text-sky-700' : tipo === 'Impresso' ? 'bg-amber-100 text-amber-700' : 'bg-violet-100 text-violet-700';
 
 // Consultar Canal de Publicação
 export function CanaisList() {
@@ -43,7 +40,7 @@ export function CanaisList() {
           columns={[
             { key: 'id', label: 'ID', render: r => `#${r.id}`, className: 'font-mono text-slate-500 w-20' },
             { key: 'nome', label: 'Nome', className: 'font-semibold text-slate-800' },
-            { key: 'tipoCanal', label: 'Tipo Canal', render: r => r.tipoCanal && <Badge className={tipoColor(r.tipoCanal)}>{r.tipoCanal}</Badge> },
+            { key: 'tipoCanal', label: 'Tipo Canal', render: r => r.tipoCanal && <span className="text-xs font-semibold text-cadastro">{r.tipoCanal}</span> },
             { key: 'observacoes', label: 'Observações', render: r => <span className="text-slate-500 line-clamp-1">{r.observacoes || '-'}</span> },
           ]}
           actions={r => (

@@ -1,14 +1,13 @@
+import { StatusDropdown } from '../components/StatusDropdown';
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
-  CheckCircle2,
   FileText,
   History,
   Lock,
   Percent,
   Plus,
   User,
-  XCircle,
 } from 'lucide-react';
 import { api } from '../api';
 import { Badge, Card, DataTable, FilterSelect, PageHeader, RowActions, SearchInput, Toolbar } from '../components/DataTable';
@@ -25,7 +24,7 @@ import {
   TIPOS_MULTA,
   statusColor,
 } from '../lib/options';
-import { Pode, usePodeNaRota } from '../lib/auth';
+import { Pode } from '../lib/auth';
 
 // Parser para histórico de status (RF F3 NF 1.3)
 interface StatusHistoryEntry {
@@ -51,7 +50,6 @@ function parseHistorico(val: any): StatusHistoryEntry[] {
 // 1. LISTAGEM DE MULTAS (RF F2)
 // ==========================================
 export function MultasList() {
-  const pode = usePodeNaRota();
   const navigate = useNavigate();
   const toast = useToast();
   const { rows, setRows, loading, reload } = useList('multas');
@@ -192,7 +190,7 @@ export function MultasList() {
               label: 'Tipo de Multa',
               render: r => (
                 <div>
-                  <span className="font-medium text-slate-800">{r.tipo}</span>
+                  <span className="text-xs font-semibold text-cadastro">{r.tipo}</span>
                   {r.motivo && (
                     <p className="text-xs text-slate-500 line-clamp-1">{r.motivo}</p>
                   )}
@@ -234,29 +232,10 @@ export function MultasList() {
               render: r => {
                 const s = r.status || 'Pendente';
                 return (
-                  <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
-                    <Badge className={statusColor(s)}>{s}</Badge>
-                    {s === 'Pendente' && pode('Editar') && (
-                      <button
-                        type="button"
-                        onClick={() => setModalStatus({ multa: r, novoStatus: 'Pago' })}
-                        title="Marcar como Pago"
-                        className="p-1 rounded hover:bg-emerald-50 text-emerald-600 transition"
-                      >
-                        <CheckCircle2 size={16} />
-                      </button>
-                    )}
-                    {s === 'Pendente' && pode('Editar') && (
-                      <button
-                        type="button"
-                        onClick={() => setModalStatus({ multa: r, novoStatus: 'Cancelado' })}
-                        title="Cancelar multa mediante justificativa"
-                        className="p-1 rounded hover:bg-rose-50 text-rose-500 transition"
-                      >
-                        <XCircle size={16} />
-                      </button>
-                    )}
-                  </div>
+                  <StatusDropdown value={s} options={STATUS_MULTA} onChange={novoStatus => {
+                    setJustificativa('');
+                    setModalStatus({ multa: r, novoStatus });
+                  }} />
                 );
               },
             },

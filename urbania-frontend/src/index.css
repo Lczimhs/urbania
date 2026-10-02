@@ -41,6 +41,20 @@
   border-radius: 9999px;
   padding: 0.25rem 0.75rem !important;
 }
+.system-select.system-status-select {
+  width: 9rem;
+  height: 2rem;
+  min-height: 2rem;
+  padding: 0.25rem 0.75rem !important;
+  border-color: transparent;
+  border-radius: 9999px;
+  background-color: transparent;
+  color: inherit !important;
+}
+.system-select.system-status-select:hover:not(:disabled),
+.system-select.system-status-select[aria-expanded="true"] {
+  background-color: rgb(255 255 255 / 25%);
+}
 .system-select-menu {
   z-index: 1000;
   display: flex;
@@ -51,6 +65,15 @@
   background-color: white;
   box-shadow: 0 12px 32px rgb(10 37 64 / 16%);
   animation: fade-in 120ms ease-out;
+}
+.data-table-dense th,
+.data-table-dense td {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  overflow-wrap: anywhere;
+}
+.data-table-dense th {
+  white-space: normal;
 }
 
 @theme {
