@@ -41,17 +41,17 @@ type NavSection = { id: string; title: string; items: NavItem[]; collapsible?: b
 
 // Organização do menu lateral por área de trabalho
 const sections: NavSection[] = [
-  { id: 'principal', title: 'Principal', items: [
+  { id: 'principal', title: 'Principal', collapsible: true, items: [
     { path: '/', label: 'Painel', icon: <LayoutDashboard size={18} /> },
     { path: '/relatorios', label: 'Relatórios', icon: <BarChart3 size={18} /> },
   ] },
-  { id: 'crm', title: 'CRM', items: [
+  { id: 'crm', title: 'CRM', collapsible: true, items: [
     { path: '/clientes', label: 'Clientes', icon: <Users size={18} /> },
     { path: '/proprietarios', label: 'Proprietários', icon: <UserSquare2 size={18} /> },
     { path: '/visitas', label: 'Visitas', icon: <Calendar size={18} /> },
     { path: '/negociacoes', label: 'Negociações', icon: <Handshake size={18} /> },
   ] },
-  { id: 'operacoes', title: 'Operações', items: [
+  { id: 'operacoes', title: 'Operações', collapsible: true, items: [
     { path: '/imoveis', label: 'Imóveis', icon: <Building2 size={18} /> },
     { path: '/contratos', label: 'Contratos', icon: <FileText size={18} /> },
     { path: '/anuncios', label: 'Anúncios', icon: <Megaphone size={18} /> },
@@ -67,7 +67,7 @@ const sections: NavSection[] = [
     { path: '/prestadores', label: 'Prestadores', icon: <HardHat size={18} /> },
     { path: '/reparos', label: 'Reparos', icon: <Wrench size={18} /> },
   ] },
-  { id: 'admin', title: 'Administração', items: [
+  { id: 'admin', title: 'Administração', collapsible: true, items: [
     { path: '/funcionarios', label: 'Funcionários', icon: <BadgeCheck size={18} /> },
     { path: '/perfis', label: 'Perfis de Acesso', icon: <ShieldCheck size={18} /> },
     { path: '/notificacoes', label: 'Notificações', icon: <Bell size={18} /> },

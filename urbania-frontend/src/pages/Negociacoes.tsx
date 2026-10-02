@@ -258,12 +258,12 @@ export function NegociacoesList() {
               key: 'id',
               label: 'Código',
               render: r => <span className="font-mono text-slate-500 font-medium whitespace-nowrap">#{r.id}</span>,
-              className: 'w-20 whitespace-nowrap',
+              className: 'w-16 whitespace-nowrap',
             },
             {
               key: 'data',
-              label: 'Data da Proposta',
-              className: 'whitespace-nowrap',
+              label: 'Data',
+              className: 'w-24 whitespace-nowrap',
               render: r => <span className="font-semibold text-slate-800 whitespace-nowrap">{formatDate(r.data)}</span>,
             },
             {
@@ -287,7 +287,7 @@ export function NegociacoesList() {
             {
               key: 'imovel',
               label: 'Imóvel',
-              className: 'w-full min-w-[200px]',
+              className: 'min-w-[160px]',
               render: r => {
                 const imv = imovel(r.imovelId);
                 const titulo = imv?.titulo || r.imovelTitulo || `Imóvel #${r.imovelId}`;
@@ -295,7 +295,7 @@ export function NegociacoesList() {
                 const tituloCompleto = endereco ? `${titulo} — ${endereco}` : titulo;
                 return (
                   <div
-                    className="truncate min-w-0 max-w-[360px] whitespace-nowrap overflow-hidden text-ellipsis text-sm"
+                    className="truncate min-w-0 max-w-[240px] lg:max-w-[320px] whitespace-nowrap overflow-hidden text-ellipsis text-sm"
                     title={tituloCompleto}
                   >
                     <span className="font-mono text-slate-400 text-xs mr-1.5">#{r.imovelId}</span>
@@ -321,7 +321,7 @@ export function NegociacoesList() {
             },
             {
               key: 'valor',
-              label: 'Valor Proposto',
+              label: 'Valor',
               className: 'whitespace-nowrap',
               render: r => (
                 <span className="font-bold text-teal-700 text-sm whitespace-nowrap">

@@ -24,16 +24,6 @@ export function DataTable<T extends { id: number }>({ columns, rows, loading, on
   const current = rows.slice((page - 1) * pageSize, page * pageSize);
   const colSpan = columns.length + (actions ? 1 : 0);
 
-  // Coluna expansiva: absorve o espaço livre para empurrar Ações para o canto fixo padrão
-  const hasFull = columns.some(c => c.className?.includes('w-full'));
-  const expandKey = useMemo(() => {
-    if (hasFull) return null;
-    const candidate = columns.find(c => ['imovel', 'titulo', 'nome', 'descricao', 'motivo', 'categoria'].includes(c.key))
-      || columns.find(c => !['id', 'codigo', 'data', 'hora', 'status', 'tipo', 'valor', 'vencimento'].includes(c.key))
-      || columns[columns.length > 1 ? 1 : 0];
-    return candidate?.key;
-  }, [columns, hasFull]);
-
   return (
     <div className={`flex flex-col justify-between ${compact ? 'min-h-0' : 'min-h-[560px] lg:min-h-[calc(100vh-250px)]'}`}>
       <div className="overflow-x-auto flex-1">
@@ -41,20 +31,19 @@ export function DataTable<T extends { id: number }>({ columns, rows, loading, on
           <thead className="bg-white border-b border-slate-100 text-slate-500 text-[11px] font-bold uppercase tracking-wider">
             <tr>
               {columns.map((c, idx) => {
-                const isExpand = c.className?.includes('w-full') || c.key === expandKey;
                 const defaultFirstWidth = idx === 0
-                  ? (['id', 'codigo'].includes(c.key.toLowerCase()) ? 'w-20' : ['data', 'datahora'].includes(c.key.toLowerCase()) ? 'w-44' : '')
+                  ? (['id', 'codigo'].includes(c.key.toLowerCase()) ? 'w-16' : ['data', 'datahora'].includes(c.key.toLowerCase()) ? 'w-40' : '')
                   : '';
-                const widthMatch = c.className?.match(/\b(w-\S+|min-w-\S+|max-w-\S+)\b/g)?.join(' ') || defaultFirstWidth;
-                const thWidthClass = isExpand ? 'w-full' : widthMatch;
+                const widthMatch = c.className?.match(/\b(w-\S+|min-w-\S+|max-w-\S+)\b/g)?.filter(w => !w.includes('w-full')).join(' ') || defaultFirstWidth;
+                const thWidthClass = widthMatch;
                 return (
-                  <th key={c.key} className={`px-6 py-4 whitespace-nowrap ${thWidthClass}`}>
+                  <th key={c.key} className={`px-4 lg:px-5 py-3.5 whitespace-nowrap ${thWidthClass}`}>
                     {c.label}
                   </th>
                 );
               })}
               {actions && (
-                <th className="px-6 py-4 whitespace-nowrap w-40 min-w-[150px] max-w-[160px] text-left">
+                <th className="px-4 lg:px-5 py-3.5 whitespace-nowrap w-36 min-w-[136px] max-w-[144px] text-left">
                   Ações
                 </th>
               )}
@@ -68,21 +57,19 @@ export function DataTable<T extends { id: number }>({ columns, rows, loading, on
             ) : current.map(row => (
               <tr key={row.id} onClick={() => onRowClick?.(row)} className={`hover:bg-slate-50/80 transition-colors ${onRowClick ? 'cursor-pointer' : ''}`}>
                 {columns.map((c, idx) => {
-                  const isExpand = c.className?.includes('w-full') || c.key === expandKey;
                   const defaultFirstWidth = idx === 0
-                    ? (['id', 'codigo'].includes(c.key.toLowerCase()) ? 'w-20' : ['data', 'datahora'].includes(c.key.toLowerCase()) ? 'w-44' : '')
+                    ? (['id', 'codigo'].includes(c.key.toLowerCase()) ? 'w-16' : ['data', 'datahora'].includes(c.key.toLowerCase()) ? 'w-40' : '')
                     : '';
-                  const colClass = isExpand && !c.className?.includes('w-full')
-                    ? `${c.className || 'text-slate-700'} w-full`
-                    : `${c.className || 'text-slate-700'} ${defaultFirstWidth}`.trim();
+                  const cleanClass = (c.className || 'text-slate-700').replace(/\bw-full\b/g, '').trim();
+                  const colClass = `${cleanClass} ${defaultFirstWidth}`.trim();
                   return (
-                    <td key={c.key} className={`px-6 py-3.5 ${colClass}`}>
+                    <td key={c.key} className={`px-4 lg:px-5 py-3.5 ${colClass}`}>
                       {c.render ? c.render(row) : String((row as any)[c.key] ?? '')}
                     </td>
                   );
                 })}
                 {actions && (
-                  <td className="px-6 py-3.5 whitespace-nowrap w-40 min-w-[150px] max-w-[160px] text-left" onClick={e => e.stopPropagation()}>
+                  <td className="px-4 lg:px-5 py-3.5 whitespace-nowrap w-36 min-w-[136px] max-w-[144px] text-left" onClick={e => e.stopPropagation()}>
                     {actions(row)}
                   </td>
                 )}

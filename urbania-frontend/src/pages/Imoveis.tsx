@@ -59,6 +59,7 @@ export function ImoveisList() {
     {
       key: 'titulo',
       label: 'Imóvel',
+      className: 'min-w-[180px]',
       render: (r: any) => {
         const foto = parsePhotos(r.fotos)[0];
         return (
@@ -91,24 +92,6 @@ export function ImoveisList() {
           {r.finalidade}
         </Badge>
       ),
-    },
-    {
-      key: 'endereco',
-      label: 'Endereço',
-      render: (r: any) => <span className="text-slate-600 text-xs">{enderecoCurto(r) || '-'}</span>,
-    },
-    {
-      key: 'detalhes',
-      label: 'Características',
-      render: (r: any) => {
-        const parts = [
-          r.quartos ? `${r.quartos} qtos` : null,
-          r.banheiros ? `${r.banheiros} banh` : null,
-          r.vagas ? `${r.vagas} vg` : null,
-          r.areaTotal ? `${r.areaTotal} m²` : null,
-        ].filter(Boolean);
-        return <span className="text-xs text-slate-500">{parts.join(' · ') || '-'}</span>;
-      },
     },
     {
       key: 'preco',

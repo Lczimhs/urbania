@@ -388,12 +388,12 @@ export function ContratosList() {
               key: 'id',
               label: 'Código',
               render: r => <span className="font-mono text-slate-500 font-medium whitespace-nowrap">#{r.id}</span>,
-              className: 'w-20 whitespace-nowrap',
+              className: 'w-16 whitespace-nowrap',
             },
             {
               key: 'imovel',
               label: 'Imóvel',
-              className: 'w-full min-w-[200px]',
+              className: 'min-w-[180px]',
               render: r => {
                 const imv = imovel(r.imovelId);
                 const foto = parsePhotos(imv?.fotos)[0];
@@ -402,7 +402,7 @@ export function ContratosList() {
                     <div className="w-10 h-10 rounded-lg overflow-hidden bg-slate-100 shrink-0 border border-slate-200/60 flex items-center justify-center">
                       {foto ? <img src={foto} alt="" className="w-full h-full object-cover" /> : <Building2 size={18} className="text-slate-400" />}
                     </div>
-                    <div className="min-w-0 max-w-[360px]">
+                    <div className="min-w-0 max-w-[280px] lg:max-w-[340px]">
                       <p className="font-semibold text-slate-800 leading-snug truncate" title={imv?.titulo || r.imovelTitulo || `Imóvel #${r.imovelId}`}>
                         {imv?.titulo || r.imovelTitulo || `Imóvel #${r.imovelId}`}
                       </p>
