@@ -1,6 +1,7 @@
+import { Select } from './Select';
 import { createContext, useContext, useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { KeyboardEvent, ReactNode } from 'react';
-import { ChevronDown, ChevronLeft, ChevronRight, Edit2, Eye, RotateCcw, Search, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Edit2, Eye, RotateCcw, Search, Trash2 } from 'lucide-react';
 import { usePodeNaRota } from '../lib/auth';
 
 export type Column<T> = { key: string; label: string; render?: (row: T) => ReactNode; className?: string };
@@ -235,16 +236,15 @@ export function FilterSelect({ value, onChange, options, placeholder }: {
   const ativo = valor !== '';
   return (
     <div className="relative w-full md:w-auto">
-      <select
-        value={valor} onChange={e => mudar(e.target.value)} title={placeholder}
-        className={`${campoBase} w-full md:w-auto md:min-w-[10rem] appearance-none cursor-pointer pl-3.5 pr-10 ${ativo ? 'border-sky-300 bg-sky-50 text-sky-800 font-semibold' : 'border-slate-200 text-slate-600'}`}
+      <Select
+        value={valor} onChange={selectedValue => mudar(selectedValue)} title={placeholder} data-filled={ativo}
+        className={`${campoBase} w-full md:w-auto md:min-w-[10rem] appearance-none cursor-pointer pl-3.5 pr-10 ${ativo ? 'border-cadastro/30 bg-cadastro/5 text-cadastro font-medium' : 'border-slate-200 text-slate-600'}`}
       >
         <option value="">{placeholder}</option>
         {options.map(o => typeof o === 'string'
           ? <option key={o} value={o}>{o}</option>
           : <option key={o.value} value={o.value}>{o.label}</option>)}
-      </select>
-      <ChevronDown size={16} className={`absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none ${ativo ? 'text-sky-600' : 'text-slate-400'}`} />
+      </Select>
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import { Select } from '../components/Select';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Check, Loader2, Plus } from 'lucide-react';
@@ -106,10 +107,10 @@ export function NovoServicoModal({ onClose, onCreated }: { onClose: () => void; 
         </div>
         <div>
           <label className="block text-xs font-semibold uppercase mb-1 text-slate-500">Categoria <span className="text-red-500">*</span></label>
-          <select aria-invalid={invalid && !form.categoria} className={input(invalid && !form.categoria)} value={form.categoria} onChange={e => setForm({ ...form, categoria: e.target.value })}>
+          <Select aria-invalid={invalid && !form.categoria} className={input(invalid && !form.categoria)} value={form.categoria} onChange={selectedValue => setForm({ ...form, categoria: selectedValue })}>
             <option value="">Selecione...</option>
             {CATEGORIAS_SERVICO.map(c => <option key={c}>{c}</option>)}
-          </select>
+          </Select>
         </div>
         <div>
           <label className="block text-xs font-semibold uppercase mb-1 text-slate-500">Descrição</label>

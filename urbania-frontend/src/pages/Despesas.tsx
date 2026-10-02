@@ -1,3 +1,4 @@
+import { Select } from '../components/Select';
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -296,9 +297,9 @@ export function DespesasList() {
                 <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
                   Forma de Pagamento *
                 </label>
-                <select
+                <Select
                   value={formaPagamentoBaixa}
-                  onChange={e => setFormaPagamentoBaixa(e.target.value)}
+                  onChange={selectedValue => setFormaPagamentoBaixa(selectedValue)}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#0a2540] bg-white"
                 >
                   {FORMAS_PAGAMENTO_FINANCEIRO.map(opt => (
@@ -306,7 +307,7 @@ export function DespesasList() {
                       {opt}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
             </div>
 

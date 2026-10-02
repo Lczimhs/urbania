@@ -1,3 +1,4 @@
+import { Select } from '../components/Select';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -237,15 +238,15 @@ function EfetuarPagamentoModal({
             <label className="block font-semibold uppercase text-slate-600 mb-1">
               Forma de Pagamento
             </label>
-            <select
+            <Select
               value={forma}
-              onChange={e => setForma(e.target.value)}
+              onChange={selectedValue => setForma(selectedValue)}
               className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-[#0a2540] bg-white text-xs"
             >
               {FORMAS_PAGAMENTO_FINANCEIRO.map(f => (
                 <option key={f} value={f}>{f}</option>
               ))}
-            </select>
+            </Select>
           </div>
         </div>
 

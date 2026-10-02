@@ -1,3 +1,4 @@
+import { Select } from './Select';
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 import { ArrowLeft, Building2, CalendarDays, Camera, Check, ChevronLeft, ChevronRight, ClipboardList, FileText, History, ImagePlus, Loader2, MapPin, Settings, ShieldCheck, Trash2, UserRound, Wallet, X } from 'lucide-react';
@@ -20,6 +21,7 @@ export type FieldDef = {
   render?: (value: any, set: (value: any) => void, ctx: { form: Form; mode: Mode; disabled: boolean; invalid: boolean }) => ReactNode;
   renderView?: (value: any, form: Form) => ReactNode; // visualização customizada no modo view
   options?: (string | Option)[];
+  selectPlacement?: 'auto' | 'bottom' | ((mode: Mode) => 'auto' | 'bottom');
   mask?: (v: unknown) => string;
   required?: boolean | ((form: Form) => boolean);
   disabled?: boolean | ((form: Form, mode: Mode) => boolean);
@@ -206,10 +208,10 @@ export function EntityForm({ title, mode, initial, tabs, defaults = {}, onSubmit
         return wrap(<textarea rows={3} disabled={disabled} aria-invalid={invalid} className={inputClass(invalid)} value={value ?? ''} onChange={e => set(f, e.target.value)} placeholder={f.placeholder} />);
       case 'select':
         return wrap(
-          <select disabled={disabled} aria-invalid={invalid} className={inputClass(invalid)} value={value ?? ''} onChange={e => set(f, e.target.value)}>
+          <Select placement={typeof f.selectPlacement === 'function' ? f.selectPlacement(mode) : f.selectPlacement} disabled={disabled} aria-label={f.label} aria-invalid={invalid} className={inputClass(invalid)} value={value ?? ''} onChange={selectedValue => set(f, selectedValue)}>
             <option value="">Selecione...</option>
             {opts.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-          </select>
+          </Select>
         );
       case 'search-select':
         return wrap(<SearchSelect value={value} options={opts} disabled={disabled} invalid={invalid} onChange={v => set(f, v)} />);
