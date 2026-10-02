@@ -111,6 +111,10 @@ const schema = {
   },
 };
 
+// "pronto" resolve quando todas as tabelas já foram criadas (usado antes de popular um banco novo)
+let tabelasCriadas;
+const pronto = new Promise(resolve => { tabelasCriadas = resolve; });
+
 db.serialize(() => {
   Object.entries(schema).forEach(([table, columns]) => {
     const cols = Object.entries(columns).map(([name, type]) => `${name} ${type}`).join(', ');
@@ -125,7 +129,9 @@ db.serialize(() => {
         .forEach(([name, type]) => db.run(`ALTER TABLE ${table} ADD COLUMN ${name} ${type}`));
     });
   });
+  db.get('SELECT 1', () => tabelasCriadas());
 });
 
 db.schema = schema;
+db.pronto = pronto;
 module.exports = db;

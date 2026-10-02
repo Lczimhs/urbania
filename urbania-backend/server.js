@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const db = require('./database');
+const popularDadosDeTeste = require('./dados-teste');
 const { idVisitante, gerarToken, carregarSessao, autenticar, autorizar, filtrarFuncionario, garantirAcessosPadrao } = require('./permissoes');
 
 const app = express();
@@ -185,7 +186,17 @@ app.get('/api/dashboard', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-garantirAcessosPadrao().catch(err => console.error('Erro ao criar acessos padrão:', err.message));
-app.listen(PORT, () => {
-  console.log('Backend Urbânia rodando na porta ' + PORT);
-});
+// Banco vazio (primeira execução ou Render após um deploy): preenche com dados de teste de todos os módulos
+const prepararBanco = async () => {
+  await db.pronto;
+  if ((await get('SELECT COUNT(*) as c FROM funcionarios')).c === 0) {
+    console.log('Banco vazio: gerando dados de teste...');
+    await popularDadosDeTeste(db);
+    console.log('Dados de teste gerados.');
+  }
+  await garantirAcessosPadrao();
+};
+
+prepararBanco()
+  .catch(err => console.error('Erro ao preparar o banco:', err.message))
+  .finally(() => app.listen(PORT, () => console.log('Backend Urbânia rodando na porta ' + PORT)));
