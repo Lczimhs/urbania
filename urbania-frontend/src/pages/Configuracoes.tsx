@@ -6,6 +6,7 @@ import { apiError, useToast } from '../components/Toast';
 import { useConfig } from '../lib/config';
 import { MODO_TESTE, useAuth } from '../lib/auth';
 import { maskCnpj, maskPhone, onlyDigits } from '../lib/masks';
+import logoPadrao from '../assets/logo.png';
 import { INDICES_REAJUSTE, addressFields } from '../lib/options';
 
 const EQUIPE = ['Enzo Prado Barbosa (Scrum Master)', 'Gustavo Alves Soares', 'Yuri Gabriel Ferreira', 'Lucas Vilas Boas Brito', 'Lucas Oliveira Nascimento', 'Felipe Barbosa Nink'];
@@ -14,7 +15,7 @@ const percentuais = ['taxaAdministracao', 'comissaoVenda', 'multaAtraso', 'juros
 
 const tabs: TabDef[] = [
   { label: 'Dados da Imobiliária', fields: [
-    { key: 'logo', label: 'Logo da Imobiliária', type: 'photo', full: true },
+    { key: 'logo', label: 'Logo da Imobiliária', type: 'photo', full: true, defaultPhoto: logoPadrao },
     { key: 'nomeFantasia', label: 'Nome Fantasia', required: true },
     { key: 'razaoSocial', label: 'Razão Social' },
     { key: 'cnpj', label: 'CNPJ', mask: maskCnpj, placeholder: '00.000.000/0000-00' },
