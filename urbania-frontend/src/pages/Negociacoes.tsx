@@ -235,6 +235,7 @@ export function NegociacoesList() {
         </Toolbar>
 
         <DataTable
+          layoutFixed
           rows={filtered}
           loading={loading}
           empty={empty}
@@ -255,17 +256,17 @@ export function NegociacoesList() {
             {
               key: 'cliente',
               label: 'Cliente',
-              className: 'whitespace-nowrap',
+              className: 'w-44 lg:w-48 min-w-[120px]',
               render: r => {
                 const c = cliente(r.clienteId);
                 const nome = c?.nome || r.clienteNome || `#${r.clienteId}`;
                 return (
                   <div
-                    className="flex items-center gap-2 whitespace-nowrap"
+                    className="flex items-center gap-2 min-w-0"
                     title={c?.telefone ? `${nome} • ${c.telefone}` : nome}
                   >
                     <Avatar src={c?.foto} name={nome} size="sm" />
-                    <span className="font-semibold text-slate-800 text-sm whitespace-nowrap">{nome}</span>
+                    <span className="font-semibold text-slate-800 text-sm truncate">{nome}</span>
                   </div>
                 );
               },
@@ -273,7 +274,7 @@ export function NegociacoesList() {
             {
               key: 'imovel',
               label: 'Imóvel',
-              className: 'min-w-[160px]',
+              className: 'min-w-[140px]',
               render: r => {
                 const imv = imovel(r.imovelId);
                 const titulo = imv?.titulo || r.imovelTitulo || `Imóvel #${r.imovelId}`;
@@ -281,12 +282,12 @@ export function NegociacoesList() {
                 const tituloCompleto = endereco ? `${titulo} — ${endereco}` : titulo;
                 return (
                   <div
-                    className="truncate min-w-0 max-w-[240px] lg:max-w-[320px] whitespace-nowrap overflow-hidden text-ellipsis text-sm"
+                    className="truncate min-w-0 text-sm"
                     title={tituloCompleto}
                   >
-                    <span className="font-mono text-slate-400 text-xs mr-1.5">#{r.imovelId}</span>
+                    <span className="font-mono text-slate-400 text-xs mr-1">#{r.imovelId}</span>
                     <span className="font-medium text-slate-800">{titulo}</span>
-                    {endereco && <span className="text-slate-400 text-xs ml-1.5">— {endereco}</span>}
+                    {endereco && <span className="text-slate-400 text-xs ml-1">— {endereco}</span>}
                   </div>
                 );
               },
@@ -294,10 +295,10 @@ export function NegociacoesList() {
             {
               key: 'tipo',
               label: 'Tipo',
-              className: 'whitespace-nowrap',
+              className: 'w-24 whitespace-nowrap',
               render: r => (
                 <span
-                  className={`inline-flex items-center w-fit whitespace-nowrap px-2.5 py-1 rounded-full text-xs font-semibold border ${tipoNegociacaoColor(
+                  className={`inline-flex items-center w-fit whitespace-nowrap px-2.5 py-0.5 rounded-full text-xs font-semibold border ${tipoNegociacaoColor(
                     r.tipo
                   )}`}
                 >
@@ -308,7 +309,7 @@ export function NegociacoesList() {
             {
               key: 'valor',
               label: 'Valor',
-              className: 'whitespace-nowrap',
+              className: 'w-28 whitespace-nowrap',
               render: r => (
                 <span className="font-bold text-teal-700 text-sm whitespace-nowrap">
                   {formatCurrency(r.valor)}
@@ -318,7 +319,7 @@ export function NegociacoesList() {
             {
               key: 'status',
               label: 'Status',
-              className: 'whitespace-nowrap',
+              className: 'w-36 whitespace-nowrap',
               render: r => (
                 <StatusDropdown
                   value={r.status || 'Em Andamento'}

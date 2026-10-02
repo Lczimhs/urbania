@@ -6,7 +6,7 @@ import { usePodeNaRota } from '../lib/auth';
 export type Column<T> = { key: string; label: string; render?: (row: T) => ReactNode; className?: string };
 
 // Grid de listagem com altura estruturada e paginação permanente (RNF 1.6 das consultas)
-export function DataTable<T extends { id: number }>({ columns, rows, loading, onRowClick, empty, pageSize = 10, compact = false, actions }: {
+export function DataTable<T extends { id: number }>({ columns, rows, loading, onRowClick, empty, pageSize = 10, compact = false, layoutFixed = false, actions }: {
   columns: Column<T>[];
   rows: T[];
   loading?: boolean;
@@ -14,6 +14,7 @@ export function DataTable<T extends { id: number }>({ columns, rows, loading, on
   empty?: ReactNode;
   pageSize?: number;
   compact?: boolean;
+  layoutFixed?: boolean;
   actions?: (row: T) => ReactNode;
 }) {
   const [page, setPage] = useState(1);
@@ -26,8 +27,8 @@ export function DataTable<T extends { id: number }>({ columns, rows, loading, on
 
   return (
     <div className={`flex flex-col justify-between ${compact ? 'min-h-0' : 'min-h-[560px] lg:min-h-[calc(100vh-250px)]'}`}>
-      <div className="overflow-x-auto flex-1">
-        <table className="w-full text-sm text-left">
+      <div className={`${layoutFixed ? 'overflow-x-hidden' : 'overflow-x-auto'} flex-1`}>
+        <table className={`w-full text-sm text-left ${layoutFixed ? 'table-fixed' : ''}`}>
           <thead className="bg-white border-b border-slate-100 text-slate-500 text-[11px] font-bold uppercase tracking-wider">
             <tr>
               {columns.map((c, idx) => {
@@ -37,13 +38,13 @@ export function DataTable<T extends { id: number }>({ columns, rows, loading, on
                 const widthMatch = c.className?.match(/\b(w-\S+|min-w-\S+|max-w-\S+)\b/g)?.filter(w => !w.includes('w-full')).join(' ') || defaultFirstWidth;
                 const thWidthClass = widthMatch;
                 return (
-                  <th key={c.key} className={`px-4 lg:px-5 py-3.5 whitespace-nowrap ${thWidthClass}`}>
+                  <th key={c.key} className={`px-3.5 lg:px-4 py-3.5 whitespace-nowrap ${thWidthClass}`}>
                     {c.label}
                   </th>
                 );
               })}
               {actions && (
-                <th className="px-4 lg:px-5 py-3.5 whitespace-nowrap w-36 min-w-[136px] max-w-[144px] text-left">
+                <th className="px-3.5 lg:px-4 py-3.5 whitespace-nowrap w-32 min-w-[116px] text-left">
                   Ações
                 </th>
               )}
@@ -63,13 +64,13 @@ export function DataTable<T extends { id: number }>({ columns, rows, loading, on
                   const cleanClass = (c.className || 'text-slate-700').replace(/\bw-full\b/g, '').trim();
                   const colClass = `${cleanClass} ${defaultFirstWidth}`.trim();
                   return (
-                    <td key={c.key} className={`px-4 lg:px-5 py-3.5 ${colClass}`}>
+                    <td key={c.key} className={`px-3.5 lg:px-4 py-3.5 ${colClass}`}>
                       {c.render ? c.render(row) : String((row as any)[c.key] ?? '')}
                     </td>
                   );
                 })}
                 {actions && (
-                  <td className="px-4 lg:px-5 py-3.5 whitespace-nowrap w-36 min-w-[136px] max-w-[144px] text-left" onClick={e => e.stopPropagation()}>
+                  <td className="px-3.5 lg:px-4 py-3.5 whitespace-nowrap w-32 min-w-[116px] text-left" onClick={e => e.stopPropagation()}>
                     {actions(row)}
                   </td>
                 )}
