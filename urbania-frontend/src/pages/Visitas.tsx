@@ -1,6 +1,7 @@
+import { Select } from '../components/Select';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CalendarX2, ChevronDown, MapPin, MoreVertical, Plus } from 'lucide-react';
+import { CalendarX2, MapPin, MoreVertical, Plus } from 'lucide-react';
 import { api } from '../api';
 import { Badge, Card, DataTable, FilterSelect, PageHeader, RowActions, SearchInput, Toolbar, matches } from '../components/DataTable';
 import type { Mode, TabDef } from '../components/EntityForm';
@@ -54,15 +55,13 @@ export function RowMenu({ items }: { items: { label: string; onClick: () => void
 export function StatusDropdown({ value, options, onChange }: { value: string; options: string[]; onChange: (v: string) => void }) {
   const pode = usePodeNaRota();
   if (!pode('Editar')) return <Badge className={statusColor(value)}>{value}</Badge>;
-  // Selo colorido com o texto centralizado e seta pequena colada ao texto.
-  // "field-sizing: content" faz o seletor ter a largura do status atual (e não da maior opção).
+  // Compact selector for inline status changes.
   return (
     <span className={`relative inline-flex items-center rounded-full transition hover:brightness-95 focus-within:ring-2 focus-within:ring-current/25 ${statusColor(value)}`}>
-      <select value={value || ''} onChange={e => onChange(e.target.value)} onClick={e => e.stopPropagation()} title="Alterar status"
-        className="appearance-none [field-sizing:content] bg-transparent text-xs font-bold text-center pl-3 pr-6 py-1 border-0 outline-none cursor-pointer">
+      <Select value={value || ''} onChange={selectedValue => onChange(selectedValue)} onClick={e => e.stopPropagation()} title="Alterar status"
+        className="system-select-compact text-xs font-medium">
         {options.map(o => <option key={o} value={o} className="bg-white text-slate-700">{o}</option>)}
-      </select>
-      <ChevronDown size={12} strokeWidth={2.5} className="absolute right-2 pointer-events-none opacity-70" />
+      </Select>
     </span>
   );
 }

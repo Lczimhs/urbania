@@ -83,7 +83,7 @@ export function ImoveisList() {
               )}
             </div>
             <div>
-              <p className="font-semibold text-slate-800 leading-snug">{r.titulo}</p>
+              <p className="font-medium text-cadastro leading-snug">{r.titulo}</p>
               <p className="text-xs text-slate-400">{r.bairro ? `${r.bairro} · ` : ''}{r.cidade || ''}</p>
             </div>
           </div>
@@ -107,7 +107,7 @@ export function ImoveisList() {
     {
       key: 'preco',
       label: 'Preço',
-      render: (r: any) => <span className="font-bold text-sky-700 text-sm whitespace-nowrap">{precoImovel(r)}</span>,
+      render: (r: any) => <span className="font-bold text-cadastro text-sm whitespace-nowrap">{precoImovel(r)}</span>,
     },
   ];
 
@@ -258,7 +258,7 @@ export function ImoveisList() {
                           {/* Informações centrais */}
                           <div className="p-4">
                             {/* Título do Imóvel */}
-                            <h3 className="font-bold text-slate-900 text-base leading-snug group-hover:text-sky-700 transition line-clamp-1">
+                            <h3 className="font-medium text-cadastro text-base leading-snug group-hover:text-cadastro-hover transition line-clamp-1">
                               {i.titulo}
                             </h3>
 
@@ -301,7 +301,7 @@ export function ImoveisList() {
                         {/* Rodapé do Card: Preço e Proprietário à esquerda, Ações à direita */}
                         <div className="px-4 pb-4 pt-2.5 flex items-center justify-between border-t border-slate-100">
                           <div className="min-w-0">
-                            <p className="text-lg font-bold text-sky-600 tracking-tight leading-snug">
+                            <p className="text-lg font-bold text-cadastro tracking-tight leading-snug">
                               {precoImovel(i)}
                             </p>
                             {proprietarioNome && (

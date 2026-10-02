@@ -1,3 +1,4 @@
+import { Select } from '../components/Select';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -424,7 +425,7 @@ export function ContratosList() {
               className: 'whitespace-nowrap',
               render: r => (
                 <div className="whitespace-nowrap">
-                  <span className="font-bold text-teal-700 text-sm">
+                  <span className="font-bold text-cadastro text-sm">
                     {formatCurrency(r.valor)}
                   </span>
                   {r.tipo === 'Locação' && <span className="text-[11px] text-slate-400 ml-1">/mês</span>}
@@ -647,11 +648,11 @@ export function ContratoPage({ mode }: { mode: Mode }) {
               <div className="space-y-2">
                 <div className="flex gap-2">
                   <div className="flex-1">
-                    <select
+                    <Select
                       value={value ?? ''}
                       disabled={disabled || mode === 'edit'}
-                      onChange={e => {
-                        const id = e.target.value ? Number(e.target.value) : null;
+                      onChange={selectedValue => {
+                        const id = selectedValue ? Number(selectedValue) : null;
                         const sel = find(imoveis.rows, id);
                         if (sel) {
                           const tipoSugerido = (sel.finalidade === 'Aluguel' || sel.finalidade === 'Temporada') ? 'Locação' : 'Compra e Venda';
@@ -685,7 +686,7 @@ export function ContratoPage({ mode }: { mode: Mode }) {
                           #{i.id} - {i.titulo} ({i.tipo} · {i.finalidade})
                         </option>
                       ))}
-                    </select>
+                    </Select>
                   </div>
                   {!disabled && mode !== 'edit' && (
                     <button
