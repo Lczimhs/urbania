@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bath, BedDouble, Building2, Car, Edit2, LayoutGrid, LayoutList, Maximize, Plus, Trash2 } from 'lucide-react';
-import { ActionButton, Badge, Card, DataTable, FilterSelect, PageHeader, Pager, RowActions, SearchInput, Toolbar, matches } from '../components/DataTable';
+import { Bath, BedDouble, Building2, Car, Edit2, LayoutGrid, LayoutList, MapPin, Maximize, Plus, Trash2 } from 'lucide-react';
+import { Badge, Card, DataTable, FilterSelect, PageHeader, Pager, RowActions, SearchInput, Toolbar, matches } from '../components/DataTable';
 import type { Mode, TabDef } from '../components/EntityForm';
 import { EntityPage, RelatedGrid } from '../components/EntityPage';
 import { useDelete } from '../components/useDelete';
@@ -11,7 +11,6 @@ import { formatCurrency, formatDate } from '../lib/format';
 import { FINALIDADES_IMOVEL, TIPOS_IMOVEL, addressFields, statusColor } from '../lib/options';
 import { Pode } from '../lib/auth';
 
-const PAGE_SIZE = 10;
 const isAluguel = (finalidade: unknown) => finalidade === 'Aluguel' || finalidade === 'Temporada';
 
 // Preço exibido no card: venda ou aluguel, conforme a finalidade
@@ -34,9 +33,21 @@ export function ImoveisList() {
   const [bairro, setBairro] = useState('');
   const [quartos, setQuartos] = useState('');
   const [proprietario, setProprietario] = useState('');
-  const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
+  const [viewMode, setViewMode] = useState<'table' | 'grid'>(() => {
+    return (localStorage.getItem('urbania_imoveis_view') as 'table' | 'grid') || 'grid';
+  });
   const [page, setPage] = useState(1);
   const del = useDelete('imoveis', 'Imóvel', reload);
+
+  const handleViewModeChange = (mode: 'table' | 'grid') => {
+    setViewMode(mode);
+    localStorage.setItem('urbania_imoveis_view', mode);
+  };
+
+  const getProprietarioNome = (id: number) => {
+    const p = proprietarios.rows.find(x => x.id === id);
+    return p?.nome || '';
+  };
 
   const bairros = [...new Set(rows.map(i => i.bairro).filter(Boolean))].sort();
   const filtered = rows.filter(i =>
@@ -45,8 +56,9 @@ export function ImoveisList() {
     (!quartos || Number(i.quartos) >= Number(quartos)) && (!proprietario || String(i.proprietarioId) === String(proprietario))
   );
 
-  useEffect(() => setPage(1), [filtered.length]);
-  const currentCards = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const pageSize = viewMode === 'grid' ? 9 : 10;
+  useEffect(() => setPage(1), [filtered.length, viewMode]);
+  const currentCards = filtered.slice((page - 1) * pageSize, page * pageSize);
 
   const columns = [
     {
@@ -87,48 +99,81 @@ export function ImoveisList() {
       key: 'finalidade',
       label: 'Finalidade',
       render: (r: any) => r.finalidade && (
-        <Badge className={r.finalidade === 'Venda' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}>
-          {r.finalidade}
+        <Badge className={r.finalidade === 'Venda' ? 'bg-sky-100 text-sky-700' : 'bg-amber-100 text-amber-700'}>
+          {r.finalidade === 'Aluguel' ? 'Locação' : r.finalidade}
         </Badge>
       ),
     },
     {
       key: 'preco',
       label: 'Preço',
-      render: (r: any) => <span className="font-bold text-teal-700 text-sm whitespace-nowrap">{precoImovel(r)}</span>,
+      render: (r: any) => <span className="font-bold text-sky-700 text-sm whitespace-nowrap">{precoImovel(r)}</span>,
     },
   ];
+
+  // Interruptor de visualização (Segmented Switch: Tabela / Cards)
+  const ViewSwitch = ({ className = '' }: { className?: string }) => (
+    <div
+      role="group"
+      aria-label="Alternar exibição entre Tabela e Cards"
+      className={`inline-flex items-center p-1 bg-slate-100/90 rounded-xl border border-slate-200/80 shadow-2xs select-none ${className}`}
+    >
+      <button
+        type="button"
+        onClick={() => handleViewModeChange('table')}
+        className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+          viewMode === 'table'
+            ? 'bg-white text-[#0a2540] shadow-xs'
+            : 'text-slate-500 hover:text-slate-800'
+        }`}
+        title="Visualização em Tabela"
+      >
+        <LayoutList size={15} />
+        <span>Tabela</span>
+      </button>
+      <button
+        type="button"
+        onClick={() => handleViewModeChange('grid')}
+        className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+          viewMode === 'grid'
+            ? 'bg-white text-[#0a2540] shadow-xs'
+            : 'text-slate-500 hover:text-slate-800'
+        }`}
+        title="Visualização em Cards"
+      >
+        <LayoutGrid size={15} />
+        <span>Cards</span>
+      </button>
+    </div>
+  );
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       <PageHeader
         title="Imóveis" subtitle={`${rows.length} cadastrados`}
         action={
-          <div className="flex items-center gap-2">
-            <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden bg-white shadow-xs">
+          <div className="flex items-center gap-3">
+            <ViewSwitch />
+            <Pode acao="Criar">
               <button
-                type="button"
-                onClick={() => setViewMode('table')}
-                className={`p-2 transition ${viewMode === 'table' ? 'bg-[#0a2540] text-white' : 'text-slate-500 hover:bg-slate-50'}`}
-                title="Visualização em Tabela"
+                onClick={() => navigate('/imoveis/novo')}
+                className="flex items-center gap-2 bg-[#0a2540] text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-[#06182c] shadow-sm transition"
               >
-                <LayoutList size={18} />
+                <Plus size={18} /> Novo Imóvel
               </button>
-              <button
-                type="button"
-                onClick={() => setViewMode('grid')}
-                className={`p-2 transition ${viewMode === 'grid' ? 'bg-[#0a2540] text-white' : 'text-slate-500 hover:bg-slate-50'}`}
-                title="Visualização em Cards"
-              >
-                <LayoutGrid size={18} />
-              </button>
-            </div>
-            <Pode acao="Criar"><button onClick={() => navigate('/imoveis/novo')} className="flex items-center gap-2 bg-[#0a2540] text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-[#06182c] shadow-sm"><Plus size={18} /> Novo Imóvel</button></Pode>
+            </Pode>
           </div>
         }
       />
       <Card>
-        <Toolbar>
+        <Toolbar
+          extraActions={
+            <div className="flex items-center gap-2.5">
+              <span className="text-xs font-semibold text-slate-500 hidden sm:inline">Visualização:</span>
+              <ViewSwitch />
+            </div>
+          }
+        >
           <SearchInput value={term} onChange={setTerm} placeholder="Buscar por título, código ou cidade..." />
           <FilterSelect value={finalidade} onChange={setFinalidade} options={FINALIDADES_IMOVEL} placeholder="Todas as finalidades" />
           <FilterSelect value={tipo} onChange={setTipo} options={TIPOS_IMOVEL} placeholder="Todos os tipos" />
@@ -152,48 +197,142 @@ export function ImoveisList() {
             )}
           />
         ) : (
-          <div className="flex flex-col justify-between min-h-[560px] lg:min-h-[calc(100vh-250px)]">
-            <div className="flex-1 p-5">
+          <div className="flex flex-col justify-between min-h-[560px]">
+            <div className="flex-1 p-5 lg:p-6 bg-slate-50/40">
               {loading ? (
                 <p className="p-12 text-center text-slate-400">Carregando...</p>
               ) : !filtered.length ? (
-                <p className="p-12 text-center text-slate-400">Nenhum imóvel encontrado.</p>
+                <p className="p-12 text-center text-slate-400">Nenhum imóvel encontrado com os filtros selecionados.</p>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {currentCards.map(i => {
                     const foto = parsePhotos(i.fotos)[0];
+                    const proprietarioNome = i.proprietarioNome || getProprietarioNome(i.proprietarioId);
+                    const isLocacao = i.finalidade === 'Aluguel' || i.finalidade === 'Temporada' || i.finalidade === 'Locação';
                     return (
-                      <div key={i.id} onClick={() => navigate(`/imoveis/${i.id}`)} className="group border rounded-xl overflow-hidden bg-white hover:shadow-md transition cursor-pointer flex flex-col justify-between">
+                      <div
+                        key={i.id}
+                        onClick={() => navigate(`/imoveis/${i.id}`)}
+                        className="group bg-white rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-lg hover:border-slate-300 transition-all duration-300 overflow-hidden flex flex-col justify-between cursor-pointer"
+                      >
                         <div>
-                          <div className="h-44 bg-slate-100 relative overflow-hidden">
+                          {/* Foto do imóvel com Badges flutuantes conforme referência */}
+                          <div className="h-48 sm:h-52 bg-slate-100 relative overflow-hidden">
                             {foto ? (
-                              <img src={foto} alt={i.titulo} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+                              <img
+                                src={foto}
+                                alt={i.titulo}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                              />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center text-slate-300"><Building2 size={48} /></div>
+                              <div className="w-full h-full flex flex-col items-center justify-center text-slate-300 bg-slate-50">
+                                <Building2 size={44} className="text-slate-300" />
+                              </div>
                             )}
-                            <div className="absolute left-3 top-3 flex gap-2">
-                              {i.finalidade && <Badge className="bg-white/90 text-slate-700">{i.finalidade}</Badge>}
-                              {i.tipo && <Badge className="bg-[#0a2540]/90 text-white">{i.tipo}</Badge>}
-                            </div>
-                            <div className="absolute right-2 top-2 flex gap-0.5 p-0.5 rounded-lg bg-white/90 shadow-sm opacity-100 sm:opacity-0 group-hover:opacity-100 transition" onClick={e => e.stopPropagation()}>
-                              <Pode acao="Editar"><ActionButton tone="edit" title="Editar" onClick={() => navigate(`/imoveis/${i.id}/editar`)}><Edit2 size={15} /></ActionButton></Pode>
-                              <Pode acao="Excluir"><ActionButton tone="delete" title="Excluir" onClick={() => del.ask(i.id, i.titulo)}><Trash2 size={15} /></ActionButton></Pode>
-                            </div>
+
+                            {/* Badge Superior Esquerdo: Finalidade (Venda em azul, Locação em laranja) */}
+                            {i.finalidade && (
+                              <div className="absolute top-3 left-3">
+                                <span
+                                  className={`text-xs font-bold px-2.5 py-1 rounded-md shadow-xs tracking-wide ${
+                                    isLocacao
+                                      ? 'bg-amber-600 text-white'
+                                      : 'bg-sky-600 text-white'
+                                  }`}
+                                >
+                                  {isLocacao ? 'Locação' : i.finalidade}
+                                </span>
+                              </div>
+                            )}
+
+                            {/* Badge Superior Direito: Tipo do Imóvel (Apartamento, Casa, etc.) */}
+                            {i.tipo && (
+                              <div className="absolute top-3 right-3">
+                                <span className="bg-white/95 text-slate-800 text-xs font-semibold px-2.5 py-1 rounded-md shadow-xs border border-white/80">
+                                  {i.tipo}
+                                </span>
+                              </div>
+                            )}
                           </div>
+
+                          {/* Informações centrais */}
                           <div className="p-4">
-                            <p className="text-[11px] font-mono text-slate-400">#{i.id}</p>
-                            <h3 className="font-bold text-slate-800 leading-snug">{i.titulo}</h3>
-                            <p className="text-xs text-slate-500 mt-1 line-clamp-1">{enderecoCurto(i) || 'Endereço não informado'}</p>
-                            <div className="flex gap-3 text-xs text-slate-500 mt-3">
-                              {!!i.quartos && <span className="flex items-center gap-1"><BedDouble size={14} />{i.quartos}</span>}
-                              {!!i.banheiros && <span className="flex items-center gap-1"><Bath size={14} />{i.banheiros}</span>}
-                              {!!i.vagas && <span className="flex items-center gap-1"><Car size={14} />{i.vagas}</span>}
-                              {!!i.areaTotal && <span className="flex items-center gap-1"><Maximize size={14} />{i.areaTotal} m²</span>}
+                            {/* Título do Imóvel */}
+                            <h3 className="font-bold text-slate-900 text-base leading-snug group-hover:text-sky-700 transition line-clamp-1">
+                              {i.titulo}
+                            </h3>
+
+                            {/* Endereço com Ícone de Localização */}
+                            <p className="text-xs text-slate-400 flex items-center gap-1.5 mt-1.5 line-clamp-1">
+                              <MapPin size={13} className="shrink-0 text-slate-400" />
+                              <span>{enderecoCurto(i) || 'Endereço não informado'}</span>
+                            </p>
+
+                            {/* Linha de Características (qtos, bnh, vagas, m²) */}
+                            <div className="flex flex-wrap items-center gap-3.5 text-xs text-slate-500 font-medium mt-3.5 pt-3 border-t border-slate-100">
+                              {i.quartos ? (
+                                <span className="flex items-center gap-1.5">
+                                  <BedDouble size={14} className="text-slate-400" />
+                                  {i.quartos} qtos
+                                </span>
+                              ) : null}
+                              {i.banheiros ? (
+                                <span className="flex items-center gap-1.5">
+                                  <Bath size={14} className="text-slate-400" />
+                                  {i.banheiros} bnh
+                                </span>
+                              ) : null}
+                              {i.vagas ? (
+                                <span className="flex items-center gap-1.5">
+                                  <Car size={14} className="text-slate-400" />
+                                  {i.vagas} vaga{Number(i.vagas) > 1 ? 's' : ''}
+                                </span>
+                              ) : null}
+                              {(i.areaTotal || i.areaTerreno) ? (
+                                <span className="flex items-center gap-1.5">
+                                  <Maximize size={14} className="text-slate-400" />
+                                  {i.areaTotal || i.areaTerreno} m²
+                                </span>
+                              ) : null}
                             </div>
                           </div>
                         </div>
-                        <div className="px-4 pb-4">
-                          <p className="text-lg font-bold text-teal-600">{precoImovel(i)}</p>
+
+                        {/* Rodapé do Card: Preço e Proprietário à esquerda, Ações à direita */}
+                        <div className="px-4 pb-4 pt-2.5 flex items-center justify-between border-t border-slate-100">
+                          <div className="min-w-0">
+                            <p className="text-lg font-bold text-sky-600 tracking-tight leading-snug">
+                              {precoImovel(i)}
+                            </p>
+                            {proprietarioNome && (
+                              <p className="text-xs text-slate-400 truncate max-w-[200px] mt-0.5">
+                                {proprietarioNome}
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-1 shrink-0 ml-2" onClick={e => e.stopPropagation()}>
+                            <Pode acao="Editar">
+                              <button
+                                type="button"
+                                title="Editar Imóvel"
+                                onClick={() => navigate(`/imoveis/${i.id}/editar`)}
+                                className="p-1.5 text-sky-600 hover:text-sky-800 hover:bg-sky-50 rounded-lg transition"
+                              >
+                                <Edit2 size={16} />
+                              </button>
+                            </Pode>
+                            <Pode acao="Excluir">
+                              <button
+                                type="button"
+                                title="Excluir Imóvel"
+                                onClick={() => del.ask(i.id, i.titulo)}
+                                className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </Pode>
+                          </div>
                         </div>
                       </div>
                     );
@@ -201,7 +340,7 @@ export function ImoveisList() {
                 </div>
               )}
             </div>
-            <Pager page={page} setPage={setPage} total={filtered.length} pageSize={PAGE_SIZE} />
+            <Pager page={page} setPage={setPage} total={filtered.length} pageSize={pageSize} />
           </div>
         )}
       </Card>

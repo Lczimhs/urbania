@@ -248,15 +248,18 @@ export function FilterSelect({ value, onChange, options, placeholder }: {
   );
 }
 
-export function Toolbar({ children }: { children: ReactNode }) {
+export function Toolbar({ children, extraActions }: { children: ReactNode; extraActions?: ReactNode }) {
   const campos = useRef(new Map<string, CampoDeBusca>());
-  const [temCampos, setTemCampos] = useState(false);
+  const [temCampos, setTemCampos] = useState(true);
 
   const ctx = useMemo<BuscaCtx>(() => ({
     registrar: (id, campo) => {
       campos.current.set(id, campo);
       setTemCampos(true);
-      return () => { campos.current.delete(id); setTemCampos(campos.current.size > 0); };
+      return () => {
+        campos.current.delete(id);
+        setTemCampos(campos.current.size > 0);
+      };
     },
   }), []);
 
@@ -273,18 +276,31 @@ export function Toolbar({ children }: { children: ReactNode }) {
 
   return (
     <BuscaContext.Provider value={ctx}>
-      <div onKeyDown={onKeyDown} className="p-4 border-b border-slate-100 flex flex-col md:flex-row flex-wrap gap-3 md:items-center bg-slate-50/60">
-        {children}
+      <div onKeyDown={onKeyDown} className="p-4 border-b border-slate-100 flex flex-col gap-3.5 bg-slate-50/60">
+        <div className="flex flex-wrap items-center gap-3 w-full">
+          {children}
+        </div>
         {temCampos && (
-          <div className="flex gap-2 md:ml-auto">
-            <button type="button" onClick={limpar} title="Limpar filtros e mostrar todos"
-              className="h-11 px-4 flex-1 md:flex-none inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-800 transition">
-              <RotateCcw size={16} /> Limpar
-            </button>
-            <button type="button" onClick={buscar} title="Buscar (sem filtros, mostra todos)"
-              className="h-11 px-5 flex-1 md:flex-none inline-flex items-center justify-center gap-2 rounded-xl bg-[#0a2540] text-sm font-semibold text-white shadow-sm hover:bg-[#06182c] active:scale-[0.98] transition">
-              <Search size={16} /> Buscar
-            </button>
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-200/60">
+            {extraActions ? <div>{extraActions}</div> : <div />}
+            <div className="flex items-center gap-2.5 ml-auto">
+              <button
+                type="button"
+                onClick={limpar}
+                title="Limpar filtros e mostrar todos"
+                className="h-9 px-4 inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition shadow-2xs cursor-pointer active:scale-95"
+              >
+                <RotateCcw size={14} className="text-slate-500" /> Limpar
+              </button>
+              <button
+                type="button"
+                onClick={buscar}
+                title="Buscar (sem filtros, mostra todos)"
+                className="h-9 px-5 inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#0a2540] text-xs font-bold text-white shadow-sm hover:bg-[#06182c] active:scale-95 transition cursor-pointer"
+              >
+                <Search size={14} className="text-sky-300" /> Buscar
+              </button>
+            </div>
           </div>
         )}
       </div>
