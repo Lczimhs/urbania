@@ -24,14 +24,40 @@ export function DataTable<T extends { id: number }>({ columns, rows, loading, on
   const current = rows.slice((page - 1) * pageSize, page * pageSize);
   const colSpan = columns.length + (actions ? 1 : 0);
 
+  // Coluna expansiva: absorve o espaço livre para empurrar Ações para o canto fixo padrão
+  const hasFull = columns.some(c => c.className?.includes('w-full'));
+  const expandKey = useMemo(() => {
+    if (hasFull) return null;
+    const candidate = columns.find(c => ['imovel', 'titulo', 'nome', 'descricao', 'motivo', 'categoria'].includes(c.key))
+      || columns.find(c => !['id', 'codigo', 'data', 'hora', 'status', 'tipo', 'valor', 'vencimento'].includes(c.key))
+      || columns[columns.length > 1 ? 1 : 0];
+    return candidate?.key;
+  }, [columns, hasFull]);
+
   return (
     <div className={`flex flex-col justify-between ${compact ? 'min-h-0' : 'min-h-[560px] lg:min-h-[calc(100vh-250px)]'}`}>
       <div className="overflow-x-auto flex-1">
         <table className="w-full text-sm text-left">
           <thead className="bg-white border-b border-slate-100 text-slate-500 text-[11px] font-bold uppercase tracking-wider">
             <tr>
-              {columns.map(c => <th key={c.key} className="px-6 py-4 whitespace-nowrap">{c.label}</th>)}
-              {actions && <th className="px-6 py-4 text-right">Ações</th>}
+              {columns.map((c, idx) => {
+                const isExpand = c.className?.includes('w-full') || c.key === expandKey;
+                const defaultFirstWidth = idx === 0
+                  ? (['id', 'codigo'].includes(c.key.toLowerCase()) ? 'w-20' : ['data', 'datahora'].includes(c.key.toLowerCase()) ? 'w-44' : '')
+                  : '';
+                const widthMatch = c.className?.match(/\b(w-\S+|min-w-\S+|max-w-\S+)\b/g)?.join(' ') || defaultFirstWidth;
+                const thWidthClass = isExpand ? 'w-full' : widthMatch;
+                return (
+                  <th key={c.key} className={`px-6 py-4 whitespace-nowrap ${thWidthClass}`}>
+                    {c.label}
+                  </th>
+                );
+              })}
+              {actions && (
+                <th className="px-6 py-4 whitespace-nowrap w-40 min-w-[150px] max-w-[160px] text-left">
+                  Ações
+                </th>
+              )}
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -41,13 +67,24 @@ export function DataTable<T extends { id: number }>({ columns, rows, loading, on
               <tr><td colSpan={colSpan} className="p-12 text-center text-slate-400">{empty || 'Nenhum registro encontrado.'}</td></tr>
             ) : current.map(row => (
               <tr key={row.id} onClick={() => onRowClick?.(row)} className={`hover:bg-slate-50/80 transition-colors ${onRowClick ? 'cursor-pointer' : ''}`}>
-                {columns.map(c => (
-                  <td key={c.key} className={`px-6 py-3.5 ${c.className || 'text-slate-700'}`}>
-                    {c.render ? c.render(row) : String((row as any)[c.key] ?? '')}
-                  </td>
-                ))}
+                {columns.map((c, idx) => {
+                  const isExpand = c.className?.includes('w-full') || c.key === expandKey;
+                  const defaultFirstWidth = idx === 0
+                    ? (['id', 'codigo'].includes(c.key.toLowerCase()) ? 'w-20' : ['data', 'datahora'].includes(c.key.toLowerCase()) ? 'w-44' : '')
+                    : '';
+                  const colClass = isExpand && !c.className?.includes('w-full')
+                    ? `${c.className || 'text-slate-700'} w-full`
+                    : `${c.className || 'text-slate-700'} ${defaultFirstWidth}`.trim();
+                  return (
+                    <td key={c.key} className={`px-6 py-3.5 ${colClass}`}>
+                      {c.render ? c.render(row) : String((row as any)[c.key] ?? '')}
+                    </td>
+                  );
+                })}
                 {actions && (
-                  <td className="px-6 py-3.5 text-right whitespace-nowrap" onClick={e => e.stopPropagation()}>{actions(row)}</td>
+                  <td className="px-6 py-3.5 whitespace-nowrap w-40 min-w-[150px] max-w-[160px] text-left" onClick={e => e.stopPropagation()}>
+                    {actions(row)}
+                  </td>
                 )}
               </tr>
             ))}
@@ -151,7 +188,7 @@ export function RowActions({
   if (!pode('Editar')) onEdit = undefined;
   if (!pode('Excluir')) onDelete = undefined;
   return (
-    <div className="inline-flex items-center gap-1.5">
+    <div className="inline-flex items-center gap-1">
       {onView && <ActionButton tone="view" title={viewTitle} onClick={onView}><Eye size={16} /></ActionButton>}
       {onEdit && <ActionButton tone="edit" title={editTitle} onClick={onEdit}><Edit2 size={15} /></ActionButton>}
       {onDelete && <ActionButton tone="delete" title={deleteTitle} onClick={onDelete}><Trash2 size={15} /></ActionButton>}

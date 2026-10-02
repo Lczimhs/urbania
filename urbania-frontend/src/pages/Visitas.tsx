@@ -122,10 +122,10 @@ export function VisitasList() {
           rows={filtered} loading={loading} empty={empty}
           onRowClick={r => navigate(`/visitas/${r.id}`)}
           columns={[
-            { key: 'data', label: 'Data / Hora', render: r => <span className="font-semibold">{formatDate(r.data)} <span className="text-slate-400 font-normal">{r.hora}</span></span> },
-            { key: 'cliente', label: 'Cliente', render: r => cliente(r.clienteId)?.nome || r.clienteNome || `#${r.clienteId}` },
-            { key: 'imovel', label: 'Imóvel', render: r => <span><span className="font-mono text-slate-400">#{r.imovelId}</span> {imovel(r.imovelId)?.titulo}</span> },
-            { key: 'status', label: 'Status', render: r => <StatusDropdown value={r.status} options={STATUS_VISITA} onChange={s => setStatus(r.id, s)} /> },
+            { key: 'data', label: 'Data / Hora', className: 'w-44 whitespace-nowrap', render: r => <span className="font-semibold">{formatDate(r.data)} <span className="text-slate-400 font-normal">{r.hora}</span></span> },
+            { key: 'cliente', label: 'Cliente', className: 'whitespace-nowrap', render: r => cliente(r.clienteId)?.nome || r.clienteNome || `#${r.clienteId}` },
+            { key: 'imovel', label: 'Imóvel', className: 'w-full min-w-[200px]', render: r => <span><span className="font-mono text-slate-400">#{r.imovelId}</span> {imovel(r.imovelId)?.titulo}</span> },
+            { key: 'status', label: 'Status', className: 'w-36 whitespace-nowrap', render: r => <StatusDropdown value={r.status} options={STATUS_VISITA} onChange={s => setStatus(r.id, s)} /> },
           ]}
           actions={r => (
             <RowActions

@@ -287,7 +287,7 @@ export function NegociacoesList() {
             {
               key: 'imovel',
               label: 'Imóvel',
-              className: 'whitespace-nowrap',
+              className: 'w-full min-w-[200px]',
               render: r => {
                 const imv = imovel(r.imovelId);
                 const titulo = imv?.titulo || r.imovelTitulo || `Imóvel #${r.imovelId}`;
@@ -295,7 +295,7 @@ export function NegociacoesList() {
                 const tituloCompleto = endereco ? `${titulo} — ${endereco}` : titulo;
                 return (
                   <div
-                    className="truncate max-w-[240px] whitespace-nowrap overflow-hidden text-ellipsis text-sm"
+                    className="truncate min-w-0 max-w-[360px] whitespace-nowrap overflow-hidden text-ellipsis text-sm"
                     title={tituloCompleto}
                   >
                     <span className="font-mono text-slate-400 text-xs mr-1.5">#{r.imovelId}</span>
@@ -304,12 +304,6 @@ export function NegociacoesList() {
                   </div>
                 );
               },
-            },
-            {
-              key: 'corretor',
-              label: 'Corretor Responsável',
-              className: 'whitespace-nowrap',
-              render: r => <span className="text-slate-700 text-sm whitespace-nowrap">{r.corretor || 'Não informado'}</span>,
             },
             {
               key: 'tipo',

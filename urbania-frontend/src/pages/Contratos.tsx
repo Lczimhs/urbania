@@ -393,6 +393,7 @@ export function ContratosList() {
             {
               key: 'imovel',
               label: 'Imóvel',
+              className: 'w-full min-w-[200px]',
               render: r => {
                 const imv = imovel(r.imovelId);
                 const foto = parsePhotos(imv?.fotos)[0];
@@ -401,7 +402,7 @@ export function ContratosList() {
                     <div className="w-10 h-10 rounded-lg overflow-hidden bg-slate-100 shrink-0 border border-slate-200/60 flex items-center justify-center">
                       {foto ? <img src={foto} alt="" className="w-full h-full object-cover" /> : <Building2 size={18} className="text-slate-400" />}
                     </div>
-                    <div className="min-w-0 max-w-[260px]">
+                    <div className="min-w-0 max-w-[360px]">
                       <p className="font-semibold text-slate-800 leading-snug truncate" title={imv?.titulo || r.imovelTitulo || `Imóvel #${r.imovelId}`}>
                         {imv?.titulo || r.imovelTitulo || `Imóvel #${r.imovelId}`}
                       </p>
@@ -446,17 +447,6 @@ export function ContratosList() {
                 >
                   {r.tipo || 'Locação'}
                 </span>
-              ),
-            },
-            {
-              key: 'periodo',
-              label: 'Vigência',
-              className: 'whitespace-nowrap',
-              render: r => (
-                <div className="text-xs whitespace-nowrap">
-                  <p className="font-semibold text-slate-700">{formatDate(r.dataInicio)}</p>
-                  <p className="text-slate-400">{r.dataFim ? `até ${formatDate(r.dataFim)}` : 'Indeterminado'}</p>
-                </div>
               ),
             },
             {
