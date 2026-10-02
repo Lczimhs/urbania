@@ -20,11 +20,15 @@ export function FuncionariosList() {
   const toast = useToast();
   const { rows, setRows, loading, reload } = useList('funcionarios');
   const perfis = useList('perfis');
-  const [campo, setCampo] = useState('nome');
   const [term, setTerm] = useState('');
+  const [perfilId, setPerfilId] = useState('');
+  const [statusFiltro, setStatusFiltro] = useState('');
   const del = useDelete('funcionarios', 'Funcionário', reload);
 
-  const filtered = rows.filter(f => (campo === 'cpf' ? matches(onlyDigits(term), onlyDigits(f.cpf)) : matches(term, f.nome)));
+  const filtered = rows
+    .filter(f => !perfilId || String(f.perfilId) === perfilId)
+    .filter(f => !statusFiltro || f.status === statusFiltro)
+    .filter(f => matches(term, f.nome, f.cpf, onlyDigits(f.cpf), f.email, f.cargo, f.id));
 
   const setStatus = async (id: number, status: string) => {
     try {
@@ -44,8 +48,19 @@ export function FuncionariosList() {
       />
       <Card>
         <Toolbar>
-          <FilterSelect value={campo} onChange={v => setCampo(v || 'nome')} placeholder="Pesquisar por..." options={[{ value: 'nome', label: 'Nome' }, { value: 'cpf', label: 'CPF' }]} />
-          <SearchInput value={term} onChange={setTerm} placeholder={campo === 'cpf' ? 'Digite o CPF...' : 'Digite o nome...'} />
+          <SearchInput value={term} onChange={setTerm} placeholder="Buscar por nome, CPF, e-mail ou cargo..." />
+          <FilterSelect
+            value={perfilId}
+            onChange={setPerfilId}
+            options={perfis.rows.map(p => ({ value: String(p.id), label: p.nome }))}
+            placeholder="Todos os perfis"
+          />
+          <FilterSelect
+            value={statusFiltro}
+            onChange={setStatusFiltro}
+            options={['Ativo', 'Inativo']}
+            placeholder="Todos os status"
+          />
         </Toolbar>
         <DataTable
           rows={filtered} loading={loading || perfis.loading}

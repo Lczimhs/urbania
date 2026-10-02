@@ -58,8 +58,8 @@ export function AnunciosList() {
       <Card>
         <Toolbar>
           {search.controls}
-          <FilterSelect value={quartos} onChange={setQuartos} options={QUARTOS} placeholder="Quartos" />
-          <FilterSelect value={canal} onChange={setCanal} options={canais.rows.map(c => ({ value: String(c.id), label: c.nome }))} placeholder="Canal de Publicação" />
+          <FilterSelect value={quartos} onChange={setQuartos} options={QUARTOS} placeholder="Todos os quartos" />
+          <FilterSelect value={canal} onChange={setCanal} options={canais.rows.map(c => ({ value: String(c.id), label: c.nome }))} placeholder="Todos os canais" />
         </Toolbar>
         <DataTable
           rows={filtered} loading={loading || imoveis.loading || canais.loading || proprietarios.loading}

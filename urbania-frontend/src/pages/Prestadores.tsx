@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Trash2 } from 'lucide-react';
-import { Badge, Card, DataTable, PageHeader, RowActions, Toolbar } from '../components/DataTable';
+import { Badge, Card, DataTable, FilterSelect, PageHeader, RowActions, Toolbar } from '../components/DataTable';
 import type { Mode, TabDef } from '../components/EntityForm';
 import { EntityPage } from '../components/EntityPage';
 import { useFieldSearch } from '../components/FieldSearch';
@@ -28,6 +28,7 @@ export function PrestadoresList() {
   const navigate = useNavigate();
   const { rows, loading, reload } = useList('prestadores');
   const servicos = useList('servicos');
+  const [servicoFiltro, setServicoFiltro] = useState('');
   const del = useDelete('prestadores', 'Prestador', reload);
   const nomesServicos = (p: any) => parseIds(p.servicos).map(id => servicos.rows.find(s => s.id === id)?.nome).filter(Boolean) as string[];
   const search = useFieldSearch<any>([
@@ -35,7 +36,10 @@ export function PrestadoresList() {
     { value: 'servico', label: 'Tipo serviço', get: p => nomesServicos(p).join(' ') },
   ]);
 
-  const filtered = rows.filter(search.filter);
+  const filtered = rows.filter(p =>
+    search.filter(p) &&
+    (!servicoFiltro || parseIds(p.servicos).includes(Number(servicoFiltro)))
+  );
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -44,7 +48,15 @@ export function PrestadoresList() {
         action={<Pode acao="Criar"><button onClick={() => navigate('/prestadores/novo')} className="flex items-center gap-2 bg-[#0a2540] text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-[#06182c]"><Plus size={18} /> Cadastrar Prestador</button></Pode>}
       />
       <Card>
-        <Toolbar>{search.controls}</Toolbar>
+        <Toolbar>
+          {search.controls}
+          <FilterSelect
+            value={servicoFiltro}
+            onChange={setServicoFiltro}
+            options={servicos.rows.map(s => ({ value: String(s.id), label: s.nome }))}
+            placeholder="Todos os serviços"
+          />
+        </Toolbar>
         <DataTable
           rows={filtered} loading={loading || servicos.loading}
           onRowClick={r => navigate(`/prestadores/${r.id}`)}

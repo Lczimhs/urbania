@@ -30,8 +30,13 @@ import {
 } from '../lib/options';
 import { Pode, usePodeNaRota } from '../lib/auth';
 
-const QUICK_FILTERS = ['Todos', 'Receitas', 'Despesas', 'Repasses', 'Pendentes', 'Pagos', 'Atrasados'] as const;
-type QuickFilter = typeof QUICK_FILTERS[number];
+const PERIODOS_FINANCEIRO = [
+  { value: 'mes_atual', label: 'Mês atual' },
+  { value: 'mes_anterior', label: 'Mês anterior' },
+  { value: 'proximo_mes', label: 'Próximo mês' },
+  { value: 'ano_atual', label: 'Ano atual' },
+  { value: 'ultimos_30', label: 'Últimos 30 dias' },
+];
 
 // Exportação nativa para CSV / Excel (RNF 1.3 - pág. 32)
 function exportFinanceiroToCsv(data: any[], filename: string) {
@@ -277,13 +282,11 @@ export function FinanceiroList() {
   const navigate = useNavigate();
   const toast = useToast();
   const { rows, setRows, loading, reload } = useList('financeiro');
-  const [quick, setQuick] = useState<QuickFilter>('Todos');
   const [term, setTerm] = useState('');
   const [tipoFiltro, setTipoFiltro] = useState('');
   const [categoriaFiltro, setCategoriaFiltro] = useState('');
   const [statusFiltro, setStatusFiltro] = useState('');
-  const [dataInicio, setDataInicio] = useState('');
-  const [dataFim, setDataFim] = useState('');
+  const [periodoFiltro, setPeriodoFiltro] = useState('');
   const [pagamentoModal, setPagamentoModal] = useState<any | null>(null);
 
   const del = useDelete('financeiro', 'Lançamento Financeiro', reload);
@@ -294,21 +297,39 @@ export function FinanceiroList() {
   const repassesPendentes = rows.filter(r => r.status === 'Pendente' && r.tipo === 'Repasse').reduce((s, r) => s + Number(r.valor || 0), 0);
   const saldoOperacional = totalReceitas - totalDespesas;
 
+  const hoje = todayISO();
+  const [ano, mes] = hoje.split('-');
+  const mesAtualInicio = `${ano}-${mes}-01`;
+  const mesAtualFim = `${ano}-${mes}-31`;
+
+  const mesAntNum = Number(mes) === 1 ? 12 : Number(mes) - 1;
+  const mesAntAno = Number(mes) === 1 ? Number(ano) - 1 : Number(ano);
+  const mesAntInicio = `${mesAntAno}-${String(mesAntNum).padStart(2, '0')}-01`;
+  const mesAntFim = `${mesAntAno}-${String(mesAntNum).padStart(2, '0')}-31`;
+
+  const proxMesNum = Number(mes) === 12 ? 1 : Number(mes) + 1;
+  const proxMesAno = Number(mes) === 12 ? Number(ano) + 1 : Number(ano);
+  const proxMesInicio = `${proxMesAno}-${String(proxMesNum).padStart(2, '0')}-01`;
+  const proxMesFim = `${proxMesAno}-${String(proxMesNum).padStart(2, '0')}-31`;
+
+  const anoAtualInicio = `${ano}-01-01`;
+  const d30 = new Date(); d30.setDate(d30.getDate() - 30);
+  const iso30Passado = d30.toISOString().slice(0, 10);
+
   const filtered = rows
-    .filter(r => {
-      if (quick === 'Receitas') return r.tipo === 'Receita';
-      if (quick === 'Despesas') return r.tipo === 'Despesa';
-      if (quick === 'Repasses') return r.tipo === 'Repasse';
-      if (quick === 'Pendentes') return r.status === 'Pendente';
-      if (quick === 'Pagos') return r.status === 'Pago';
-      if (quick === 'Atrasados') return r.status === 'Atrasado';
-      return true;
-    })
     .filter(r => (!tipoFiltro ? true : r.tipo === tipoFiltro))
     .filter(r => (!categoriaFiltro ? true : r.categoria === categoriaFiltro))
     .filter(r => (!statusFiltro ? true : r.status === statusFiltro))
-    .filter(r => (!dataInicio ? true : (r.dataVencimento || r.dataPagamento || '') >= dataInicio))
-    .filter(r => (!dataFim ? true : (r.dataVencimento || r.dataPagamento || '') <= dataFim))
+    .filter(r => {
+      if (!periodoFiltro) return true;
+      const d = r.dataVencimento || r.dataPagamento || '';
+      if (periodoFiltro === 'mes_atual') return d >= mesAtualInicio && d <= mesAtualFim;
+      if (periodoFiltro === 'mes_anterior') return d >= mesAntInicio && d <= mesAntFim;
+      if (periodoFiltro === 'proximo_mes') return d >= proxMesInicio && d <= proxMesFim;
+      if (periodoFiltro === 'ano_atual') return d >= anoAtualInicio;
+      if (periodoFiltro === 'ultimos_30') return d >= iso30Passado && d <= hoje;
+      return true;
+    })
     .filter(r => matches(term, r.descricao, r.categoria, r.clienteNome, r.proprietarioNome, r.imovelTitulo, r.reciboNumero, r.id));
 
   const handleExport = () => {
@@ -412,22 +433,6 @@ export function FinanceiroList() {
 
       <Card>
         <Toolbar>
-          <div className="flex flex-wrap gap-2">
-            {QUICK_FILTERS.map(q => (
-              <button
-                key={q}
-                onClick={() => setQuick(q)}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition ${
-                  quick === q
-                    ? 'bg-[#0a2540] text-white border-[#0a2540] shadow-sm'
-                    : 'bg-white text-slate-600 hover:bg-slate-50'
-                }`}
-              >
-                {q}
-              </button>
-            ))}
-          </div>
-
           <SearchInput
             value={term}
             onChange={setTerm}
@@ -455,33 +460,12 @@ export function FinanceiroList() {
             placeholder="Todos os status"
           />
 
-          {/* Filtro por Período */}
-          <div className="flex items-center gap-2 text-xs text-slate-500 bg-white border border-slate-200 px-3 py-1.5 rounded-lg">
-            <span className="font-semibold text-slate-600">Período:</span>
-            <input
-              type="date"
-              value={dataInicio}
-              onChange={e => setDataInicio(e.target.value)}
-              className="outline-none text-slate-700 bg-transparent text-xs"
-            />
-            <span>até</span>
-            <input
-              type="date"
-              value={dataFim}
-              onChange={e => setDataFim(e.target.value)}
-              className="outline-none text-slate-700 bg-transparent text-xs"
-            />
-            {(dataInicio || dataFim) && (
-              <button
-                type="button"
-                onClick={() => { setDataInicio(''); setDataFim(''); }}
-                className="text-red-500 hover:text-red-700 font-bold ml-1"
-                title="Limpar período"
-              >
-                ×
-              </button>
-            )}
-          </div>
+          <FilterSelect
+            value={periodoFiltro}
+            onChange={setPeriodoFiltro}
+            options={PERIODOS_FINANCEIRO}
+            placeholder="Todos os períodos"
+          />
         </Toolbar>
 
         <DataTable

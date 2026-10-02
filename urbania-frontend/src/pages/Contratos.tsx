@@ -41,9 +41,6 @@ import { StatusDropdown } from './Visitas';
 import { enderecoCurto } from './Imoveis';
 import { Pode } from '../lib/auth';
 
-const QUICK_FILTERS = ['Todos', 'Ativo', 'Pendente', 'Finalizado', 'Rescindido', 'Cancelado'] as const;
-type QuickFilter = typeof QUICK_FILTERS[number];
-
 const tipoContratoColor = (tipo: unknown) => {
   const map: Record<string, string> = {
     Locação: 'bg-emerald-50 text-emerald-800 border-emerald-200',
@@ -187,6 +184,14 @@ function SelecionarImovelContratoModal({
 }
 
 // Consultar Contratos (Listagem padronizada Urbânia com filtros rápidos, pesquisa, status inline e exportação)
+const PERIODOS_CONTRATO = [
+  { value: 'vigentes', label: 'Vigentes hoje' },
+  { value: 'a_vencer_30', label: 'A vencer em 30 dias' },
+  { value: 'a_vencer_60', label: 'A vencer em 60 dias' },
+  { value: 'vencidos', label: 'Vencidos / Encerrados' },
+  { value: 'iniciados_mes', label: 'Iniciados este mês' },
+];
+
 export function ContratosList() {
   const navigate = useNavigate();
   const toast = useToast();
@@ -195,34 +200,37 @@ export function ContratosList() {
   const imoveis = useList('imoveis');
   const corretores = useList('funcionarios', { cargo: 'Corretor' });
 
-  const [quick, setQuick] = useState<QuickFilter>('Todos');
   const [term, setTerm] = useState('');
   const [tipoFiltro, setTipoFiltro] = useState('');
   const [statusFiltro, setStatusFiltro] = useState('');
   const [corretorFiltro, setCorretorFiltro] = useState('');
-  const [dataInicio, setDataInicio] = useState('');
-  const [dataFim, setDataFim] = useState('');
+  const [periodoVigencia, setPeriodoVigencia] = useState('');
 
   const del = useDelete('contratos', 'Contrato', reload);
 
   const cliente = (id: number) => clientes.rows.find(c => c.id === id);
   const imovel = (id: number) => imoveis.rows.find(i => i.id === id);
 
+  const hoje = todayISO();
+  const d30 = new Date(); d30.setDate(d30.getDate() + 30);
+  const iso30 = d30.toISOString().slice(0, 10);
+  const d60 = new Date(); d60.setDate(d60.getDate() + 60);
+  const iso60 = d60.toISOString().slice(0, 10);
+
   // Filtros combinados e período de vigência
   const filtered = rows
-    .filter(c => {
-      if (quick === 'Ativo') return c.status === 'Ativo';
-      if (quick === 'Pendente') return c.status === 'Pendente';
-      if (quick === 'Finalizado') return c.status === 'Finalizado';
-      if (quick === 'Rescindido') return c.status === 'Rescindido';
-      if (quick === 'Cancelado') return c.status === 'Cancelado';
-      return true;
-    })
     .filter(c => (!tipoFiltro ? true : c.tipo === tipoFiltro))
     .filter(c => (!statusFiltro ? true : c.status === statusFiltro))
     .filter(c => (!corretorFiltro ? true : String(c.corretorId) === String(corretorFiltro) || c.corretor === corretorFiltro))
-    .filter(c => (!dataInicio ? true : (c.dataInicio || '') >= dataInicio))
-    .filter(c => (!dataFim ? true : (c.dataInicio || '') <= dataFim))
+    .filter(c => {
+      if (!periodoVigencia) return true;
+      if (periodoVigencia === 'vigentes') return (c.dataInicio || '') <= hoje && (!c.dataFim || c.dataFim >= hoje);
+      if (periodoVigencia === 'a_vencer_30') return Boolean(c.dataFim && c.dataFim >= hoje && c.dataFim <= iso30);
+      if (periodoVigencia === 'a_vencer_60') return Boolean(c.dataFim && c.dataFim >= hoje && c.dataFim <= iso60);
+      if (periodoVigencia === 'vencidos') return Boolean(c.dataFim && c.dataFim < hoje);
+      if (periodoVigencia === 'iniciados_mes') return Boolean(c.dataInicio && c.dataInicio.startsWith(hoje.slice(0, 7)));
+      return true;
+    })
     .filter(c => matches(
       term,
       c.id,
@@ -304,22 +312,6 @@ export function ContratosList() {
 
       <Card>
         <Toolbar>
-          <div className="flex flex-wrap gap-2">
-            {QUICK_FILTERS.map(q => (
-              <button
-                key={q}
-                onClick={() => setQuick(q)}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition ${
-                  quick === q
-                    ? 'bg-[#0a2540] text-white border-[#0a2540] shadow-sm'
-                    : 'bg-white text-slate-600 hover:bg-slate-50'
-                }`}
-              >
-                {q}
-              </button>
-            ))}
-          </div>
-
           <SearchInput
             value={term}
             onChange={setTerm}
@@ -347,35 +339,12 @@ export function ContratosList() {
             placeholder="Todos os corretores"
           />
 
-          {/* Filtro por período (RNF 1.2: filtros por período de vigência) */}
-          <div className="flex items-center gap-2 text-xs text-slate-500 bg-white border border-slate-200 px-3 py-1.5 rounded-lg">
-            <span className="font-semibold text-slate-600">Vigência:</span>
-            <input
-              type="date"
-              value={dataInicio}
-              onChange={e => setDataInicio(e.target.value)}
-              className="outline-none text-slate-700 bg-transparent text-xs"
-              title="A partir da data"
-            />
-            <span>até</span>
-            <input
-              type="date"
-              value={dataFim}
-              onChange={e => setDataFim(e.target.value)}
-              className="outline-none text-slate-700 bg-transparent text-xs"
-              title="Até a data"
-            />
-            {(dataInicio || dataFim) && (
-              <button
-                type="button"
-                onClick={() => { setDataInicio(''); setDataFim(''); }}
-                className="text-red-500 hover:text-red-700 font-bold ml-1"
-                title="Limpar período"
-              >
-                ×
-              </button>
-            )}
-          </div>
+          <FilterSelect
+            value={periodoVigencia}
+            onChange={setPeriodoVigencia}
+            options={PERIODOS_CONTRATO}
+            placeholder="Todos os períodos"
+          />
         </Toolbar>
 
         <DataTable

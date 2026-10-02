@@ -34,13 +34,21 @@ function exportGridToCsv(headers: string[], rows: (string | number | null | unde
   document.body.removeChild(link);
 }
 
+const PERIODOS_RELATORIO = [
+  { value: 'hoje', label: 'Hoje' },
+  { value: 'mes_atual', label: 'Este mês' },
+  { value: 'mes_anterior', label: 'Mês anterior' },
+  { value: 'ano_atual', label: 'Este ano' },
+  { value: 'ultimos_30', label: 'Últimos 30 dias' },
+  { value: 'ultimos_90', label: 'Últimos 90 dias' },
+];
+
 export default function Relatorios() {
   const toast = useToast();
   const [tab, setTab] = useState<ReportTab>('propostas');
 
   // Filtros Globais (RNF 1.2: filtros por período e por Usuário Responsável)
-  const [dataInicio, setDataInicio] = useState('');
-  const [dataFim, setDataFim] = useState('');
+  const [periodoFiltro, setPeriodoFiltro] = useState('');
   const [responsavelFiltro, setResponsavelFiltro] = useState('');
   const [term, setTerm] = useState('');
 
@@ -55,25 +63,46 @@ export default function Relatorios() {
 
   const corretores = funcionarios.rows.filter(f => f.cargo === 'Corretor');
 
+  const hoje = new Date().toISOString().slice(0, 10);
+  const [ano, mes] = hoje.split('-');
+  const mesAtualInicio = `${ano}-${mes}-01`;
+  const mesAntNum = Number(mes) === 1 ? 12 : Number(mes) - 1;
+  const mesAntAno = Number(mes) === 1 ? Number(ano) - 1 : Number(ano);
+  const mesAntInicio = `${mesAntAno}-${String(mesAntNum).padStart(2, '0')}-01`;
+  const mesAntFim = `${mesAntAno}-${String(mesAntNum).padStart(2, '0')}-31`;
+  const anoAtualInicio = `${ano}-01-01`;
+  const d30 = new Date(); d30.setDate(d30.getDate() - 30);
+  const iso30 = d30.toISOString().slice(0, 10);
+  const d90 = new Date(); d90.setDate(d90.getDate() - 90);
+  const iso90 = d90.toISOString().slice(0, 10);
+
+  const filtraData = (d?: string) => {
+    if (!periodoFiltro || !d) return true;
+    if (periodoFiltro === 'hoje') return d === hoje;
+    if (periodoFiltro === 'mes_atual') return d >= mesAtualInicio && d <= hoje;
+    if (periodoFiltro === 'mes_anterior') return d >= mesAntInicio && d <= mesAntFim;
+    if (periodoFiltro === 'ano_atual') return d >= anoAtualInicio && d <= hoje;
+    if (periodoFiltro === 'ultimos_30') return d >= iso30 && d <= hoje;
+    if (periodoFiltro === 'ultimos_90') return d >= iso90 && d <= hoje;
+    return true;
+  };
+
   // 1. RELATÓRIO: HISTÓRICO DE PROPOSTAS E NEGOCIAÇÕES (RF F68)
   const filteredPropostas = negociacoes.rows
     .filter(n => (!responsavelFiltro ? true : String(n.corretorId) === responsavelFiltro || n.corretor === responsavelFiltro))
-    .filter(n => (!dataInicio ? true : (n.data || '') >= dataInicio))
-    .filter(n => (!dataFim ? true : (n.data || '') <= dataFim))
+    .filter(n => filtraData(n.data))
     .filter(n => matches(term, n.id, n.clienteNome, n.imovelTitulo, n.corretor, n.status, n.tipo, n.formaPagamento));
 
   // 2. RELATÓRIO: HISTÓRICO DE INTERVENÇÕES E REPAROS (RF F69)
   const filteredReparos = reparos.rows
     .filter(r => (!responsavelFiltro ? true : String(r.responsavelId) === responsavelFiltro || r.responsavel === responsavelFiltro))
-    .filter(r => (!dataInicio ? true : (r.dataSolicitacao || '') >= dataInicio))
-    .filter(r => (!dataFim ? true : (r.dataSolicitacao || '') <= dataFim))
+    .filter(r => filtraData(r.dataSolicitacao))
     .filter(r => matches(term, r.id, r.descricao, r.responsavel, r.status));
 
   // 3. RELATÓRIO: HISTÓRICO FINANCEIRO & REPASSES (RF F70)
   const filteredFinanceiro = financeiro.rows
     .filter(f => (!responsavelFiltro ? true : f.operador === responsavelFiltro))
-    .filter(f => (!dataInicio ? true : (f.dataVencimento || f.dataPagamento || '') >= dataInicio))
-    .filter(f => (!dataFim ? true : (f.dataVencimento || f.dataPagamento || '') <= dataFim))
+    .filter(f => filtraData(f.dataVencimento || f.dataPagamento))
     .filter(f => matches(term, f.id, f.descricao, f.categoria, f.tipo, f.status, f.clienteNome, f.proprietarioNome, f.reciboNumero));
 
   // 4. RELATÓRIO: VÍNCULOS DE IMÓVEIS E PROPRIETÁRIOS (RF F71)
@@ -84,8 +113,7 @@ export default function Relatorios() {
   // 5. RELATÓRIO DE LOG DE AUDITORIA (RF F74)
   const filteredAuditoria = auditoria.rows
     .filter(a => (!responsavelFiltro ? true : a.usuario?.includes(responsavelFiltro)))
-    .filter(a => (!dataInicio ? true : (a.data || '') >= dataInicio))
-    .filter(a => (!dataFim ? true : (a.data || '') <= dataFim))
+    .filter(a => filtraData(a.data))
     .filter(a => matches(term, a.id, a.usuario, a.acao, a.entidade, a.detalhes, a.ip));
 
   // Ações de Exportação
@@ -183,32 +211,12 @@ export default function Relatorios() {
             placeholder="Todos os responsáveis"
           />
 
-          <div className="flex items-center gap-2 text-xs text-slate-500 bg-white border border-slate-200 px-3 py-1.5 rounded-lg">
-            <span className="font-semibold text-slate-600">Período:</span>
-            <input
-              type="date"
-              value={dataInicio}
-              onChange={e => setDataInicio(e.target.value)}
-              className="outline-none text-slate-700 bg-transparent text-xs"
-            />
-            <span>até</span>
-            <input
-              type="date"
-              value={dataFim}
-              onChange={e => setDataFim(e.target.value)}
-              className="outline-none text-slate-700 bg-transparent text-xs"
-            />
-            {(dataInicio || dataFim) && (
-              <button
-                type="button"
-                onClick={() => { setDataInicio(''); setDataFim(''); }}
-                className="text-red-500 hover:text-red-700 font-bold ml-1"
-                title="Limpar período"
-              >
-                ×
-              </button>
-            )}
-          </div>
+          <FilterSelect
+            value={periodoFiltro}
+            onChange={setPeriodoFiltro}
+            options={PERIODOS_RELATORIO}
+            placeholder="Todos os períodos"
+          />
         </Toolbar>
 
         {/* 1. ABA PROPOSTAS E NEGOCIAÇÕES */}

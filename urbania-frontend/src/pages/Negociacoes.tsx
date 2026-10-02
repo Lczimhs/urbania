@@ -27,8 +27,13 @@ import { FORMAS_PAGAMENTO, STATUS_NEGOCIACAO, TIPOS_NEGOCIACAO, statusColor } fr
 import { StatusDropdown } from './Visitas';
 import { Pode } from '../lib/auth';
 
-const QUICK_FILTERS = ['Todas', 'Em Andamento', 'Realizadas', 'Canceladas'] as const;
-type QuickFilter = typeof QUICK_FILTERS[number];
+const PERIODOS_NEGOCIACAO = [
+  { value: 'hoje', label: 'Hoje' },
+  { value: 'mes_atual', label: 'Este mês' },
+  { value: 'mes_anterior', label: 'Mês anterior' },
+  { value: 'ano_atual', label: 'Este ano' },
+  { value: 'ultimos_30', label: 'Últimos 30 dias' },
+];
 
 const tipoNegociacaoColor = (tipo: unknown) => {
   const map: Record<string, string> = {
@@ -76,12 +81,11 @@ export function NegociacoesList() {
   const imoveis = useList('imoveis');
   const corretores = useList('funcionarios', { cargo: 'Corretor' });
 
-  const [quick, setQuick] = useState<QuickFilter>('Todas');
   const [term, setTerm] = useState('');
+  const [statusFiltro, setStatusFiltro] = useState('');
   const [corretorFiltro, setCorretorFiltro] = useState('');
   const [tipoFiltro, setTipoFiltro] = useState('');
-  const [dataInicio, setDataInicio] = useState('');
-  const [dataFim, setDataFim] = useState('');
+  const [periodoFiltro, setPeriodoFiltro] = useState('');
   const [cancelarId, setCancelarId] = useState<number | null>(null);
 
   const del = useDelete('negociacoes', 'Negociação', reload);
@@ -89,18 +93,32 @@ export function NegociacoesList() {
   const cliente = (id: number) => clientes.rows.find(c => c.id === id);
   const imovel = (id: number) => imoveis.rows.find(i => i.id === id);
 
+  const hoje = todayISO();
+  const [ano, mes] = hoje.split('-');
+  const mesAtualInicio = `${ano}-${mes}-01`;
+  const mesAnteriorNum = Number(mes) === 1 ? 12 : Number(mes) - 1;
+  const mesAnteriorAno = Number(mes) === 1 ? Number(ano) - 1 : Number(ano);
+  const mesAnteriorInicio = `${mesAnteriorAno}-${String(mesAnteriorNum).padStart(2, '0')}-01`;
+  const mesAnteriorFim = `${mesAnteriorAno}-${String(mesAnteriorNum).padStart(2, '0')}-31`;
+  const anoAtualInicio = `${ano}-01-01`;
+  const d30 = new Date(); d30.setDate(d30.getDate() - 30);
+  const iso30Passado = d30.toISOString().slice(0, 10);
+
   // Filtros combinados (RNF 1.2: filtros por período e por Usuário Responsável)
   const filtered = rows
-    .filter(n => {
-      if (quick === 'Em Andamento') return n.status === 'Em Andamento';
-      if (quick === 'Realizadas') return n.status === 'Realizada';
-      if (quick === 'Canceladas') return n.status === 'Cancelada';
-      return true;
-    })
+    .filter(n => (!statusFiltro ? true : n.status === statusFiltro))
     .filter(n => (!corretorFiltro ? true : String(n.corretorId) === String(corretorFiltro) || n.corretor === corretorFiltro))
     .filter(n => (!tipoFiltro ? true : n.tipo === tipoFiltro))
-    .filter(n => (!dataInicio ? true : n.data >= dataInicio))
-    .filter(n => (!dataFim ? true : n.data <= dataFim))
+    .filter(n => {
+      if (!periodoFiltro) return true;
+      const d = n.data || '';
+      if (periodoFiltro === 'hoje') return d === hoje;
+      if (periodoFiltro === 'mes_atual') return d >= mesAtualInicio && d <= hoje;
+      if (periodoFiltro === 'mes_anterior') return d >= mesAnteriorInicio && d <= mesAnteriorFim;
+      if (periodoFiltro === 'ano_atual') return d >= anoAtualInicio;
+      if (periodoFiltro === 'ultimos_30') return d >= iso30Passado && d <= hoje;
+      return true;
+    })
     .filter(n => matches(
       term,
       n.id,
@@ -181,26 +199,24 @@ export function NegociacoesList() {
 
       <Card>
         <Toolbar>
-          <div className="flex flex-wrap gap-2">
-            {QUICK_FILTERS.map(q => (
-              <button
-                key={q}
-                onClick={() => setQuick(q)}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition ${
-                  quick === q
-                    ? 'bg-[#0a2540] text-white border-[#0a2540] shadow-sm'
-                    : 'bg-white text-slate-600 hover:bg-slate-50'
-                }`}
-              >
-                {q}
-              </button>
-            ))}
-          </div>
-
           <SearchInput
             value={term}
             onChange={setTerm}
             placeholder="Buscar por cliente, imóvel, corretor ou ID..."
+          />
+
+          <FilterSelect
+            value={statusFiltro}
+            onChange={setStatusFiltro}
+            options={STATUS_NEGOCIACAO}
+            placeholder="Todos os status"
+          />
+
+          <FilterSelect
+            value={tipoFiltro}
+            onChange={setTipoFiltro}
+            options={TIPOS_NEGOCIACAO}
+            placeholder="Todos os tipos"
           />
 
           <FilterSelect
@@ -211,41 +227,11 @@ export function NegociacoesList() {
           />
 
           <FilterSelect
-            value={tipoFiltro}
-            onChange={setTipoFiltro}
-            options={TIPOS_NEGOCIACAO}
-            placeholder="Todos os tipos"
+            value={periodoFiltro}
+            onChange={setPeriodoFiltro}
+            options={PERIODOS_NEGOCIACAO}
+            placeholder="Todos os períodos"
           />
-
-          {/* Filtros por período (RNF 1.2: obrigatório filtro por período Data Inicial e Data Final) */}
-          <div className="flex items-center gap-2 text-xs text-slate-500 bg-white border border-slate-200 px-3 py-1.5 rounded-lg">
-            <span className="font-semibold text-slate-600">Período:</span>
-            <input
-              type="date"
-              value={dataInicio}
-              onChange={e => setDataInicio(e.target.value)}
-              className="outline-none text-slate-700 bg-transparent text-xs"
-              title="Data inicial"
-            />
-            <span>até</span>
-            <input
-              type="date"
-              value={dataFim}
-              onChange={e => setDataFim(e.target.value)}
-              className="outline-none text-slate-700 bg-transparent text-xs"
-              title="Data final"
-            />
-            {(dataInicio || dataFim) && (
-              <button
-                type="button"
-                onClick={() => { setDataInicio(''); setDataFim(''); }}
-                className="text-red-500 hover:text-red-700 font-bold ml-1"
-                title="Limpar período"
-              >
-                ×
-              </button>
-            )}
-          </div>
         </Toolbar>
 
         <DataTable

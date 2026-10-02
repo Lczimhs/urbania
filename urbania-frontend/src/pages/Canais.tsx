@@ -1,6 +1,7 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
-import { Badge, Card, DataTable, PageHeader, RowActions, Toolbar } from '../components/DataTable';
+import { Badge, Card, DataTable, FilterSelect, PageHeader, RowActions, Toolbar } from '../components/DataTable';
 import type { Mode, TabDef } from '../components/EntityForm';
 import { EntityPage } from '../components/EntityPage';
 import { useFieldSearch } from '../components/FieldSearch';
@@ -16,13 +17,14 @@ const tipoColor = (tipo: string) =>
 export function CanaisList() {
   const navigate = useNavigate();
   const { rows, loading, reload } = useList('canais');
+  const [tipoCanal, setTipoCanal] = useState('');
   const del = useDelete('canais', 'Canal de publicação', reload);
   const search = useFieldSearch<any>([
     { value: 'nome', label: 'Nome', get: c => c.nome },
     { value: 'tipoCanal', label: 'Tipo Canal', get: c => c.tipoCanal },
   ]);
 
-  const filtered = rows.filter(search.filter);
+  const filtered = rows.filter(c => search.filter(c) && (!tipoCanal || c.tipoCanal === tipoCanal));
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -31,7 +33,10 @@ export function CanaisList() {
         action={<Pode acao="Criar"><button onClick={() => navigate('/canais/novo')} className="flex items-center gap-2 bg-[#0a2540] text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-[#06182c]"><Plus size={18} /> Cadastrar Canal</button></Pode>}
       />
       <Card>
-        <Toolbar>{search.controls}</Toolbar>
+        <Toolbar>
+          {search.controls}
+          <FilterSelect value={tipoCanal} onChange={setTipoCanal} options={TIPOS_CANAL} placeholder="Todos os tipos de canais" />
+        </Toolbar>
         <DataTable
           rows={filtered} loading={loading}
           onRowClick={r => navigate(`/canais/${r.id}`)}

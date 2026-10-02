@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
-import { Badge, Card, DataTable, PageHeader, RowActions, Toolbar } from '../components/DataTable';
+import { Badge, Card, DataTable, FilterSelect, PageHeader, RowActions, Toolbar } from '../components/DataTable';
 import type { Mode, TabDef } from '../components/EntityForm';
 import { EntityPage } from '../components/EntityPage';
 import { useFieldSearch } from '../components/FieldSearch';
@@ -27,6 +27,7 @@ export function ReparosList() {
   const imoveis = useList('imoveis');
   const servicos = useList('servicos');
   const prestadores = useList('prestadores');
+  const [status, setStatus] = useState('');
   const del = useDelete('reparos', 'Reparo', reload);
 
   const nome = (list: any[], id: unknown, key = 'nome') => list.find(x => x.id === id)?.[key];
@@ -35,7 +36,9 @@ export function ReparosList() {
     { value: 'servico', label: 'Tipo serviço', get: r => nome(servicos.rows, r.servicoId) },
   ]);
 
-  const filtered = rows.filter(search.filter).sort((a, b) => a.id - b.id);
+  const filtered = rows
+    .filter(r => search.filter(r) && (!status || r.status === status))
+    .sort((a, b) => a.id - b.id);
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -44,7 +47,10 @@ export function ReparosList() {
         action={<Pode acao="Criar"><button onClick={() => navigate('/reparos/novo')} className="flex items-center gap-2 bg-[#0a2540] text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-[#06182c]"><Plus size={18} /> Cadastrar Reparo</button></Pode>}
       />
       <Card>
-        <Toolbar>{search.controls}</Toolbar>
+        <Toolbar>
+          {search.controls}
+          <FilterSelect value={status} onChange={setStatus} options={STATUS_REPARO} placeholder="Todos os status" />
+        </Toolbar>
         <DataTable
           rows={filtered} loading={loading || imoveis.loading || servicos.loading || prestadores.loading}
           onRowClick={r => navigate(`/reparos/${r.id}`)}

@@ -4,7 +4,6 @@ import { Bath, BedDouble, Building2, Car, Edit2, LayoutGrid, LayoutList, Maximiz
 import { ActionButton, Badge, Card, DataTable, FilterSelect, PageHeader, Pager, RowActions, SearchInput, Toolbar, matches } from '../components/DataTable';
 import type { Mode, TabDef } from '../components/EntityForm';
 import { EntityPage, RelatedGrid } from '../components/EntityPage';
-import { SearchSelect } from '../components/SearchSelect';
 import { useDelete } from '../components/useDelete';
 import { useList } from '../lib/useApi';
 import { parsePhotos } from '../lib/files';
@@ -34,7 +33,7 @@ export function ImoveisList() {
   const [tipo, setTipo] = useState('');
   const [bairro, setBairro] = useState('');
   const [quartos, setQuartos] = useState('');
-  const [proprietario, setProprietario] = useState<string | number | null>(null);
+  const [proprietario, setProprietario] = useState('');
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
   const [page, setPage] = useState(1);
   const del = useDelete('imoveis', 'Imóvel', reload);
@@ -43,8 +42,8 @@ export function ImoveisList() {
   const filtered = rows.filter(i =>
     matches(term, i.titulo, i.id, i.cidade, i.bairro) &&
     (!finalidade || i.finalidade === finalidade) && (!tipo || i.tipo === tipo) && (!bairro || i.bairro === bairro) &&
-    (!quartos || Number(i.quartos || 0) >= Number(quartos)) &&
-    (!proprietario || String(i.proprietarioId) === String(proprietario)));
+    (!quartos || Number(i.quartos) >= Number(quartos)) && (!proprietario || String(i.proprietarioId) === String(proprietario))
+  );
 
   useEffect(() => setPage(1), [filtered.length]);
   const currentCards = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -104,38 +103,38 @@ export function ImoveisList() {
     <div className="space-y-6 max-w-7xl mx-auto">
       <PageHeader
         title="Imóveis" subtitle={`${rows.length} cadastrados`}
-        action={<Pode acao="Criar"><button onClick={() => navigate('/imoveis/novo')} className="flex items-center gap-2 bg-[#0a2540] text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-[#06182c]"><Plus size={18} /> Novo Imóvel</button></Pode>}
+        action={
+          <div className="flex items-center gap-2">
+            <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden bg-white shadow-xs">
+              <button
+                type="button"
+                onClick={() => setViewMode('table')}
+                className={`p-2 transition ${viewMode === 'table' ? 'bg-[#0a2540] text-white' : 'text-slate-500 hover:bg-slate-50'}`}
+                title="Visualização em Tabela"
+              >
+                <LayoutList size={18} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('grid')}
+                className={`p-2 transition ${viewMode === 'grid' ? 'bg-[#0a2540] text-white' : 'text-slate-500 hover:bg-slate-50'}`}
+                title="Visualização em Cards"
+              >
+                <LayoutGrid size={18} />
+              </button>
+            </div>
+            <Pode acao="Criar"><button onClick={() => navigate('/imoveis/novo')} className="flex items-center gap-2 bg-[#0a2540] text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-[#06182c] shadow-sm"><Plus size={18} /> Novo Imóvel</button></Pode>
+          </div>
+        }
       />
       <Card>
         <Toolbar>
           <SearchInput value={term} onChange={setTerm} placeholder="Buscar por título, código ou cidade..." />
-          <FilterSelect value={finalidade} onChange={setFinalidade} options={FINALIDADES_IMOVEL} placeholder="Finalidade" />
-          <FilterSelect value={tipo} onChange={setTipo} options={TIPOS_IMOVEL} placeholder="Tipo" />
-          <FilterSelect value={bairro} onChange={setBairro} options={bairros} placeholder="Bairro" />
-          <FilterSelect value={quartos} onChange={setQuartos} options={[{ value: '1', label: '1+ quartos' }, { value: '2', label: '2+ quartos' }, { value: '3', label: '3+ quartos' }, { value: '4', label: '4+ quartos' }]} placeholder="Quartos" />
-          <div className="w-full md:w-56">
-            <SearchSelect value={proprietario} onChange={setProprietario} placeholder="Todos os proprietários"
-              options={proprietarios.rows.map(p => ({ value: p.id, label: p.nome }))} />
-          </div>
-
-          <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden bg-white md:ml-auto">
-            <button
-              type="button"
-              onClick={() => setViewMode('table')}
-              className={`p-2 transition ${viewMode === 'table' ? 'bg-[#0a2540] text-white' : 'text-slate-500 hover:bg-slate-50'}`}
-              title="Visualização em Tabela"
-            >
-              <LayoutList size={18} />
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode('grid')}
-              className={`p-2 transition ${viewMode === 'grid' ? 'bg-[#0a2540] text-white' : 'text-slate-500 hover:bg-slate-50'}`}
-              title="Visualização em Cards"
-            >
-              <LayoutGrid size={18} />
-            </button>
-          </div>
+          <FilterSelect value={finalidade} onChange={setFinalidade} options={FINALIDADES_IMOVEL} placeholder="Todas as finalidades" />
+          <FilterSelect value={tipo} onChange={setTipo} options={TIPOS_IMOVEL} placeholder="Todos os tipos" />
+          <FilterSelect value={bairro} onChange={setBairro} options={bairros} placeholder="Todos os bairros" />
+          <FilterSelect value={quartos} onChange={setQuartos} options={[{ value: '1', label: '1+ quartos' }, { value: '2', label: '2+ quartos' }, { value: '3', label: '3+ quartos' }, { value: '4', label: '4+ quartos' }]} placeholder="Todos os quartos" />
+          <FilterSelect value={proprietario} onChange={setProprietario} options={proprietarios.rows.map(p => ({ value: String(p.id), label: p.nome }))} placeholder="Todos os proprietários" />
         </Toolbar>
 
         {viewMode === 'table' ? (

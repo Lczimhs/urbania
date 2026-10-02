@@ -14,23 +14,18 @@ import { Pode } from '../lib/auth';
 
 const documento = (p: Record<string, any>) => (p.tipo === 'Jurídica' ? p.cnpj : p.cpfCnpj);
 
-const searchBy: Record<string, (p: Record<string, any>) => unknown[]> = {
-  '': p => [p.id, p.nome, documento(p), onlyDigits(documento(p)), p.tipo],
-  id: p => [p.id],
-  nome: p => [p.nome],
-  documento: p => [documento(p), onlyDigits(documento(p))],
-  tipo: p => [p.tipo],
-};
-
 // Consultar Proprietários
 export function ProprietariosList() {
   const navigate = useNavigate();
   const { rows, loading, reload } = useList('proprietarios');
   const [term, setTerm] = useState('');
-  const [campo, setCampo] = useState('');
+  const [tipo, setTipo] = useState('');
   const del = useDelete('proprietarios', 'Proprietário', reload);
 
-  const filtered = rows.filter(p => matches(term, ...searchBy[campo](p)));
+  const filtered = rows.filter(p =>
+    (!tipo || p.tipo === tipo) &&
+    matches(term, p.id, p.nome, p.email, p.telefone, onlyDigits(p.telefone), documento(p), onlyDigits(documento(p)), p.tipo)
+  );
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -40,9 +35,8 @@ export function ProprietariosList() {
       />
       <Card>
         <Toolbar>
-          <FilterSelect value={campo} onChange={setCampo} placeholder="Buscar em todos os campos"
-            options={[{ value: 'id', label: 'ID' }, { value: 'nome', label: 'Nome' }, { value: 'documento', label: 'CPF/CNPJ' }, { value: 'tipo', label: 'Tipo de Pessoa' }]} />
-          <SearchInput value={term} onChange={setTerm} placeholder="Digite para filtrar..." />
+          <SearchInput value={term} onChange={setTerm} placeholder="Buscar por nome, documento, e-mail ou telefone..." />
+          <FilterSelect value={tipo} onChange={setTipo} options={TIPOS_PESSOA} placeholder="Todos os tipos de pessoa" />
         </Toolbar>
         <DataTable
           rows={filtered} loading={loading}

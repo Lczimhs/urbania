@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CalendarX2, MapPin, MoreVertical, Plus } from 'lucide-react';
 import { api } from '../api';
-import { Badge, Card, DataTable, PageHeader, RowActions, SearchInput, Toolbar, matches } from '../components/DataTable';
+import { Badge, Card, DataTable, FilterSelect, PageHeader, RowActions, SearchInput, Toolbar, matches } from '../components/DataTable';
 import type { Mode, TabDef } from '../components/EntityForm';
 import { EntityPage } from '../components/EntityPage';
 import { ConfirmModal } from '../components/Modal';
@@ -12,14 +12,16 @@ import { formatDate, fullAddress, todayISO } from '../lib/format';
 import { STATUS_VISITA, statusColor } from '../lib/options';
 import { Pode, usePodeNaRota } from '../lib/auth';
 
-const QUICK_FILTERS = ['Todas', 'Hoje', 'Esta Semana', 'Pendentes'] as const;
-type QuickFilter = typeof QUICK_FILTERS[number];
+const PERIODOS_VISITA = [
+  { value: 'Hoje', label: 'Hoje' },
+  { value: 'Esta Semana', label: 'Esta Semana' },
+];
 
 const weekRange = () => {
   const d = new Date();
   const monday = new Date(d);
+  const sunday = new Date(d);
   monday.setDate(d.getDate() - ((d.getDay() + 6) % 7));
-  const sunday = new Date(monday);
   sunday.setDate(monday.getDate() + 6);
   const iso = (x: Date) => `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`;
   return [iso(monday), iso(sunday)];
@@ -67,7 +69,8 @@ export function VisitasList() {
   const { rows, setRows, loading } = useList('visitas');
   const clientes = useList('clientes');
   const imoveis = useList('imoveis');
-  const [quick, setQuick] = useState<QuickFilter>('Todas');
+  const [periodo, setPeriodo] = useState('');
+  const [status, setStatusFiltro] = useState('');
   const [term, setTerm] = useState('');
   const [cancelar, setCancelar] = useState<number | null>(null);
 
@@ -77,19 +80,19 @@ export function VisitasList() {
 
   const filtered = rows
     .filter(v => {
-      if (quick === 'Hoje') return v.data === todayISO();
-      if (quick === 'Esta Semana') return v.data >= inicioSemana && v.data <= fimSemana;
-      if (quick === 'Pendentes') return v.status === 'Pendente';
+      if (periodo === 'Hoje') return v.data === todayISO();
+      if (periodo === 'Esta Semana') return v.data >= inicioSemana && v.data <= fimSemana;
       return true;
     })
+    .filter(v => !status || v.status === status)
     .filter(v => matches(term, cliente(v.clienteId)?.nome, imovel(v.imovelId)?.titulo, v.imovelId, v.status))
     .sort((a, b) => `${b.data} ${b.hora}`.localeCompare(`${a.data} ${a.hora}`));
 
-  const setStatus = async (id: number, status: string) => {
+  const setStatus = async (id: number, statusVal: string) => {
     try {
-      await api.put(`/visitas/${id}`, { status });
-      setRows(rs => rs.map(r => (r.id === id ? { ...r, status } : r)));
-      toast.success(`Status da visita #${id} alterado para ${status}.`);
+      await api.put(`/visitas/${id}`, { status: statusVal });
+      setRows(rs => rs.map(r => (r.id === id ? { ...r, status: statusVal } : r)));
+      toast.success(`Status da visita #${id} alterado para ${statusVal}.`);
     } catch (err) {
       toast.error(apiError(err, 'Erro ao alterar o status.'));
     }
@@ -111,12 +114,9 @@ export function VisitasList() {
       />
       <Card>
         <Toolbar>
-          <div className="flex flex-wrap gap-2">
-            {QUICK_FILTERS.map(q => (
-              <button key={q} onClick={() => setQuick(q)} className={`px-3 py-1.5 rounded-full text-sm font-semibold border ${quick === q ? 'bg-[#0a2540] text-white border-[#0a2540]' : 'bg-white text-slate-600 hover:bg-slate-50'}`}>{q}</button>
-            ))}
-          </div>
-          <SearchInput value={term} onChange={setTerm} placeholder="Pesquisar cliente, imóvel ou status..." />
+          <SearchInput value={term} onChange={setTerm} placeholder="Buscar por cliente, imóvel ou código..." />
+          <FilterSelect value={periodo} onChange={setPeriodo} options={PERIODOS_VISITA} placeholder="Todos os períodos" />
+          <FilterSelect value={status} onChange={setStatusFiltro} options={STATUS_VISITA} placeholder="Todos os status" />
         </Toolbar>
         <DataTable
           rows={filtered} loading={loading} empty={empty}
