@@ -149,7 +149,11 @@ export default function Layout({ children }: { children: ReactNode }) {
 
         {/* Marca + botão recolher */}
         <div className={`flex items-center gap-3 px-4 h-16 border-b border-white/10 shrink-0 ${mini ? 'md:justify-center md:px-0' : ''}`}>
-          <div className="bg-white p-1 rounded-lg shadow shrink-0">
+          <div
+            className={`bg-white p-1 rounded-lg shadow shrink-0 ${mini ? 'cursor-pointer hover:ring-2 hover:ring-sky-400/50 transition' : ''}`}
+            onClick={mini ? toggleCollapsed : undefined}
+            title={mini ? 'Expandir menu' : undefined}
+          >
             <img src={config.logo || logoImg} alt={`${nomeImobiliaria} Logotipo`} className="h-8 w-8 object-contain" />
           </div>
           <div className={`flex flex-col min-w-0 flex-1 ${mini ? 'md:hidden' : ''}`}>
@@ -157,10 +161,16 @@ export default function Layout({ children }: { children: ReactNode }) {
             <span className="text-[10px] text-teal-400 font-bold tracking-wider uppercase truncate">Imobiliária</span>
           </div>
           <button
-            type="button" onClick={toggleCollapsed} title={collapsed ? 'Expandir menu' : 'Recolher menu'}
-            className={`hidden md:flex p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition ${mini ? 'md:absolute md:-right-3 md:top-5 md:bg-[#0a2540] md:border md:border-white/20 md:p-1 md:rounded-full' : ''}`}
+            type="button"
+            onClick={toggleCollapsed}
+            title={collapsed ? 'Expandir menu' : 'Recolher menu'}
+            className={
+              mini
+                ? 'hidden md:flex items-center justify-center w-6 h-6 rounded-full bg-[#0a2540] text-slate-300 hover:text-white hover:bg-sky-600 border border-white/30 shadow-md absolute -right-3 top-5 z-50 transition-colors cursor-pointer'
+                : 'hidden md:flex items-center justify-center p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition cursor-pointer'
+            }
           >
-            {collapsed ? <ChevronsRight size={16} /> : <ChevronsLeft size={16} />}
+            {collapsed ? <ChevronsRight size={13} className="ml-0.5" /> : <ChevronsLeft size={16} />}
           </button>
         </div>
 
