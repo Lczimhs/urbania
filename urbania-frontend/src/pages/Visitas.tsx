@@ -1,3 +1,4 @@
+import { Select } from '../components/Select';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CalendarX2, MapPin, MoreVertical, Plus } from 'lucide-react';
@@ -54,11 +55,14 @@ export function RowMenu({ items }: { items: { label: string; onClick: () => void
 export function StatusDropdown({ value, options, onChange }: { value: string; options: string[]; onChange: (v: string) => void }) {
   const pode = usePodeNaRota();
   if (!pode('Editar')) return <Badge className={statusColor(value)}>{value}</Badge>;
+  // Compact selector for inline status changes.
   return (
-    <select value={value || ''} onChange={e => onChange(e.target.value)} onClick={e => e.stopPropagation()}
-      className={`text-xs font-bold rounded-full px-2.5 py-1 border-0 outline-none cursor-pointer ${statusColor(value)}`}>
-      {options.map(o => <option key={o} value={o} className="bg-white text-slate-700">{o}</option>)}
-    </select>
+    <span className={`relative inline-flex items-center rounded-full transition hover:brightness-95 focus-within:ring-2 focus-within:ring-current/25 ${statusColor(value)}`}>
+      <Select value={value || ''} onChange={selectedValue => onChange(selectedValue)} onClick={e => e.stopPropagation()} title="Alterar status"
+        className="system-select-compact text-xs font-medium">
+        {options.map(o => <option key={o} value={o} className="bg-white text-slate-700">{o}</option>)}
+      </Select>
+    </span>
   );
 }
 

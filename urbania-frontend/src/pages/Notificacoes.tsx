@@ -1,3 +1,4 @@
+import { Select } from '../components/Select';
 import { useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
@@ -491,44 +492,44 @@ export function NotificacaoPage({ mode }: { mode: 'create' | 'edit' | 'view' }) 
               <label className="block text-xs font-semibold uppercase text-slate-600 mb-1.5">
                 Gatilho do Disparo (Evento) <span className="text-red-500">*</span>
               </label>
-              <select
+              <Select
                 value={gatilho}
-                onChange={e => setGatilho(e.target.value)}
+                onChange={selectedValue => setGatilho(selectedValue)}
                 className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-[#0a2540] text-sm bg-white"
               >
                 {GATILHOS_NOTIFICACAO.map(g => (
                   <option key={g} value={g}>{g}</option>
                 ))}
-              </select>
+              </Select>
             </div>
 
             <div>
               <label className="block text-xs font-semibold uppercase text-slate-600 mb-1.5">
                 Destinatário Padrão
               </label>
-              <select
+              <Select
                 value={destinatario}
-                onChange={e => setDestinatario(e.target.value)}
+                onChange={selectedValue => setDestinatario(selectedValue)}
                 className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-[#0a2540] text-sm bg-white"
               >
                 {DESTINATARIOS_NOTIFICACAO.map(d => (
                   <option key={d} value={d}>{d}</option>
                 ))}
-              </select>
+              </Select>
             </div>
 
             <div>
               <label className="block text-xs font-semibold uppercase text-slate-600 mb-1.5">
                 Status da Automação
               </label>
-              <select
+              <Select
                 value={status}
-                onChange={e => setStatus(e.target.value)}
+                onChange={selectedValue => setStatus(selectedValue)}
                 className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-[#0a2540] text-sm bg-white"
               >
                 <option value="Ativo">Ativo (Disparo Automático Ligado)</option>
                 <option value="Inativo">Inativo (Disparo Pausado)</option>
-              </select>
+              </Select>
             </div>
           </div>
 

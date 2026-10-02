@@ -73,8 +73,8 @@ const tabs: TabDef[] = [
     { key: 'nome', label: 'Nome Completo', required: true, full: true },
     { key: 'telefone', label: 'Telefone', mask: maskPhone, placeholder: '(00) 00000-0000', required: true },
     { key: 'email', label: 'E-mail', type: 'email' },
-    { key: 'origem', label: 'Origem', type: 'select', options: ORIGENS_CLIENTE },
-    { key: 'tipo', label: 'Tipo de Cliente', type: 'select', options: TIPOS_CLIENTE },
+    { key: 'origem', label: 'Origem', type: 'select', options: ORIGENS_CLIENTE, selectPlacement: mode => mode === 'create' ? 'bottom' : 'auto' },
+    { key: 'tipo', label: 'Tipo de Cliente', type: 'select', options: TIPOS_CLIENTE, selectPlacement: mode => mode === 'create' ? 'bottom' : 'auto' },
     { key: 'rg', label: 'RG', mask: maskRg },
   ] },
   { label: 'Dados Pessoais', fields: [

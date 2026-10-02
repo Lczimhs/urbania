@@ -311,7 +311,7 @@ export function NegociacoesList() {
               label: 'Valor',
               className: 'w-28 whitespace-nowrap',
               render: r => (
-                <span className="font-bold text-teal-700 text-sm whitespace-nowrap">
+                <span className="font-bold text-cadastro text-sm whitespace-nowrap">
                   {formatCurrency(r.valor)}
                 </span>
               ),

@@ -83,7 +83,7 @@ export function AnunciosList() {
             } },
             { key: 'canal', label: 'Canal', render: r => canais.rows.find(c => c.id === r.canalId)?.nome || r.canal || '-' },
             { key: 'quartos', label: 'Quartos', render: r => imovel(r.imovelId).quartos ?? '-' },
-            { key: 'valor', label: 'Valor', render: r => <span className="font-bold text-teal-700 whitespace-nowrap">{formatCurrency(r.valor) || '-'}</span> },
+            { key: 'valor', label: 'Valor', render: r => <span className="font-bold text-cadastro whitespace-nowrap">{formatCurrency(r.valor) || '-'}</span> },
             { key: 'status', label: 'Situação', render: r => r.status && <Badge className={situacaoColor(r.status)}>{r.status}</Badge> },
           ]}
           actions={r => (

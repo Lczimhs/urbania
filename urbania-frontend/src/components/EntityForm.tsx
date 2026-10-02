@@ -1,6 +1,7 @@
+import { Select } from './Select';
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
-import { ArrowLeft, Building2, CalendarDays, Camera, Check, ChevronLeft, ChevronRight, ClipboardList, Eye, FileText, History, ImagePlus, Loader2, MapPin, Settings, ShieldCheck, UserRound, Wallet, X } from 'lucide-react';
+import { ArrowLeft, Building2, CalendarDays, Camera, Check, ChevronLeft, ChevronRight, ClipboardList, Eye, FileText, History, ImagePlus, Loader2, MapPin, Settings, ShieldCheck, Trash2, UserRound, Wallet, X } from 'lucide-react';
 import { formatCurrency, formatDate, initials, parseCurrencyInput } from '../lib/format';
 import { imageToDataUrl, parsePhotos } from '../lib/files';
 import { buscarCep } from '../lib/cep';
@@ -20,6 +21,7 @@ export type FieldDef = {
   render?: (value: any, set: (value: any) => void, ctx: { form: Form; mode: Mode; disabled: boolean; invalid: boolean }) => ReactNode;
   renderView?: (value: any, form: Form) => ReactNode; // visualização customizada no modo view
   options?: (string | Option)[];
+  selectPlacement?: 'auto' | 'bottom' | ((mode: Mode) => 'auto' | 'bottom');
   mask?: (v: unknown) => string;
   required?: boolean | ((form: Form) => boolean);
   disabled?: boolean | ((form: Form, mode: Mode) => boolean);
@@ -27,6 +29,7 @@ export type FieldDef = {
   full?: boolean;              // ocupa a linha inteira
   placeholder?: string;
   suffix?: string;             // ex.: "m²"
+  defaultPhoto?: string;       // type 'photo': imagem exibida quando não há foto (ex.: logo padrão do sistema)
   cep?: boolean;               // preenche logradouro/bairro/cidade/uf automaticamente
   onChange?: (value: any, form: Form) => Form | void;  // campos extras que mudam junto
 };
@@ -194,7 +197,7 @@ export function EntityForm({ title, mode, initial, tabs, defaults = {}, onSubmit
       }
       else if (f.type === 'toggle') text = value;
       else if (f.type === 'password') text = '••••••••';
-      else if (f.type === 'photo') return wrap(<PhotoView src={value} name={form.nome || form.nomeFantasia || form.razaoSocial} />);
+      else if (f.type === 'photo') return wrap(<PhotoView src={value} defaultPhoto={f.defaultPhoto} name={form.nome || form.nomeFantasia || form.razaoSocial} />);
       else if (f.type === 'photos') return wrap(<Gallery photos={parsePhotos(value)} />);
       if (!isEmpty(text) && f.suffix) text = `${text} ${f.suffix}`;
       return wrap(<p className="py-2 text-slate-800 font-medium border-b border-slate-100 min-h-[2.5rem] whitespace-pre-wrap">{isEmpty(text) ? <span className="text-slate-300">—</span> : text}</p>);
@@ -205,10 +208,10 @@ export function EntityForm({ title, mode, initial, tabs, defaults = {}, onSubmit
         return wrap(<textarea rows={3} disabled={disabled} aria-invalid={invalid} className={inputClass(invalid)} value={value ?? ''} onChange={e => set(f, e.target.value)} placeholder={f.placeholder} />);
       case 'select':
         return wrap(
-          <select disabled={disabled} aria-invalid={invalid} className={inputClass(invalid)} value={value ?? ''} onChange={e => set(f, e.target.value)}>
+          <Select placement={typeof f.selectPlacement === 'function' ? f.selectPlacement(mode) : f.selectPlacement} disabled={disabled} aria-label={f.label} aria-invalid={invalid} className={inputClass(invalid)} value={value ?? ''} onChange={selectedValue => set(f, selectedValue)}>
             <option value="">Selecione...</option>
             {opts.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-          </select>
+          </Select>
         );
       case 'search-select':
         return wrap(<SearchSelect value={value} options={opts} disabled={disabled} invalid={invalid} onChange={v => set(f, v)} />);
@@ -227,7 +230,7 @@ export function EntityForm({ title, mode, initial, tabs, defaults = {}, onSubmit
         );
       }
       case 'photo':
-        return wrap(<PhotoInput value={value} name={form.nome} disabled={disabled} invalid={invalid} onChange={v => set(f, v)} />);
+        return wrap(<PhotoInput value={value} name={form.nome} defaultPhoto={f.defaultPhoto} disabled={disabled} invalid={invalid} onChange={v => set(f, v)} />);
       case 'photos':
         return wrap(<PhotosInput value={parsePhotos(value)} onChange={v => set(f, JSON.stringify(v))} />);
       default:
@@ -392,7 +395,8 @@ export function EntityForm({ title, mode, initial, tabs, defaults = {}, onSubmit
       </form>
 
       {confirmCancel && cancelConfirm && (
-        <ConfirmModal message={cancelConfirm} onConfirm={onBack} onCancel={() => setConfirmCancel(false)} />
+        <ConfirmModal title="Descartar alterações" message={cancelConfirm} confirmLabel="Sim, descartar" cancelLabel="Continuar editando"
+          onConfirm={onBack} onCancel={() => setConfirmCancel(false)} />
       )}
     </div>
   );
@@ -405,23 +409,24 @@ export function Avatar({ src, name, size = 'lg' }: { src?: string; name?: string
     : <div className={`${cls} rounded-full bg-[#0a2540] text-white flex items-center justify-center font-bold shrink-0`}>{initials(name)}</div>;
 }
 
-export function PhotoView({ src, name }: { src?: string; name?: string }) {
+export function PhotoView({ src, name, defaultPhoto }: { src?: string; name?: string; defaultPhoto?: string }) {
   const [open, setOpen] = useState(false);
+  const displaySrc = src || defaultPhoto;
   return (
     <div className="w-full max-w-36 sm:max-w-44">
       <div
-        onClick={() => src && setOpen(true)}
+        onClick={() => displaySrc && setOpen(true)}
         className={`relative aspect-[3/4] w-full overflow-hidden rounded-2xl border border-slate-300 bg-white shadow-xs flex flex-col items-center justify-center ${
-          src ? 'cursor-pointer group hover:border-slate-400 hover:shadow-md transition' : ''
+          displaySrc ? 'cursor-pointer group hover:border-slate-400 hover:shadow-md transition' : ''
         }`}
-        title={src ? 'Clique para ampliar' : undefined}
+        title={displaySrc ? 'Clique para ampliar' : undefined}
       >
-        {src ? (
+        {displaySrc ? (
           <>
             <img
-              src={src}
+              src={displaySrc}
               alt={name ? `Foto de ${name}` : 'Foto'}
-              className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+              className={`absolute inset-0 h-full w-full ${defaultPhoto && !src ? 'object-contain p-4' : 'object-cover group-hover:scale-105 transition-transform duration-300'}`}
             />
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
               <span className="p-2 rounded-full bg-white/95 text-slate-800 shadow-md">
@@ -455,7 +460,7 @@ export function PhotoView({ src, name }: { src?: string; name?: string }) {
   );
 }
 
-function PhotoInput({ value, name, disabled, invalid, onChange }: { value?: string; name?: string; disabled?: boolean; invalid?: boolean; onChange: (v: string | null) => void }) {
+function PhotoInput({ value, name, defaultPhoto, disabled, invalid, onChange }: { value?: string; name?: string; defaultPhoto?: string; disabled?: boolean; invalid?: boolean; onChange: (v: string | null) => void }) {
   const toast = useToast();
   const fileInput = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
@@ -465,12 +470,20 @@ function PhotoInput({ value, name, disabled, invalid, onChange }: { value?: stri
         aria-label={value ? 'Alterar foto' : 'Inserir foto'} onClick={() => fileInput.current?.click()}
         className={`relative aspect-[3/4] w-full overflow-hidden rounded-2xl border bg-white flex flex-col items-center justify-center gap-2 text-cadastro transition-colors outline-none focus-visible:ring-2 focus-visible:ring-cadastro focus-visible:ring-offset-2 disabled:cursor-default ${invalid ? 'border-red-500' : 'border-slate-300 enabled:hover:border-cadastro'} enabled:cursor-pointer`}>
         {value && <img src={value} alt={name ? `Foto de ${name}` : 'Foto selecionada'} className="absolute inset-0 h-full w-full object-cover" />}
-        {loading ? <Loader2 size={28} className="relative animate-spin" /> : value ? (
-          <span className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-2 bg-cadastro/85 p-3 text-xs font-semibold text-white"><Camera size={16} /> Alterar foto</span>
+        {!value && defaultPhoto && <img src={defaultPhoto} alt="Imagem padrão" className="absolute inset-0 h-full w-full object-contain p-6" />}
+        {loading ? <Loader2 size={28} className="relative animate-spin" /> : value || defaultPhoto ? (
+          <span className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-2 bg-cadastro/85 p-3 text-xs font-semibold text-white"><Camera size={16} /> {value ? 'Alterar foto' : 'Inserir foto'}</span>
         ) : (
           <><Camera size={28} /><span className="text-sm font-semibold">Inserir foto</span><span className="text-xs text-slate-400">JPG ou PNG</span></>
         )}
       </button>
+      {/* Retira a foto escolhida (volta para a imagem padrão / iniciais) */}
+      {value && !disabled && !loading && (
+        <button type="button" onClick={() => onChange(null)}
+          className="mt-2 w-full h-9 inline-flex items-center justify-center gap-1.5 rounded-xl border border-red-200 bg-white text-xs font-semibold text-red-600 hover:bg-red-50 hover:border-red-300 transition">
+          <Trash2 size={14} /> Remover foto
+        </button>
+      )}
       <input ref={fileInput} type="file" accept="image/png,image/jpeg" disabled={disabled || loading} className="hidden" onChange={async e => {
         const file = e.target.files?.[0];
         e.target.value = '';

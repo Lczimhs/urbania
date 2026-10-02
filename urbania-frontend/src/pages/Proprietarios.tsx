@@ -71,7 +71,7 @@ const tabs: TabDef[] = [
     { key: 'nome', label: 'Nome', required: true, full: true },
     { key: 'telefone', label: 'Telefone', mask: maskPhone, placeholder: '(00) 00000-0000', required: true },
     { key: 'email', label: 'E-mail', type: 'email' },
-    { key: 'tipo', label: 'Tipo de Pessoa', type: 'select', options: TIPOS_PESSOA, required: true,
+    { key: 'tipo', label: 'Tipo de Pessoa', type: 'select', options: TIPOS_PESSOA, required: true, selectPlacement: mode => mode === 'create' ? 'bottom' : 'auto',
       onChange: (v, f) => (v === 'Jurídica' ? { ...f, cpfCnpj: null } : { ...f, cnpj: null, razaoSocial: null }) },
     { key: 'rg', label: 'RG', mask: maskRg, disabled: f => juridica(f) },
     { key: 'cnpj', label: 'CNPJ', mask: maskCnpj, placeholder: '00.000.000/0000-00', disabled: f => !juridica(f), required: juridica },
