@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
-import { ArrowLeft, Building2, CalendarDays, Camera, Check, ChevronLeft, ChevronRight, ClipboardList, FileText, History, ImagePlus, Loader2, MapPin, Settings, ShieldCheck, UserRound, Wallet, X } from 'lucide-react';
+import { ArrowLeft, Building2, CalendarDays, Camera, Check, ChevronLeft, ChevronRight, ClipboardList, Eye, FileText, History, ImagePlus, Loader2, MapPin, Settings, ShieldCheck, UserRound, Wallet, X } from 'lucide-react';
 import { formatCurrency, formatDate, initials, parseCurrencyInput } from '../lib/format';
 import { imageToDataUrl, parsePhotos } from '../lib/files';
 import { buscarCep } from '../lib/cep';
 import { SearchSelect } from './SearchSelect';
 import type { Option } from './SearchSelect';
-import { ConfirmModal } from './Modal';
+import { ConfirmModal, Modal } from './Modal';
 import { useToast } from './Toast';
 
 export type Mode = 'create' | 'edit' | 'view';
@@ -194,7 +194,7 @@ export function EntityForm({ title, mode, initial, tabs, defaults = {}, onSubmit
       }
       else if (f.type === 'toggle') text = value;
       else if (f.type === 'password') text = '••••••••';
-      else if (f.type === 'photo') return wrap(<Avatar src={value} name={form.nome} />);
+      else if (f.type === 'photo') return wrap(<PhotoView src={value} name={form.nome || form.nomeFantasia || form.razaoSocial} />);
       else if (f.type === 'photos') return wrap(<Gallery photos={parsePhotos(value)} />);
       if (!isEmpty(text) && f.suffix) text = `${text} ${f.suffix}`;
       return wrap(<p className="py-2 text-slate-800 font-medium border-b border-slate-100 min-h-[2.5rem] whitespace-pre-wrap">{isEmpty(text) ? <span className="text-slate-300">—</span> : text}</p>);
@@ -403,6 +403,56 @@ export function Avatar({ src, name, size = 'lg' }: { src?: string; name?: string
   return src
     ? <img src={src} alt={name} className={`${cls} rounded-full object-cover border shrink-0`} />
     : <div className={`${cls} rounded-full bg-[#0a2540] text-white flex items-center justify-center font-bold shrink-0`}>{initials(name)}</div>;
+}
+
+export function PhotoView({ src, name }: { src?: string; name?: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="w-full max-w-36 sm:max-w-44">
+      <div
+        onClick={() => src && setOpen(true)}
+        className={`relative aspect-[3/4] w-full overflow-hidden rounded-2xl border border-slate-300 bg-white shadow-xs flex flex-col items-center justify-center ${
+          src ? 'cursor-pointer group hover:border-slate-400 hover:shadow-md transition' : ''
+        }`}
+        title={src ? 'Clique para ampliar' : undefined}
+      >
+        {src ? (
+          <>
+            <img
+              src={src}
+              alt={name ? `Foto de ${name}` : 'Foto'}
+              className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+            />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+              <span className="p-2 rounded-full bg-white/95 text-slate-800 shadow-md">
+                <Eye size={18} />
+              </span>
+            </div>
+          </>
+        ) : (
+          <div className="w-full h-full flex flex-col items-center justify-center p-4 text-center bg-slate-50/80">
+            <div className="w-16 h-16 rounded-full bg-[#0a2540] text-white flex items-center justify-center text-xl font-bold mb-2.5 shadow-xs">
+              {initials(name)}
+            </div>
+            <span className="text-xs font-semibold text-slate-600">Sem foto</span>
+            <span className="text-[11px] text-slate-400 mt-0.5 font-medium">Foto 3x4</span>
+          </div>
+        )}
+      </div>
+
+      {open && src && (
+        <Modal title={name ? `Foto de ${name}` : 'Foto 3x4'} onClose={() => setOpen(false)}>
+          <div className="p-4 flex items-center justify-center bg-slate-900/5">
+            <img
+              src={src}
+              alt={name ? `Foto de ${name}` : 'Foto ampliada'}
+              className="max-h-[70vh] w-auto rounded-lg object-contain shadow-md"
+            />
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
 }
 
 function PhotoInput({ value, name, disabled, invalid, onChange }: { value?: string; name?: string; disabled?: boolean; invalid?: boolean; onChange: (v: string | null) => void }) {
