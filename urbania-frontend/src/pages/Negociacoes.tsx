@@ -414,7 +414,7 @@ export function NegociacaoPage({ mode }: { mode: Mode }) {
   const clientes = useList('clientes');
   const imoveis = useList('imoveis');
   const proprietarios = useList('proprietarios');
-  const corretores = useList('funcionarios', { cargo: 'Corretor' });
+  const corretores = useList('funcionarios');
 
   if (clientes.loading || imoveis.loading || proprietarios.loading || corretores.loading) {
     return <p className="text-slate-400 p-8">Carregando...</p>;
@@ -437,6 +437,10 @@ export function NegociacaoPage({ mode }: { mode: Mode }) {
             label: c.nome,
             hint: c.cpfCnpj ? `CPF/CNPJ: ${c.cpfCnpj}` : c.telefone,
           })),
+          renderView: (val, form) => {
+            const cl = clientes.rows.find(c => String(c.id) === String(val));
+            return cl?.nome || form.clienteNome || (val ? `Cliente #${val}` : '—');
+          },
         },
         {
           key: 'imovelId',
@@ -456,6 +460,10 @@ export function NegociacaoPage({ mode }: { mode: Mode }) {
               .filter(Boolean)
               .join(' · '),
           })),
+          renderView: (val, form) => {
+            const im = imoveis.rows.find(i => String(i.id) === String(val));
+            return im ? `#${im.id} - ${im.titulo}` : form.imovelTitulo || (val ? `Imóvel #${val}` : '—');
+          },
           onChange: (imovelId, form) => {
             const imv = find(imoveis.rows, imovelId);
             if (imv) {
@@ -479,6 +487,10 @@ export function NegociacaoPage({ mode }: { mode: Mode }) {
           type: 'select',
           required: true,
           options: corretores.rows.map(c => ({ value: c.id, label: `${c.nome}${c.creci ? ` (CRECI ${c.creci})` : ''}` })),
+          renderView: (val, form) => {
+            const co = corretores.rows.find(c => String(c.id) === String(val));
+            return co?.nome || form.corretor || form.corretorNome || (val ? `Corretor #${val}` : '—');
+          },
         },
         {
           key: 'tipo',
@@ -635,12 +647,12 @@ export function NegociacaoPage({ mode }: { mode: Mode }) {
         return {
           ...f,
           status: f.status || 'Em Andamento',
-          clienteNome: c?.nome ?? null,
-          imovelTitulo: imv?.titulo ?? null,
-          proprietarioId: imv?.proprietarioId ?? null,
-          proprietarioNome: p?.nome ?? null,
+          clienteNome: c?.nome || f.clienteNome || null,
+          imovelTitulo: imv?.titulo || f.imovelTitulo || null,
+          proprietarioId: imv?.proprietarioId || f.proprietarioId || null,
+          proprietarioNome: p?.nome || f.proprietarioNome || null,
           corretorId: f.corretorId ? Number(f.corretorId) : null,
-          corretor: corr?.nome ?? null,
+          corretor: corr?.nome || f.corretor || null,
         };
       }}
       extraTabs={[

@@ -18,6 +18,7 @@ export type FieldDef = {
   type?: 'text' | 'email' | 'password' | 'date' | 'time' | 'number' | 'textarea' | 'select' | 'search-select' | 'currency' | 'photo' | 'photos' | 'toggle' | 'custom';
   // type 'custom': o próprio campo desenha o conteúdo (ex.: grid de serviços, modal de seleção)
   render?: (value: any, set: (value: any) => void, ctx: { form: Form; mode: Mode; disabled: boolean; invalid: boolean }) => ReactNode;
+  renderView?: (value: any, form: Form) => ReactNode; // visualização customizada no modo view
   options?: (string | Option)[];
   mask?: (v: unknown) => string;
   required?: boolean | ((form: Form) => boolean);
@@ -160,14 +161,37 @@ export function EntityForm({ title, mode, initial, tabs, defaults = {}, onSubmit
       </div>
     );
 
-    if (f.type === 'custom') return wrap(f.render?.(value, v => set(f, v), { form, mode, disabled: view || disabled, invalid }));
+    if (f.type === 'custom') {
+      if (view && f.renderView) {
+        const customText = f.renderView(value, form);
+        return wrap(<p className="py-2 text-slate-800 font-medium border-b border-slate-100 min-h-[2.5rem] whitespace-pre-wrap">{isEmpty(customText) ? <span className="text-slate-300">—</span> : customText}</p>);
+      }
+      return wrap(f.render?.(value, v => set(f, v), { form, mode, disabled: view || disabled, invalid }));
+    }
 
     // Visualizar: somente texto, sem caixas de digitação
     if (view) {
+      if (f.renderView) {
+        const customText = f.renderView(value, form);
+        return wrap(<p className="py-2 text-slate-800 font-medium border-b border-slate-100 min-h-[2.5rem] whitespace-pre-wrap">{isEmpty(customText) ? <span className="text-slate-300">—</span> : customText}</p>);
+      }
       let text: ReactNode = value;
       if (f.type === 'currency') text = formatCurrency(value);
       else if (f.type === 'date') text = formatDate(value);
-      else if (f.type === 'select' || f.type === 'search-select') text = opts.find(o => String(o.value) === String(value))?.label ?? value;
+      else if (f.type === 'select' || f.type === 'search-select') {
+        const found = opts.find(o => String(o.value) === String(value));
+        if (found) {
+          text = found.label;
+        } else {
+          const baseKey = f.key.replace(/Id$/, '');
+          text =
+            form[`${baseKey}Nome`] ||
+            form[`${baseKey}Titulo`] ||
+            form[baseKey] ||
+            form[`${f.key}Nome`] ||
+            (value !== undefined && value !== null && value !== '' ? value : '—');
+        }
+      }
       else if (f.type === 'toggle') text = value;
       else if (f.type === 'password') text = '••••••••';
       else if (f.type === 'photo') return wrap(<Avatar src={value} name={form.nome} />);

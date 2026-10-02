@@ -667,6 +667,10 @@ export function FinanceiroPage({ mode }: { mode: Mode }) {
             label: `Contrato #${ct.id} - ${ct.tipo} (${ct.clienteNome || 'Cliente'})`,
             hint: ct.imovelTitulo,
           })),
+          renderView: val => {
+            const ct = find(contratos.rows, val);
+            return ct ? `Contrato #${ct.id} - ${ct.tipo} (${ct.clienteNome || 'Cliente'})` : (val ? `Contrato #${val}` : '—');
+          },
           onChange: (ctId, form) => {
             const ct = find(contratos.rows, ctId);
             if (ct) {
@@ -693,6 +697,10 @@ export function FinanceiroPage({ mode }: { mode: Mode }) {
             label: `#${i.id} - ${i.titulo}`,
             hint: [i.bairro, i.cidade].filter(Boolean).join(' - '),
           })),
+          renderView: (val, form) => {
+            const im = find(imoveis.rows, val);
+            return im ? `#${im.id} - ${im.titulo}` : form.imovelTitulo || (val ? `Imóvel #${val}` : '—');
+          },
         },
         {
           key: 'clienteId',
@@ -703,6 +711,10 @@ export function FinanceiroPage({ mode }: { mode: Mode }) {
             label: c.nome,
             hint: c.cpfCnpj || c.telefone,
           })),
+          renderView: (val, form) => {
+            const cl = find(clientes.rows, val);
+            return cl?.nome || form.clienteNome || (val ? `Cliente #${val}` : '—');
+          },
         },
         {
           key: 'proprietarioId',
@@ -713,6 +725,10 @@ export function FinanceiroPage({ mode }: { mode: Mode }) {
             label: p.nome,
             hint: p.chavePix ? `PIX: ${p.chavePix}` : p.telefone,
           })),
+          renderView: (val, form) => {
+            const pr = find(proprietarios.rows, val);
+            return pr?.nome || form.proprietarioNome || (val ? `Proprietário #${val}` : '—');
+          },
         },
         {
           key: 'observacoes',

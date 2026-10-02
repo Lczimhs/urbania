@@ -619,7 +619,7 @@ export function ContratoPage({ mode }: { mode: Mode }) {
   const clientes = useList('clientes');
   const imoveis = useList('imoveis');
   const proprietarios = useList('proprietarios');
-  const corretores = useList('funcionarios', { cargo: 'Corretor' });
+  const corretores = useList('funcionarios');
   const [modalImovel, setModalImovel] = useState<((imovel: any) => void) | null>(null);
 
   if (clientes.loading || imoveis.loading || proprietarios.loading || corretores.loading) {
@@ -637,6 +637,10 @@ export function ContratoPage({ mode }: { mode: Mode }) {
           label: 'Imóvel Contratado',
           type: 'custom',
           required: true,
+          renderView: (val, form) => {
+            const im = imoveis.rows.find(i => String(i.id) === String(val));
+            return im ? `#${im.id} - ${im.titulo}` : form.imovelTitulo || (val ? `Imóvel #${val}` : '—');
+          },
           render: (value, set, { disabled, invalid, form }) => {
             const imv = find(imoveis.rows, value);
             return (
@@ -733,6 +737,10 @@ export function ContratoPage({ mode }: { mode: Mode }) {
             label: c.nome,
             hint: [c.tipo, c.cpfCnpj ? `Doc: ${c.cpfCnpj}` : null, c.telefone].filter(Boolean).join(' · '),
           })),
+          renderView: (val, form) => {
+            const cl = clientes.rows.find(c => String(c.id) === String(val));
+            return cl?.nome || form.clienteNome || (val ? `Cliente #${val}` : '—');
+          },
         },
         {
           key: 'corretorId',
@@ -743,6 +751,10 @@ export function ContratoPage({ mode }: { mode: Mode }) {
             value: c.id,
             label: `${c.nome}${c.creci ? ` (${c.creci})` : ''}`,
           })),
+          renderView: (val, form) => {
+            const co = corretores.rows.find(c => String(c.id) === String(val));
+            return co?.nome || form.corretor || form.corretorNome || (val ? `Corretor #${val}` : '—');
+          },
         },
         {
           key: 'tipo',
@@ -1047,12 +1059,12 @@ export function ContratoPage({ mode }: { mode: Mode }) {
           return {
             ...f,
             status: f.status || 'Ativo',
-            clienteNome: c?.nome ?? null,
-            imovelTitulo: imv?.titulo ?? null,
-            proprietarioId: imv?.proprietarioId ?? null,
-            proprietarioNome: p?.nome ?? null,
+            clienteNome: c?.nome || f.clienteNome || null,
+            imovelTitulo: imv?.titulo || f.imovelTitulo || null,
+            proprietarioId: imv?.proprietarioId || f.proprietarioId || null,
+            proprietarioNome: p?.nome || f.proprietarioNome || null,
             corretorId: f.corretorId ? Number(f.corretorId) : null,
-            corretor: corr?.nome ?? null,
+            corretor: corr?.nome || f.corretor || null,
             repasseProprietario: repasse,
           };
         }}

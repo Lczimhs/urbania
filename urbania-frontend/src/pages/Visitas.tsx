@@ -151,7 +151,7 @@ export function VisitasList() {
 export function VisitaPage({ mode }: { mode: Mode }) {
   const clientes = useList('clientes');
   const imoveis = useList('imoveis');
-  const corretores = useList('funcionarios', { cargo: 'Corretor' });
+  const corretores = useList('funcionarios');
 
   if (clientes.loading || imoveis.loading || corretores.loading) return <p className="text-slate-400 p-8">Carregando...</p>;
 
@@ -160,12 +160,35 @@ export function VisitaPage({ mode }: { mode: Mode }) {
   const tabs: TabDef[] = [{
     label: 'Dados da Visita',
     fields: [
-      { key: 'clienteId', label: 'Cliente', type: 'search-select', required: true, disabled: (_, m) => m === 'edit',
-        options: clientes.rows.map(c => ({ value: c.id, label: c.nome, hint: c.cpfCnpj })) },
-      { key: 'imovelId', label: 'Imóvel', type: 'search-select', required: true, disabled: (_, m) => m === 'edit',
-        options: imoveis.rows.map(i => ({ value: i.id, label: `#${i.id} - ${i.titulo}`, hint: [i.bairro, i.cidade].filter(Boolean).join(' - ') })) },
-      { key: 'corretorId', label: 'Corretor', type: 'select', required: true,
-        options: corretores.rows.map(c => ({ value: c.id, label: c.nome })) },
+      {
+        key: 'clienteId',
+        label: 'Cliente',
+        type: 'search-select',
+        required: true,
+        disabled: (_, m) => m === 'edit',
+        options: clientes.rows.map(c => ({ value: c.id, label: c.nome, hint: c.cpfCnpj })),
+        renderView: (val, form) => clientes.rows.find(c => String(c.id) === String(val))?.nome || form.clienteNome || (val ? `Cliente #${val}` : '—'),
+      },
+      {
+        key: 'imovelId',
+        label: 'Imóvel',
+        type: 'search-select',
+        required: true,
+        disabled: (_, m) => m === 'edit',
+        options: imoveis.rows.map(i => ({ value: i.id, label: `#${i.id} - ${i.titulo}`, hint: [i.bairro, i.cidade].filter(Boolean).join(' - ') })),
+        renderView: (val, form) => {
+          const im = imoveis.rows.find(i => String(i.id) === String(val));
+          return im ? `#${im.id} - ${im.titulo}` : form.imovelTitulo || (val ? `Imóvel #${val}` : '—');
+        },
+      },
+      {
+        key: 'corretorId',
+        label: 'Corretor',
+        type: 'select',
+        required: true,
+        options: corretores.rows.map(c => ({ value: c.id, label: c.nome })),
+        renderView: (val, form) => corretores.rows.find(c => String(c.id) === String(val))?.nome || form.corretor || form.corretorNome || (val ? `Corretor #${val}` : '—'),
+      },
       { key: 'status', label: 'Status da Visita', type: 'select', options: STATUS_VISITA, hidden: () => mode === 'create' },
       { key: 'data', label: 'Data', type: 'date', required: true },
       { key: 'hora', label: 'Hora', type: 'time', required: true },
@@ -210,9 +233,9 @@ export function VisitaPage({ mode }: { mode: Mode }) {
       prepare={f => ({
         ...f,
         status: f.status || 'Pendente',
-        clienteNome: find(clientes.rows, f.clienteId)?.nome,
-        imovelTitulo: find(imoveis.rows, f.imovelId)?.titulo,
-        corretor: find(corretores.rows, f.corretorId)?.nome,
+        clienteNome: find(clientes.rows, f.clienteId)?.nome || f.clienteNome,
+        imovelTitulo: find(imoveis.rows, f.imovelId)?.titulo || f.imovelTitulo,
+        corretor: find(corretores.rows, f.corretorId)?.nome || f.corretor,
       })}
     />
   );

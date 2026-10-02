@@ -72,8 +72,8 @@ async function seed() {
     await run(`
       INSERT INTO negociacoes (clienteId, clienteNome, imovelId, imovelTitulo, proprietarioId, proprietarioNome, corretorId, corretor, tipo, data, valor, status, formaPagamento, observacoes)
       VALUES 
-        (2, 'Beatriz Helena Lima', 1, 'Apartamento 3 Quartos com Vista Panorâmica', 1, 'Roberto de Souza', 1, 'Carlos Mendes', 'Venda', '2026-09-25', 430000, 'Em Andamento', 'Financiamento Bancário', 'Proposta apresentada com entrada de R$ 130.000 e saldo de R$ 300.000 via CEF. Aguardando aceite do proprietário.'),
-        (3, 'Lucas Vilas Boas', 2, 'Casa Térrea em Condomínio Fechado', 2, 'Construtora Alvorada Ltda', 2, 'Mariana Silva', 'Venda', '2026-09-28', 820000, 'Em Andamento', 'À Vista (PIX / Transferência)', 'Proposta com desconto para pagamento à vista. Proprietário analisando contraproposta de R$ 835.000.')
+        (1, 'Beatriz Helena Lima', 1, 'Apartamento 3 Quartos com Vista Panorâmica', 1, 'Roberto de Souza', 3, 'Carlos Mendes', 'Venda', '2026-09-25', 430000, 'Em Andamento', 'Financiamento Bancário', 'Proposta apresentada com entrada de R$ 130.000 e saldo de R$ 300.000 via CEF. Aguardando aceite do proprietário.'),
+        (2, 'Lucas Vilas Boas', 2, 'Casa Térrea em Condomínio Fechado', 2, 'Construtora Alvorada Ltda', 4, 'Mariana Silva', 'Venda', '2026-09-28', 820000, 'Em Andamento', 'À Vista (PIX / Transferência)', 'Proposta com desconto para pagamento à vista. Proprietário analisando contraproposta de R$ 835.000.')
     `);
   }
 
@@ -84,7 +84,7 @@ async function seed() {
     await run(`
       INSERT INTO visitas (clienteId, clienteNome, imovelId, imovelTitulo, corretorId, corretor, data, hora, status, descricao)
       VALUES 
-        (2, 'Beatriz Helena Lima', 1, 'Apartamento 3 Quartos com Vista Panorâmica', 1, 'Carlos Mendes', '2026-10-02', '15:30', 'Confirmada', 'Segunda visita para avaliação da iluminação solar e medição dos quartos.')
+        (1, 'Beatriz Helena Lima', 1, 'Apartamento 3 Quartos com Vista Panorâmica', 3, 'Carlos Mendes', '2026-10-02', '15:30', 'Confirmada', 'Segunda visita para avaliação da iluminação solar e medição dos quartos.')
     `);
   }
 
@@ -162,16 +162,16 @@ async function seed() {
         indiceReajuste, multaAtraso, multaRescisoria, observacoes
       ) VALUES
         (
-          3, 'Lucas Vilas Boas', 2, 'Casa Térrea em Condomínio Fechado', 2, 'Construtora Alvorada Ltda',
-          2, 'Mariana Silva', 'Locação', 'Ativo', 'Residencial', '2026-02-01', '2027-01-31', '2026-01-25',
+          2, 'Lucas Vilas Boas', 2, 'Casa Térrea em Condomínio Fechado', 2, 'Construtora Alvorada Ltda',
+          4, 'Mariana Silva', 'Locação', 'Ativo', 'Residencial', '2026-02-01', '2027-01-31', '2026-01-25',
           4200.00, 350.00, 100.00, 10, 'Boleto Bancário', 10.0,
           3780.00, 'Seguro Fiança', 4200.00, 'Apólice Porto Seguro #994821 - Cobertura de 12 meses.',
           'IPCA', 2.0, '3 meses de aluguel proporcional ao prazo restante.',
           'Contrato padrão de locação residencial por 12 meses. Vistoria inicial registrada com sucesso.'
         ),
         (
-          2, 'Beatriz Helena Lima', 1, 'Apartamento 3 Quartos com Vista Panorâmica', 1, 'Roberto de Souza',
-          1, 'Carlos Mendes', 'Compra e Venda', 'Ativo', 'Residencial', '2026-09-25', null, '2026-09-25',
+          1, 'Beatriz Helena Lima', 1, 'Apartamento 3 Quartos com Vista Panorâmica', 1, 'Roberto de Souza',
+          3, 'Carlos Mendes', 'Compra e Venda', 'Ativo', 'Residencial', '2026-09-25', null, '2026-09-25',
           430000.00, 420.00, 950.00, null, 'Financiamento Bancário', 6.0,
           404200.00, 'Sem Garantia / Não Aplicável', 0, null,
           'Fixo (Sem Reajuste)', 0, 'Cláusula penal resolutiva de 10% sobre o valor global em caso de desistência imotivada.',
@@ -202,10 +202,10 @@ async function seed() {
     await run(`
       INSERT INTO financeiro (tipo, categoria, descricao, valor, dataVencimento, dataPagamento, status, formaPagamento, clienteId, clienteNome, imovelId, imovelTitulo, proprietarioId, proprietarioNome, contratoId, reciboNumero, data, operador)
       VALUES
-        ('Receita', 'Aluguel de Imóvel', 'Aluguel Mensal - Competência Setembro/2026', 4200.00, '2026-09-10', '2026-09-08', 'Pago', 'Boleto Bancário', 3, 'Lucas Vilas Boas', 2, 'Casa Térrea em Condomínio Fechado', 2, 'Construtora Alvorada Ltda', 1, 'REC-20260908-01', '2026-09-08', 'Mariana Silva'),
-        ('Receita', 'Taxa de Administração', 'Honorários de Gestão Locatícia (10%)', 420.00, '2026-09-10', '2026-09-08', 'Pago', 'Retenção Automática', 3, 'Lucas Vilas Boas', 2, 'Casa Térrea em Condomínio Fechado', 2, 'Construtora Alvorada Ltda', 1, 'REC-20260908-02', '2026-09-08', 'Mariana Silva'),
+        ('Receita', 'Aluguel de Imóvel', 'Aluguel Mensal - Competência Setembro/2026', 4200.00, '2026-09-10', '2026-09-08', 'Pago', 'Boleto Bancário', 2, 'Lucas Vilas Boas', 2, 'Casa Térrea em Condomínio Fechado', 2, 'Construtora Alvorada Ltda', 1, 'REC-20260908-01', '2026-09-08', 'Mariana Silva'),
+        ('Receita', 'Taxa de Administração', 'Honorários de Gestão Locatícia (10%)', 420.00, '2026-09-10', '2026-09-08', 'Pago', 'Retenção Automática', 2, 'Lucas Vilas Boas', 2, 'Casa Térrea em Condomínio Fechado', 2, 'Construtora Alvorada Ltda', 1, 'REC-20260908-02', '2026-09-08', 'Mariana Silva'),
         ('Repasse', 'Repasse ao Proprietário', 'Repasse Líquido de Aluguel - Construtora Alvorada', 3780.00, '2026-09-15', '2026-09-15', 'Pago', 'PIX', null, null, 2, 'Casa Térrea em Condomínio Fechado', 2, 'Construtora Alvorada Ltda', 1, 'REP-20260915-01', '2026-09-15', 'Carlos Mendes'),
-        ('Receita', 'Comissão de Venda', 'Comissão de Intermediação - Venda Apartamento Centro', 25800.00, '2026-09-30', '2026-09-28', 'Pago', 'Transferência Bancária', 2, 'Beatriz Helena Lima', 1, 'Apartamento 3 Quartos com Vista Panorâmica', 1, 'Roberto de Souza', 2, 'REC-20260928-04', '2026-09-28', 'Carlos Mendes'),
+        ('Receita', 'Comissão de Venda', 'Comissão de Intermediação - Venda Apartamento Centro', 25800.00, '2026-09-30', '2026-09-28', 'Pago', 'Transferência Bancária', 1, 'Beatriz Helena Lima', 1, 'Apartamento 3 Quartos com Vista Panorâmica', 1, 'Roberto de Souza', 2, 'REC-20260928-04', '2026-09-28', 'Carlos Mendes'),
         ('Despesa', 'Marketing e Divulgação', 'Divulgação em Portais Imobiliários e Mídias Sociais', 1450.00, '2026-10-05', null, 'Pendente', 'Boleto Bancário', null, null, null, null, null, null, null, null, '2026-09-25', 'Carlos Mendes'),
         ('Despesa', 'Administrativa', 'Telefonia, Internet Fibra e Softwares de Gestão', 890.00, '2026-10-10', null, 'Pendente', 'Débito em Conta', null, null, null, null, null, null, null, null, '2026-09-26', 'Carlos Mendes'),
         ('Repasse', 'Repasse ao Proprietário', 'Repasse Líquido de Aluguel - Competência Outubro', 3780.00, '2026-10-15', null, 'Pendente', 'PIX', null, null, 2, 'Casa Térrea em Condomínio Fechado', 2, 'Construtora Alvorada Ltda', 1, null, '2026-09-30', 'Carlos Mendes')
@@ -287,8 +287,8 @@ async function seed() {
     await run(`
       INSERT INTO multas (contratoId, clienteId, clienteNome, motivo, tipo, modoValor, valor, percentual, valorCalculado, dataAplicacao, dataVencimento, status, historicoStatus)
       VALUES
-        (1, 3, 'Lucas Vilas Boas', 'Atraso no pagamento do aluguel referente à competência 08/2026.', 'Atraso no pagamento', 'Percentual (%)', 84.00, 2.0, 84.00, '2026-09-12', '2026-10-10', 'Pendente', ?),
-        (1, 3, 'Lucas Vilas Boas', 'Dano acidental ao portão basculante durante descarga de mudança.', 'Dano ao imóvel', 'Fixo (R$)', 350.00, 0, 350.00, '2026-09-15', '2026-09-25', 'Pago', ?)
+        (1, 2, 'Lucas Vilas Boas', 'Atraso no pagamento do aluguel referente à competência 08/2026.', 'Atraso no pagamento', 'Percentual (%)', 84.00, 2.0, 84.00, '2026-09-12', '2026-10-10', 'Pendente', ?),
+        (1, 2, 'Lucas Vilas Boas', 'Dano acidental ao portão basculante durante descarga de mudança.', 'Dano ao imóvel', 'Fixo (R$)', 350.00, 0, 350.00, '2026-09-15', '2026-09-25', 'Pago', ?)
     `, [hist1, hist2]);
   }
 
