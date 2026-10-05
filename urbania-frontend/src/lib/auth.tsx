@@ -27,7 +27,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
 }
 
-// PERÍODO DE TESTES: exibe os botões de acesso rápido na tela de login. Para tirar os botões, troque para false.
+// PERÍODO DE TESTES: indica nas Configurações que o sistema está em modo de testes.
 // A senha não é conferida: o e-mail define o funcionário (e o perfil); e-mail desconhecido entra como Visitante.
 export const MODO_TESTE = true;
 
