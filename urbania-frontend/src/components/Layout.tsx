@@ -175,7 +175,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         </div>
 
         {/* Navegação */}
-        <nav className={`flex-1 overflow-y-auto overflow-x-hidden py-3 px-3 space-y-4 sidebar-scroll ${mini ? 'sidebar-mini' : ''}`}>
+        <nav className="flex-1 overflow-y-auto overflow-x-hidden py-3 px-3 space-y-4 sidebar-scroll">
           {visibleSections.map(section => {
             const hasActive = section.items.some(i => isActive(i.path, loc.pathname));
             const open = !section.collapsible || mini || hasActive || !closedGroups.includes(section.id);
