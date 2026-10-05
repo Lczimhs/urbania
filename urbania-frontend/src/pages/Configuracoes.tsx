@@ -45,7 +45,6 @@ const tabs: TabDef[] = [
         <p className="flex items-center gap-2 font-bold text-slate-800"><FlaskConical size={18} className="text-teal-600" /> Modo de testes {MODO_TESTE ? 'ativado' : 'desativado'}</p>
         <p className="text-sm text-slate-600 mt-2">
           O e-mail de um funcionário entra com o perfil dele (a senha não é conferida); outro e-mail entra como Visitante. Cada tela respeita o perfil de acesso.
-          {MODO_TESTE && ' Os botões de acesso rápido do login podem ser removidos alterando MODO_TESTE para false em src/lib/auth.tsx.'}
         </p>
       </div>
       <div className="bg-white border rounded-xl p-5">
