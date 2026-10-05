@@ -1,32 +1,169 @@
-import { useState } from 'react';
-import type { FormEvent, ReactNode } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { FormEvent, MouseEvent, ReactNode } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import {
-  ArrowRight, Building2, CalendarCheck, Eye, EyeOff, Loader2, Lock, Mail, Wallet,
-} from 'lucide-react';
+import { ArrowRight, Eye, EyeOff, Loader2, Lock, Mail } from 'lucide-react';
 import { useAuth } from '../lib/auth';
 import logoImg from '../assets/logo.png';
+import './Login.css';
 
-const destaques = [
-  { icon: <Building2 size={18} />, titulo: 'Imóveis e proprietários', texto: 'Portfólio com fotos, valores e vínculos.' },
-  { icon: <CalendarCheck size={18} />, titulo: 'Visitas e negociações', texto: 'Da agenda do corretor à proposta aceita.' },
-  { icon: <Wallet size={18} />, titulo: 'Financeiro e repasses', texto: 'Contratos, multas, despesas e pagamentos.' },
+// ===== Vitrine 3D (decorativa) =====
+const KINDS = ['Apartamento', 'Casa térrea', 'Sobrado', 'Sala comercial', 'Terreno', 'Cobertura'] as const;
+type Kind = typeof KINDS[number];
+const TAGS = [
+  { label: 'Venda', cls: 'lg-pill-venda' },
+  { label: 'Locação', cls: 'lg-pill-locacao' },
+  { label: 'Administração', cls: 'lg-pill-admin' },
 ];
+const SKIES = [['#0e3a6b', '#081f3d'], ['#1e3a8a', '#0b2545'], ['#0c4a6e', '#082f49'], ['#172554', '#0a1b3a']];
+const COL_PADDING = [0, 140, 60, 0, 180, 40];
+const CARDS_PER_COL = 6;
 
-function Campo({ label, icon, children }: { label: string; icon: ReactNode; children: ReactNode }) {
+// Janela acesa; o atraso varia para as janelas não piscarem todas juntas
+const Win = ({ x, y, w = 7, h = 8, d = 0 }: { x: number; y: number; w?: number; h?: number; d?: number }) => (
+  <rect x={x} y={y} width={w} height={h} rx={1} className="lg-win" style={{ animationDelay: `${d}s` }} />
+);
+
+// Ilustrações em traço ciano (viewBox 230×138, chão em y=118)
+function Illustration({ kind, seed }: { kind: Kind; seed: number }) {
+  const d = (n: number) => ((seed * 7 + n * 3) % 10) * 0.5;
+  switch (kind) {
+    case 'Apartamento':
+      return (
+        <g>
+          <rect x={78} y={34} width={46} height={84} />
+          <rect x={124} y={68} width={34} height={50} />
+          {[44, 60, 76, 92].map((y, r) => [86, 100].map((x, c) => <Win key={`${r}${c}`} x={x} y={y} d={d(r + c)} />))}
+          <Win x={133} y={78} d={d(9)} /><Win x={133} y={94} d={d(4)} />
+        </g>
+      );
+    case 'Casa térrea':
+      return (
+        <g>
+          <polyline points="66,84 115,50 164,84" />
+          <rect x={74} y={82} width={82} height={36} />
+          <rect x={108} y={96} width={14} height={22} fill="#fbbf24" stroke="none" />
+          <Win x={84} y={92} w={12} h={10} d={d(1)} /><Win x={134} y={92} w={12} h={10} d={d(2)} />
+        </g>
+      );
+    case 'Sobrado':
+      return (
+        <g>
+          <polyline points="72,58 115,28 158,58" />
+          <rect x={80} y={56} width={70} height={62} />
+          <line x1={80} y1={86} x2={150} y2={86} />
+          <Win x={90} y={64} w={12} h={11} d={d(1)} /><Win x={128} y={64} w={12} h={11} d={d(2)} />
+          <Win x={90} y={95} w={12} h={11} d={d(3)} />
+          <rect x={124} y={96} width={14} height={22} fill="#fbbf24" stroke="none" />
+        </g>
+      );
+    case 'Sala comercial':
+      return (
+        <g>
+          <rect x={52} y={46} width={126} height={72} />
+          {[56, 72, 88].map(y => <rect key={y} x={60} y={y} width={110} height={9} fill="rgba(125,211,252,.18)" />)}
+          <Win x={70} y={57} w={20} h={7} d={d(1)} /><Win x={130} y={73} w={20} h={7} d={d(2)} />
+          <rect x={106} y={102} width={18} height={16} />
+        </g>
+      );
+    case 'Terreno':
+      return (
+        <g>
+          <polygon points="50,118 92,92 180,92 160,118" strokeDasharray="5 4" />
+          <line x1={120} y1={104} x2={120} y2={66} />
+          <polygon points="120,66 142,72 120,78" fill="#fbbf24" stroke="none" />
+          <line x1={74} y1={118} x2={74} y2={94} />
+          <circle cx={74} cy={84} r={12} />
+        </g>
+      );
+    case 'Cobertura':
+      return (
+        <g>
+          <rect x={94} y={22} width={38} height={16} />
+          <line x1={76} y1={38} x2={150} y2={38} />
+          {[80, 90, 136, 146].map(x => <line key={x} x1={x} y1={38} x2={x} y2={31} />)}
+          <line x1={76} y1={31} x2={150} y2={31} />
+          <rect x={82} y={38} width={62} height={80} />
+          <Win x={104} y={27} w={18} h={7} d={d(5)} />
+          {[48, 64, 80, 96].map((y, r) => [92, 108, 124].map((x, c) => <Win key={`${r}${c}`} x={x} y={y} d={d(r * 3 + c)} />))}
+        </g>
+      );
+  }
+}
+
+function AdCard({ col, i }: { col: number; i: number }) {
+  const kind = KINDS[(i * 2 + col) % 6];
+  const tag = kind === 'Terreno' ? TAGS[0] : TAGS[(i + col * 2) % 3];
+  const [skyTop, skyBottom] = SKIES[(i + col) % 4];
   return (
-    <label className="block">
-      <span className="block text-sm font-semibold text-slate-700 mb-1.5">{label}</span>
-      <span className="relative flex items-center">
-        <span className="absolute left-3.5 text-slate-400 pointer-events-none">{icon}</span>
-        {children}
-      </span>
-    </label>
+    <div className="lg-ad">
+      <div className="lg-ad-top" style={{ background: `linear-gradient(180deg, ${skyTop}, ${skyBottom})` }}>
+        <span className={`lg-pill ${tag.cls}`}>{tag.label}</span>
+        <svg viewBox="0 0 230 138" preserveAspectRatio="xMidYMax meet">
+          <circle cx={192} cy={30} r={11} fill="#e0f2fe" opacity={.85} />
+          <line x1={12} y1={118} x2={218} y2={118} stroke="rgba(125,211,252,.45)" strokeWidth={1.5} />
+          <g fill="none" stroke="#7dd3fc" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round">
+            <Illustration kind={kind} seed={col * 6 + i} />
+          </g>
+        </svg>
+      </div>
+      <div className="lg-ad-body">
+        <p className="lg-ad-name">{kind}</p>
+        <div className="lg-skel" style={{ width: '46%', background: 'rgba(125,211,252,.22)' }} />
+        <div className="lg-skel" style={{ width: '34%', background: 'rgba(125,211,252,.14)' }} />
+        <div className="lg-skel" style={{ width: '40%', background: 'rgba(125,211,252,.14)' }} />
+      </div>
+    </div>
   );
 }
 
-const inputClass =
-  'w-full h-12 pl-11 pr-4 rounded-xl border border-slate-200 bg-white text-slate-800 placeholder:text-slate-400 outline-none transition focus:border-sky-600 focus:ring-4 focus:ring-sky-600/15';
+function Showcase() {
+  return (
+    <div className="lg-layer lg-showcase" aria-hidden="true">
+      <div className="lg-wall-in">
+        <div className="lg-wall">
+          {COL_PADDING.map((pad, col) => (
+            <div key={col} className="lg-col" style={{ paddingTop: pad }}>
+              {/* 6 cards duplicados: o trilho anda 50% e recomeça sem salto */}
+              <div className="lg-track">
+                {Array.from({ length: CARDS_PER_COL * 2 }, (_, k) => <AdCard key={k} col={col} i={k % CARDS_PER_COL} />)}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Chaveiro de imobiliária pendurado no card
+function Keychain() {
+  return (
+    <div className="lg-keys" aria-hidden="true">
+      <div className="lg-ring" />
+      <div className="lg-swing-in">
+        <div className="lg-swing-hover">
+          <div className="lg-rod" />
+          <div className="lg-tag">
+            <span className="lg-tag-hole" />
+            <svg width={26} height={26} viewBox="0 0 24 24" fill="none" stroke="#7dd3fc" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 10.5 12 3l9 7.5" /><path d="M5 9.5V21h14V9.5" /><path d="M10 21v-6h4v6" />
+            </svg>
+            <span className="lg-tag-line" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Field({ id, label, icon, children }: { id: string; label: string; icon: ReactNode; children: ReactNode }) {
+  return (
+    <div>
+      <label htmlFor={id} className="lg-label">{label}</label>
+      <div className="lg-field">{icon}{children}</div>
+    </div>
+  );
+}
 
 export default function Login() {
   const navigate = useNavigate();
@@ -36,6 +173,27 @@ export default function Login() {
   const [verSenha, setVerSenha] = useState(false);
   const [entrando, setEntrando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+
+  // Parallax: grava --mx/--my no root via requestAnimationFrame, sem re-render do React
+  const rootRef = useRef<HTMLDivElement>(null);
+  const frame = useRef<number | null>(null);
+  const parallaxOn = useRef(false);
+  useEffect(() => {
+    parallaxOn.current = !window.matchMedia('(pointer: coarse)').matches && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    return () => { if (frame.current !== null) cancelAnimationFrame(frame.current); };
+  }, []);
+
+  const onMouseMove = (e: MouseEvent) => {
+    if (!parallaxOn.current || frame.current !== null) return;
+    const { clientX, clientY } = e;
+    frame.current = requestAnimationFrame(() => {
+      frame.current = null;
+      const el = rootRef.current;
+      if (!el) return;
+      el.style.setProperty('--mx', (clientX / window.innerWidth - 0.5).toFixed(3));
+      el.style.setProperty('--my', (clientY / window.innerHeight - 0.5).toFixed(3));
+    });
+  };
 
   if (isAuthenticated) return <Navigate to="/" replace />;
 
@@ -51,74 +209,56 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex bg-white font-sans">
-      {/* PAINEL DA MARCA (telas grandes) */}
-      <aside className="hidden lg:flex lg:w-[52%] relative overflow-hidden bg-[#06182c] text-white p-12 flex-col justify-between">
-        <div className="absolute -top-32 -left-32 w-[28rem] h-[28rem] rounded-full bg-sky-500/25 blur-3xl" />
-        <div className="absolute -bottom-40 right-0 w-[32rem] h-[32rem] rounded-full bg-blue-600/20 blur-3xl" />
-        <div
-          className="absolute inset-0 opacity-[0.07]"
-          style={{ backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '48px 48px' }}
-        />
+    <div ref={rootRef} className="lg-root" onMouseMove={onMouseMove}>
+      <Showcase />
+      <div className="lg-layer lg-shade-h" />
+      <div className="lg-layer lg-shade-v" />
+      <div className="lg-glow" aria-hidden="true" />
 
-        <div className="relative flex items-center gap-3">
-          <img src={logoImg} alt="Urbânia" className="w-12 h-12 rounded-xl object-cover ring-1 ring-white/20" />
+      <div className="lg-left">
+        <div className="lg-brand">
+          <div className="lg-logo"><img src={logoImg} alt="" /></div>
           <div>
-            <p className="font-bold text-lg leading-tight">Urbânia</p>
-            <p className="text-xs text-sky-200/80 tracking-wide">Gestão Imobiliária Inteligente</p>
+            <p className="lg-brand-name">Urbânia</p>
+            <p className="lg-brand-sub">Gestão Imobiliária Inteligente</p>
           </div>
         </div>
+        <p className="lg-credit">IFRO Campus Ji-Paraná · Equipe FrontDev's · 2026</p>
+      </div>
 
-        <div className="relative max-w-lg">
-          <h1 className="text-4xl xl:text-5xl font-bold leading-tight tracking-tight">
-            Do primeiro contato ao <span className="text-sky-300">repasse ao proprietário.</span>
-          </h1>
-          <p className="mt-5 text-slate-300 text-lg">Tudo o que a imobiliária precisa para vender, alugar e administrar imóveis em um só lugar.</p>
+      <main className="lg-right">
+        <div className="lg-cardwrap">
+          <div className="lg-tilt">
+            <div className="lg-floor" aria-hidden="true" />
+            <Keychain />
+            <div className="lg-card">
+              <h1 className="lg-title">Bem-vindo de volta</h1>
+              <p className="lg-subtitle">Entre com seu e-mail e senha para continuar.</p>
 
-          <ul className="mt-10 space-y-3">
-            {destaques.map(d => (
-              <li key={d.titulo} className="flex items-start gap-4 p-4 rounded-2xl bg-white/[0.06] border border-white/10 backdrop-blur-sm">
-                <span className="w-9 h-9 shrink-0 rounded-lg bg-sky-500/20 text-sky-300 flex items-center justify-center">{d.icon}</span>
-                <span>
-                  <span className="block font-semibold">{d.titulo}</span>
-                  <span className="block text-sm text-slate-400">{d.texto}</span>
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
+              {erro && <p role="alert" className="lg-error">{erro}</p>}
 
-        <p className="relative text-xs text-slate-500">IFRO Campus Ji-Paraná · Equipe FrontDev's · 2026</p>
-      </aside>
+              <form onSubmit={enviar} className="lg-form">
+                <Field id="login-email" label="E-mail" icon={<Mail size={20} aria-hidden="true" />}>
+                  <input id="login-email" type="email" autoComplete="email" placeholder="voce@urbania.com.br" value={email} onChange={e => setEmail(e.target.value)} />
+                </Field>
 
-      {/* FORMULÁRIO */}
-      <main className="flex-1 flex items-center justify-center p-6 sm:p-10 bg-white">
-        <div className="w-full max-w-sm">
-          <img src={logoImg} alt="Urbânia" className="lg:hidden w-20 h-20 mx-auto mb-10 rounded-2xl object-cover ring-1 ring-slate-200" />
+                <Field id="login-senha" label="Senha" icon={<Lock size={20} aria-hidden="true" />}>
+                  <input id="login-senha" type={verSenha ? 'text' : 'password'} autoComplete="current-password" placeholder="••••••••" value={senha} onChange={e => setSenha(e.target.value)} />
+                  <button type="button" className="lg-eye" onClick={() => setVerSenha(!verSenha)} aria-label={verSenha ? 'Ocultar senha' : 'Mostrar senha'}>
+                    {verSenha ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </Field>
 
-          <h2 className="text-3xl font-bold text-cadastro tracking-tight">Bem-vindo de volta</h2>
-          <p className="mt-2 text-slate-500">Entre com seu e-mail e senha para continuar.</p>
+                <button type="submit" disabled={entrando} className="lg-btn">
+                  {entrando
+                    ? <Loader2 size={20} className="animate-spin" />
+                    : <>Entrar <span className="lg-arrow"><ArrowRight size={20} /></span></>}
+                </button>
+              </form>
 
-          {erro && <p role="alert" className="mt-6 p-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700">{erro}</p>}
-
-          <form onSubmit={enviar} className="mt-8 space-y-5">
-            <Campo label="E-mail" icon={<Mail size={18} />}>
-              <input type="email" autoComplete="email" className={inputClass} placeholder="voce@urbania.com.br" value={email} onChange={e => setEmail(e.target.value)} />
-            </Campo>
-
-            <Campo label="Senha" icon={<Lock size={18} />}>
-              <input type={verSenha ? 'text' : 'password'} autoComplete="current-password" className={`${inputClass} pr-12`} placeholder="••••••••" value={senha} onChange={e => setSenha(e.target.value)} />
-              <button type="button" onClick={() => setVerSenha(!verSenha)} title={verSenha ? 'Ocultar senha' : 'Mostrar senha'} className="absolute right-3 p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100">
-                {verSenha ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </Campo>
-
-            <button type="submit" disabled={entrando} className="w-full h-12 mt-2 rounded-xl font-semibold text-white bg-cadastro hover:bg-cadastro-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-600/30 transition flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
-              {entrando ? <Loader2 size={18} className="animate-spin" /> : <>Entrar <ArrowRight size={18} /></>}
-            </button>
-          </form>
-
-          <p className="mt-12 text-center text-xs text-slate-400">© 2026 Urbânia · Sistema de Gestão Imobiliária</p>
+              <p className="lg-foot">© 2026 Urbânia · Sistema de Gestão Imobiliária</p>
+            </div>
+          </div>
         </div>
       </main>
     </div>
