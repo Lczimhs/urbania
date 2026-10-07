@@ -66,7 +66,7 @@ const schema = {
   // servicos: lista JSON com os ids dos serviços prestados (ex.: "[1,3]")
   prestadores: {
     nome: 'TEXT', especialidade: 'TEXT', telefone: 'TEXT', cpfCnpj: 'TEXT', avaliacao: 'REAL',
-    razaoSocial: 'TEXT', email: 'TEXT', pais: 'TEXT', uf: 'TEXT', cidade: 'TEXT', bairro: 'TEXT', logradouro: 'TEXT',
+    razaoSocial: 'TEXT', email: 'TEXT', pais: 'TEXT', cep: 'TEXT', uf: 'TEXT', cidade: 'TEXT', bairro: 'TEXT', logradouro: 'TEXT',
     numero: 'TEXT', complemento: 'TEXT', servicos: 'TEXT', banco: 'TEXT', agencia: 'TEXT', conta: 'TEXT',
     tipoChavePix: 'TEXT', chavePix: 'TEXT',
   },

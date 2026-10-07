@@ -10,7 +10,7 @@ import { useToast } from '../components/Toast';
 import { useDelete } from '../components/useDelete';
 import { useList } from '../lib/useApi';
 import { maskCpfCnpj, maskPhone, onlyDigits } from '../lib/masks';
-import { TIPOS_CHAVE_PIX, UFS } from '../lib/options';
+import { TIPOS_CHAVE_PIX, addressFields } from '../lib/options';
 import { Pode } from '../lib/auth';
 
 // Serviços do prestador ficam salvos como lista JSON de ids (ex.: "[1,3]")
@@ -160,14 +160,8 @@ export function PrestadorPage({ mode }: { mode: Mode }) {
       { key: 'telefone', label: 'Telefone para Contato', mask: maskPhone, placeholder: '(00) 00000-0000', required: true },
       { key: 'email', label: 'E-mail', type: 'email' },
     ] },
-    { label: 'Endereço', fields: [
-      { key: 'uf', label: 'Estado', type: 'select', options: UFS },
-      { key: 'cidade', label: 'Cidade' },
-      { key: 'bairro', label: 'Bairro' },
-      { key: 'logradouro', label: 'Logradouro' },
-      { key: 'numero', label: 'Número' },
-      { key: 'complemento', label: 'Complemento' },
-    ] },
+    // Mesmo endereço das outras telas: o CEP preenche logradouro, bairro, cidade e estado
+    { label: 'Endereço', fields: addressFields() },
     { label: 'Dados Profissionais', fields: [
       { key: 'servicos', label: 'Serviço Prestado', type: 'custom', full: true, required: true,
         render: (value, set, { disabled, invalid }) => (
