@@ -188,8 +188,8 @@ module.exports = async function popularDadosDeTeste(db) {
       funcionarios.push(await inserir('funcionarios', {
         nome, cpf: cpf(), rg: rg(), orgaoEmissor: 'SSP/RO', dataNascimento: nascimento(23, 55), telefone: celular(), telefoneFixo: chance(0.4) ? fixo() : null,
         email, senha: 'urbania123', cargo, creci: cargo === 'Corretor' ? `CRECI-RO ${entre(3000, 9999)}-F` : null,
-        // Um corretor inativo para testar o filtro de status
-        status: i === equipe.length - 1 ? 'Inativo' : 'Ativo', dataAdmissao: dia(-entre(90, 1800)), salario, perfilId: perfilId[perfil],
+        // Corretores inativos para testar regras de validação e filtros de status
+        status: (nome === 'Wesley Cardoso Freitas' || nome === 'Letícia Nunes Andrade') ? 'Inativo' : 'Ativo', dataAdmissao: dia(-entre(90, 1800)), salario, perfilId: perfilId[perfil],
         observacoes: cargo === 'Corretor' ? um(['Especialista em imóveis residenciais.', 'Foco em locação e administração.', 'Atende a região central e condomínios.', null]) : null,
         ...endereco(),
       }));

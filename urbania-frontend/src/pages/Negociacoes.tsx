@@ -213,7 +213,7 @@ export function NegociacoesList() {
           <FilterSelect
             value={corretorFiltro}
             onChange={setCorretorFiltro}
-            options={corretores.rows.map(c => ({ value: String(c.id), label: c.nome }))}
+            options={corretores.rows.map(c => ({ value: String(c.id), label: `${c.nome}${c.status === 'Inativo' ? ' (Inativo)' : ''}` }))}
             placeholder="Todos os corretores"
           />
 
@@ -400,12 +400,13 @@ export function NegociacaoPage({ mode }: { mode: Mode }) {
   const clientes = useList('clientes');
   const imoveis = useList('imoveis');
   const proprietarios = useList('proprietarios');
-  const corretores = useList('funcionarios');
+  const corretores = useList('funcionarios', { cargo: 'Corretor', status: 'Ativo' });
 
   if (clientes.loading || imoveis.loading || proprietarios.loading || corretores.loading) {
     return <p className="text-slate-400 p-8">Carregando...</p>;
   }
 
+  const corretoresAtivos = corretores.rows.filter(c => c.status !== 'Inativo');
   const find = (list: any[], id: unknown) => list.find(x => String(x.id) === String(id));
 
   const tabs: TabDef[] = [
@@ -472,7 +473,7 @@ export function NegociacaoPage({ mode }: { mode: Mode }) {
           label: 'Corretor Responsável',
           type: 'select',
           required: true,
-          options: corretores.rows.map(c => ({ value: c.id, label: `${c.nome}${c.creci ? ` (CRECI ${c.creci})` : ''}` })),
+          options: corretoresAtivos.map(c => ({ value: c.id, label: `${c.nome}${c.creci ? ` (CRECI ${c.creci})` : ''}` })),
           renderView: (val, form) => {
             const co = corretores.rows.find(c => String(c.id) === String(val));
             return co?.nome || form.corretor || form.corretorNome || (val ? `Corretor #${val}` : '—');
@@ -621,6 +622,13 @@ export function NegociacaoPage({ mode }: { mode: Mode }) {
       validate={f => {
         if (!f.valor || Number(f.valor) <= 0) {
           return 'Informe um valor proposto válido maior que zero.';
+        }
+        if (!f.corretorId) {
+          return 'Selecione o corretor responsável.';
+        }
+        const corr = corretores.rows.find(c => String(c.id) === String(f.corretorId));
+        if (!corr || corr.status === 'Inativo') {
+          return 'O corretor selecionado está inativo. Selecione um corretor ativo.';
         }
         return null;
       }}
