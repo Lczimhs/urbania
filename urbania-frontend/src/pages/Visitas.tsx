@@ -213,7 +213,7 @@ export function VisitaPage({ mode }: { mode: Mode }) {
       {
         key: 'corretorId',
         label: 'Corretor',
-        type: 'select',
+        type: 'search-select',
         required: true,
         options: corretoresAtivos.map(c => ({ value: c.id, label: c.nome })),
         renderView: (val, form) => corretores.rows.find(c => String(c.id) === String(val))?.nome || form.corretor || form.corretorNome || (val ? `Corretor #${val}` : '—'),

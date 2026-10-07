@@ -156,7 +156,7 @@ export function FuncionarioPage({ mode }: { mode: Mode }) {
         {
           key: 'perfilId',
           label: 'Perfil de Acesso (Permissões)',
-          type: 'select',
+          type: 'search-select',
           options: perfis.rows.map(p => ({
             value: p.id,
             label: `${p.nome}${Number(p.nativo) === 1 ? ' (Nativo)' : ''}`,

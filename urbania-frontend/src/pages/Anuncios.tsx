@@ -208,7 +208,7 @@ export function AnuncioPage({ mode }: { mode: Mode }) {
     { label: 'Dados do Anúncio',
       locked: f => (f.imovelId ? null : 'Selecione um imóvel na aba "Dados do Imóvel" para liberar os dados do anúncio.'),
       fields: [
-        { key: 'canalId', label: 'Canal de Publicação', type: 'select', required: true,
+        { key: 'canalId', label: 'Canal de Publicação', type: 'search-select', required: true,
           options: canais.rows.map(c => ({ value: c.id, label: `${c.nome} (${c.tipoCanal})` })) },
         { key: 'valor', label: 'Valor', type: 'currency', required: true },
         { key: 'status', label: 'Situação', type: 'select', options: SITUACOES_ANUNCIO, required: true },

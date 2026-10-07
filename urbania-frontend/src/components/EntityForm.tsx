@@ -21,6 +21,7 @@ export type FieldDef = {
   render?: (value: any, set: (value: any) => void, ctx: { form: Form; mode: Mode; disabled: boolean; invalid: boolean }) => ReactNode;
   renderView?: (value: any, form: Form) => ReactNode; // visualização customizada no modo view
   options?: (string | Option)[];
+  searchable?: boolean;
   selectPlacement?: 'auto' | 'bottom' | ((mode: Mode) => 'auto' | 'bottom');
   mask?: (v: unknown) => string;
   required?: boolean | ((form: Form) => boolean);
@@ -206,15 +207,41 @@ export function EntityForm({ title, mode, initial, tabs, defaults = {}, onSubmit
     switch (f.type) {
       case 'textarea':
         return wrap(<textarea rows={3} disabled={disabled} aria-invalid={invalid} className={inputClass(invalid)} value={value ?? ''} onChange={e => set(f, e.target.value)} placeholder={f.placeholder} />);
-      case 'select':
+      case 'select': {
+        const hasEmpty = opts.some(o => o.value === '' || o.value === null || o.value === undefined);
+        const optionsList = [
+          ...(hasEmpty ? [] : [{ value: '', label: f.placeholder || 'Selecione...' }]),
+          ...opts.map(o => ({ value: String(o.value), label: o.label, hint: o.hint }))
+        ];
         return wrap(
-          <Select placement={typeof f.selectPlacement === 'function' ? f.selectPlacement(mode) : f.selectPlacement} disabled={disabled} aria-label={f.label} aria-invalid={invalid} className={inputClass(invalid)} value={value ?? ''} onChange={selectedValue => set(f, selectedValue)}>
-            <option value="">Selecione...</option>
-            {opts.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-          </Select>
+          <Select
+            placement={typeof f.selectPlacement === 'function' ? f.selectPlacement(mode) : f.selectPlacement}
+            disabled={disabled}
+            aria-label={f.label}
+            aria-invalid={invalid}
+            placeholder={f.placeholder || 'Selecione...'}
+            value={value ?? ''}
+            options={optionsList}
+            searchable={f.searchable ?? (f.key.endsWith('Id') || false)}
+            onChange={selectedValue => {
+              const orig = opts.find(o => String(o.value) === selectedValue);
+              set(f, orig ? orig.value : (selectedValue === '' ? null : selectedValue));
+            }}
+          />
         );
+      }
       case 'search-select':
-        return wrap(<SearchSelect value={value} options={opts} disabled={disabled} invalid={invalid} onChange={v => set(f, v)} />);
+        return wrap(
+          <SearchSelect
+            value={value}
+            options={opts}
+            placeholder={f.placeholder || 'Selecione...'}
+            disabled={disabled}
+            invalid={invalid}
+            placement={typeof f.selectPlacement === 'function' ? f.selectPlacement(mode) : f.selectPlacement}
+            onChange={v => set(f, v)}
+          />
+        );
       case 'currency':
         return wrap(<input disabled={disabled} aria-invalid={invalid} inputMode="numeric" className={inputClass(invalid)} value={formatCurrency(value)} placeholder="R$ 0,00" onChange={e => set(f, parseCurrencyInput(e.target.value))} />);
       case 'toggle': {
