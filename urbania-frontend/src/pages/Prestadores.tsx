@@ -161,13 +161,12 @@ export function PrestadorPage({ mode }: { mode: Mode }) {
       { key: 'email', label: 'E-mail', type: 'email' },
     ] },
     { label: 'Endereço', fields: [
-      { key: 'pais', label: 'País' },
       { key: 'uf', label: 'Estado', type: 'select', options: UFS },
       { key: 'cidade', label: 'Cidade' },
       { key: 'bairro', label: 'Bairro' },
-      { key: 'logradouro', label: 'Rua' },
-      { key: 'numero', label: 'Nº' },
-      { key: 'complemento', label: 'Complemento', full: true },
+      { key: 'logradouro', label: 'Logradouro' },
+      { key: 'numero', label: 'Número' },
+      { key: 'complemento', label: 'Complemento' },
     ] },
     { label: 'Dados Profissionais', fields: [
       { key: 'servicos', label: 'Serviço Prestado', type: 'custom', full: true, required: true,
@@ -186,7 +185,7 @@ export function PrestadorPage({ mode }: { mode: Mode }) {
   return (
     <EntityPage
       mode={mode} entity="prestadores" basePath="/prestadores" singular="Prestador" tabs={tabs}
-      defaults={{ pais: 'Brasil' }} showClear={false}
+      showClear={false}
       validate={f => {
         const doc = onlyDigits(f.cpfCnpj).length;
         if (doc !== 11 && doc !== 14) return 'CPF/CNPJ inválido: informe 11 dígitos (CPF) ou 14 dígitos (CNPJ).';
