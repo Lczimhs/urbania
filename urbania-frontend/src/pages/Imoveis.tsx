@@ -244,15 +244,6 @@ export function ImoveisList() {
                                 </span>
                               </div>
                             )}
-
-                            {/* Badge Superior Direito: Tipo do Imóvel (Apartamento, Casa, etc.) */}
-                            {i.tipo && (
-                              <div className="absolute top-3 right-3">
-                                <span className="text-xs font-semibold text-cadastro">
-                                  {i.tipo}
-                                </span>
-                              </div>
-                            )}
                           </div>
 
                           {/* Informações centrais */}
@@ -409,9 +400,11 @@ function ImovelRelacionamentos({ imovelId }: { imovelId: number }) {
 // Cadastrar / Visualizar / Editar Imóvel
 export function ImovelPage({ mode }: { mode: Mode }) {
   const proprietarios = useList('proprietarios');
-  const corretores = useList('funcionarios', { cargo: 'Corretor' });
+  const corretores = useList('funcionarios', { cargo: 'Corretor', status: 'Ativo' });
 
   if (proprietarios.loading || corretores.loading) return <p className="text-slate-400 p-8">Carregando...</p>;
+
+  const corretoresAtivos = corretores.rows.filter(c => c.status !== 'Inativo');
 
   const tabs: TabDef[] = [
     { label: 'Dados Básicos', fields: [
@@ -420,7 +413,7 @@ export function ImovelPage({ mode }: { mode: Mode }) {
       { key: 'proprietarioId', label: 'Proprietário', type: 'search-select', required: true,
         options: proprietarios.rows.map(p => ({ value: p.id, label: p.nome, hint: p.tipo === 'Jurídica' ? p.cnpj : p.cpfCnpj })) },
       { key: 'responsavelId', label: 'Responsável (Corretor)', type: 'select',
-        options: corretores.rows.map(c => ({ value: c.id, label: c.nome })) },
+        options: corretoresAtivos.map(c => ({ value: c.id, label: c.nome })) },
       { key: 'titulo', label: 'Título', required: true, full: true, placeholder: 'Ex.: Apartamento 3 quartos no Centro' },
       { key: 'descricao', label: 'Descrição', type: 'textarea' },
     ] },
@@ -449,6 +442,12 @@ export function ImovelPage({ mode }: { mode: Mode }) {
         const neg = ['areaTotal', 'areaTerreno', 'quartos', 'suites', 'banheiros', 'vagas'].find(k => Number(f[k]) < 0);
         if (neg) return 'As características não podem ter valores negativos.';
         if (Number(f.suites || 0) > Number(f.quartos || 0)) return 'O número de suítes não pode ser maior que o de quartos.';
+        if (f.responsavelId) {
+          const corr = corretores.rows.find(c => String(c.id) === String(f.responsavelId));
+          if (!corr || corr.status === 'Inativo') {
+            return 'O corretor selecionado está inativo. Selecione um corretor ativo para vincular ao imóvel.';
+          }
+        }
         return null;
       }}
       prepare={f => ({ ...f, responsavel: corretores.rows.find(c => String(c.id) === String(f.responsavelId))?.nome ?? null })}

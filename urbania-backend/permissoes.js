@@ -89,6 +89,9 @@ const autenticar = async (req, res, next) => {
   try {
     const sessao = await carregarSessao(userId);
     if (!sessao) return res.status(401).json({ error: 'Usuário não encontrado. Faça login novamente.' });
+    if (sessao.user.status && String(sessao.user.status).toLowerCase() === 'inativo') {
+      return res.status(403).json({ error: 'Usuário inativo. Acesso bloqueado ao sistema.' });
+    }
     req.sessao = sessao;
     next();
   } catch (err) {

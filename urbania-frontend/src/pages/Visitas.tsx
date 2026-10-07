@@ -179,10 +179,11 @@ export function VisitasList() {
 export function VisitaPage({ mode }: { mode: Mode }) {
   const clientes = useList('clientes');
   const imoveis = useList('imoveis');
-  const corretores = useList('funcionarios');
+  const corretores = useList('funcionarios', { cargo: 'Corretor', status: 'Ativo' });
 
   if (clientes.loading || imoveis.loading || corretores.loading) return <p className="text-slate-400 p-8">Carregando...</p>;
 
+  const corretoresAtivos = corretores.rows.filter(c => c.status !== 'Inativo');
   const find = (list: any[], id: unknown) => list.find(x => String(x.id) === String(id));
 
   const tabs: TabDef[] = [{
@@ -214,7 +215,7 @@ export function VisitaPage({ mode }: { mode: Mode }) {
         label: 'Corretor',
         type: 'select',
         required: true,
-        options: corretores.rows.map(c => ({ value: c.id, label: c.nome })),
+        options: corretoresAtivos.map(c => ({ value: c.id, label: c.nome })),
         renderView: (val, form) => corretores.rows.find(c => String(c.id) === String(val))?.nome || form.corretor || form.corretorNome || (val ? `Corretor #${val}` : '—'),
       },
       { key: 'status', label: 'Status da Visita', type: 'select', options: STATUS_VISITA, hidden: () => mode === 'create' },
@@ -258,6 +259,14 @@ export function VisitaPage({ mode }: { mode: Mode }) {
       mode={mode} entity="visitas" basePath="/visitas" singular="Visita" tabs={tabs} feminine
       defaults={{ status: 'Pendente' }} showClear={false}
       cancelConfirm={mode === 'edit' ? 'Tem certeza que deseja cancelar? As alterações não serão salvas.' : undefined}
+      validate={f => {
+        if (!f.corretorId) return 'Selecione o corretor responsável pela visita.';
+        const corr = corretores.rows.find(c => String(c.id) === String(f.corretorId));
+        if (!corr || corr.status === 'Inativo') {
+          return 'O corretor selecionado está inativo. Selecione um corretor ativo para vincular à visita.';
+        }
+        return null;
+      }}
       prepare={f => ({
         ...f,
         status: f.status || 'Pendente',

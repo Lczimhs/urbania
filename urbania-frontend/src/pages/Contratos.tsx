@@ -327,7 +327,7 @@ export function ContratosList() {
           <FilterSelect
             value={corretorFiltro}
             onChange={setCorretorFiltro}
-            options={corretores.rows.map(c => ({ value: String(c.id), label: c.nome }))}
+            options={corretores.rows.map(c => ({ value: String(c.id), label: `${c.nome}${c.status === 'Inativo' ? ' (Inativo)' : ''}` }))}
             placeholder="Todos os corretores"
           />
 
@@ -351,7 +351,7 @@ export function ContratosList() {
               key: 'id',
               label: 'Código',
               render: r => <span className="font-mono text-slate-500 font-medium whitespace-nowrap">#{r.id}</span>,
-              className: 'w-14',
+              className: 'w-20 min-w-[76px] whitespace-nowrap',
             },
             {
               key: 'imovel',
@@ -607,13 +607,14 @@ export function ContratoPage({ mode }: { mode: Mode }) {
   const clientes = useList('clientes');
   const imoveis = useList('imoveis');
   const proprietarios = useList('proprietarios');
-  const corretores = useList('funcionarios');
+  const corretores = useList('funcionarios', { cargo: 'Corretor', status: 'Ativo' });
   const [modalImovel, setModalImovel] = useState<((imovel: any) => void) | null>(null);
 
   if (clientes.loading || imoveis.loading || proprietarios.loading || corretores.loading) {
     return <p className="text-slate-400 p-8">Carregando dados necessários...</p>;
   }
 
+  const corretoresAtivos = corretores.rows.filter(c => c.status !== 'Inativo');
   const find = (list: any[], id: unknown) => list.find(x => String(x.id) === String(id));
 
   const tabs: TabDef[] = [
@@ -653,7 +654,8 @@ export function ContratoPage({ mode }: { mode: Mode }) {
                             form.imovelTitulo = sel.titulo;
                             form.proprietarioId = sel.proprietarioId;
                             form.proprietarioNome = prop?.nome || null;
-                            form.corretorId = sel.responsavelId || form.corretorId;
+                            const corrAtivo = corretoresAtivos.find(c => String(c.id) === String(sel.responsavelId));
+                            form.corretorId = corrAtivo ? corrAtivo.id : (corretoresAtivos.some(c => String(c.id) === String(form.corretorId)) ? form.corretorId : null);
                             form.tipo = form.tipo || tipoSugerido;
                             form.valor = form.valor || valorSugerido;
                             form.condominio = sel.condominio || 0;
@@ -689,7 +691,8 @@ export function ContratoPage({ mode }: { mode: Mode }) {
                           form.imovelTitulo = sel.titulo;
                           form.proprietarioId = sel.proprietarioId;
                           form.proprietarioNome = prop?.nome || null;
-                          form.corretorId = sel.responsavelId || form.corretorId;
+                          const corrAtivo = corretoresAtivos.find(c => String(c.id) === String(sel.responsavelId));
+                          form.corretorId = corrAtivo ? corrAtivo.id : (corretoresAtivos.some(c => String(c.id) === String(form.corretorId)) ? form.corretorId : null);
                           form.tipo = form.tipo || tipoSugerido;
                           form.valor = form.valor || valorSugerido;
                           form.condominio = sel.condominio || 0;
@@ -735,7 +738,7 @@ export function ContratoPage({ mode }: { mode: Mode }) {
           label: 'Corretor Intermediador',
           type: 'select',
           required: true,
-          options: corretores.rows.map(c => ({
+          options: corretoresAtivos.map(c => ({
             value: c.id,
             label: `${c.nome}${c.creci ? ` (${c.creci})` : ''}`,
           })),
@@ -1025,6 +1028,8 @@ export function ContratoPage({ mode }: { mode: Mode }) {
           if (!f.imovelId) return 'Selecione o imóvel objeto do contrato.';
           if (!f.clienteId) return 'Selecione o cliente (inquilino ou comprador).';
           if (!f.corretorId) return 'Selecione o corretor responsável.';
+          const corr = corretores.rows.find(c => String(c.id) === String(f.corretorId));
+          if (!corr || corr.status === 'Inativo') return 'O corretor selecionado está inativo. Selecione um corretor ativo.';
           if (!f.dataInicio) return 'A data de início de vigência é obrigatória.';
           if (f.tipo !== 'Compra e Venda' && !f.dataFim) return 'Para contratos de locação ou temporada, a data de término é obrigatória.';
           if (f.dataInicio && f.dataFim && f.dataFim < f.dataInicio) return 'A data de término não pode ser anterior à data de início.';

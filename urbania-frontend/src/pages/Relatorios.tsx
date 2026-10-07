@@ -207,7 +207,7 @@ export default function Relatorios() {
           <FilterSelect
             value={responsavelFiltro}
             onChange={setResponsavelFiltro}
-            options={corretores.map(c => ({ value: String(c.id), label: `Resp: ${c.nome}` }))}
+            options={corretores.map(c => ({ value: String(c.id), label: `Resp: ${c.nome}${c.status === 'Inativo' ? ' (Inativo)' : ''}` }))}
             placeholder="Todos os responsáveis"
           />
 

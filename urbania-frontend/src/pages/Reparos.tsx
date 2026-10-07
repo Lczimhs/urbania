@@ -100,7 +100,13 @@ export function ReparoPage({ mode }: { mode: Mode }) {
         onChange: (v, f) => {
           const imovel = find(imoveis.rows, v);
           const responsavelId = imovel?.responsavelId ?? null;
-          return { ...f, responsavelId, responsavel: find(funcionarios.rows, responsavelId)?.nome ?? imovel?.responsavel ?? null };
+          const resp = find(funcionarios.rows, responsavelId);
+          const isAtivo = resp ? resp.status !== 'Inativo' : true;
+          return {
+            ...f,
+            responsavelId: isAtivo ? responsavelId : null,
+            responsavel: isAtivo ? (resp?.nome ?? imovel?.responsavel ?? null) : null,
+          };
         } },
       { key: 'responsavel', label: 'Responsável', disabled: true, placeholder: 'Preenchido pelo imóvel' },
       { key: 'servicoId', label: 'Serviço', type: 'custom', required: true,

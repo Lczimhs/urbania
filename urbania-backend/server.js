@@ -57,6 +57,28 @@ const logAudit = (usuario, acao, entidade, entidadeId, detalhes, ip) => {
   );
 };
 
+// Impede relacionar funcionário/corretor inativo a qualquer entidade (imóvel, visita, proposta, contrato, reparo)
+const validarFuncionarioAtivo = async (table, data) => {
+  const field = (table === 'imoveis' || table === 'reparos')
+    ? 'responsavelId'
+    : (table === 'visitas' || table === 'negociacoes' || table === 'contratos' ? 'corretorId' : null);
+
+  if (field && data[field] !== undefined && data[field] !== null && data[field] !== '') {
+    const funcId = Number(data[field]);
+    if (!isNaN(funcId) && funcId > 0) {
+      const func = await get('SELECT id, nome, status, cargo FROM funcionarios WHERE id = ?', [funcId]);
+      if (!func) {
+        return 'O funcionário/corretor selecionado não foi encontrado no sistema.';
+      }
+      if (func.status && String(func.status).toLowerCase() === 'inativo') {
+        const papel = table === 'reparos' ? 'funcionário responsável' : 'corretor';
+        return `Não é possível relacionar o ${papel} "${func.nome}" pois seu cadastro está inativo no sistema.`;
+      }
+    }
+  }
+  return null;
+};
+
 tables.forEach(table => {
   // Cada método exige a ação correspondente no perfil (GET=Visualizar, POST=Criar, PUT=Editar, DELETE=Excluir)
   app.use(`/api/${table}`, autorizar(table));
@@ -68,7 +90,14 @@ tables.forEach(table => {
   app.get(`/api/${table}`, (req, res) => {
     const filters = pickColumns(table, req.query);
     const keys = Object.keys(filters);
-    const where = keys.length ? ' WHERE ' + keys.map(k => `${k} = ?`).join(' AND ') : '';
+    const whereParts = keys.map(k => {
+      if (k === 'status') return 'LOWER(status) = LOWER(?)';
+      return `${k} = ?`;
+    });
+    if (table === 'funcionarios' && (req.query.apenasAtivos === 'true' || req.query.ativo === 'true')) {
+      whereParts.push("(status IS NULL OR LOWER(status) != 'inativo')");
+    }
+    const where = whereParts.length ? ' WHERE ' + whereParts.join(' AND ') : '';
     db.all(`SELECT * FROM ${table}${where} ORDER BY id DESC`, Object.values(filters), (err, rows) => {
       if (err) return res.status(500).json({ error: err.message });
       res.json(rows.map(row => saida(req, row)));
@@ -85,10 +114,20 @@ tables.forEach(table => {
   });
 
   // CREATE (o id nunca vem do usuário: é gerado pelo banco)
-  app.post(`/api/${table}`, (req, res) => {
+  app.post(`/api/${table}`, async (req, res) => {
     const data = pickColumns(table, req.body);
     const keys = Object.keys(data);
     if (!keys.length) return res.status(400).json({ error: 'Nenhum dado enviado.' });
+
+    try {
+      const erroFuncionario = await validarFuncionarioAtivo(table, data);
+      if (erroFuncionario) return res.status(400).json({ error: erroFuncionario });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+
+    if (table === 'funcionarios' && !data.status) data.status = 'Ativo';
+
     const sql = `INSERT INTO ${table} (${keys.join(',')}) VALUES (${keys.map(() => '?').join(',')})`;
 
     db.run(sql, Object.values(data), function(err) {
@@ -100,12 +139,20 @@ tables.forEach(table => {
   });
 
   // UPDATE (o id não pode ser alterado)
-  app.put(`/api/${table}/:id`, (req, res) => {
+  app.put(`/api/${table}/:id`, async (req, res) => {
     const data = pickColumns(table, req.body);
     // A senha não volta para a tela: campo vazio na edição mantém a senha atual
     if (table === 'funcionarios' && !data.senha) delete data.senha;
     const keys = Object.keys(data);
     if (!keys.length) return res.status(400).json({ error: 'Nenhum dado enviado.' });
+
+    try {
+      const erroFuncionario = await validarFuncionarioAtivo(table, data);
+      if (erroFuncionario) return res.status(400).json({ error: erroFuncionario });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+
     const sql = `UPDATE ${table} SET ${keys.map(k => `${k}=?`).join(',')} WHERE id=?`;
 
     db.run(sql, [...Object.values(data), req.params.id], function(err) {
@@ -143,7 +190,10 @@ tables.forEach(table => {
 app.post('/api/auth/login', async (req, res) => {
   const email = String(req.body?.email || '').trim();
   try {
-    const encontrado = email ? await get('SELECT id FROM funcionarios WHERE LOWER(email) = LOWER(?)', [email]) : null;
+    const encontrado = email ? await get('SELECT id, status, nome FROM funcionarios WHERE LOWER(email) = LOWER(?)', [email]) : null;
+    if (encontrado && String(encontrado.status).toLowerCase() === 'inativo') {
+      return res.status(403).json({ error: `O funcionário "${encontrado.nome}" está inativo e não pode acessar o sistema.` });
+    }
     const userId = encontrado?.id || await idVisitante();
     if (!userId) return res.status(500).json({ error: 'Usuário Visitante não encontrado. Rode o seed do banco (node seed.js).' });
 
