@@ -102,7 +102,7 @@ export default function Dashboard() {
         {cards.map(c => (
           <Link key={c.label} to={c.to} className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm hover:shadow-md transition">
             <div className={`w-3 h-3 rounded-full ${c.color} mb-4`}></div>
-            <p className="text-4xl font-bold text-sky-900">{c.value}</p>
+            <p className="text-4xl font-bold text-[#0a2540]">{c.value}</p>
             <p className="text-sm font-bold text-slate-700 mt-1">{c.label}</p>
             <p className="text-xs text-slate-400 mt-1">{c.hint}</p>
           </Link>
@@ -111,36 +111,36 @@ export default function Dashboard() {
 
       {/* Destaques Financeiros e de Portfólio */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-2xl border border-sky-100 shadow-sm">
-          <p className="text-xs font-bold uppercase text-slate-400">Portfólio à venda</p>
-          <p className="text-2xl font-bold text-indigo-600 mt-1">{loading ? '…' : formatCurrency(portfolio)}</p>
+        <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:border-[#0a2540]/30 hover:shadow-md transition">
+          <p className="text-xs font-bold uppercase text-[#0a2540]">Portfólio à venda</p>
+          <p className="text-2xl font-bold text-[#0a2540] mt-1">{loading ? '…' : formatCurrency(portfolio)}</p>
           <p className="text-xs text-slate-400 mt-1">Soma dos preços dos imóveis para venda</p>
         </div>
 
-        <Link to="/financeiro" className="bg-white p-6 rounded-2xl border border-emerald-100 shadow-sm hover:border-emerald-300 transition group">
+        <Link to="/financeiro" className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:border-[#0a2540]/30 hover:shadow-md transition group">
           <div className="flex justify-between items-center">
-            <p className="text-xs font-bold uppercase text-slate-400">Receitas Liquidadas no Caixa</p>
-            <span className="text-xs text-emerald-600 font-semibold group-hover:underline">Ver caixa →</span>
+            <p className="text-xs font-bold uppercase text-[#0a2540]">Receitas Liquidadas no Caixa</p>
+            <span className="text-xs text-[#0a2540] font-semibold group-hover:underline">Ver caixa →</span>
           </div>
-          <p className="text-2xl font-bold text-emerald-700 mt-1">{loading ? '…' : formatCurrency(receitasMes)}</p>
+          <p className="text-2xl font-bold text-[#0a2540] mt-1">{loading ? '…' : formatCurrency(receitasMes)}</p>
           <p className="text-xs text-slate-400 mt-1">Aluguéis e comissões recebidas</p>
         </Link>
 
-        <Link to="/financeiro" className="bg-white p-6 rounded-2xl border border-sky-100 shadow-sm hover:border-sky-300 transition group">
+        <Link to="/financeiro" className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:border-[#0a2540]/30 hover:shadow-md transition group">
           <div className="flex justify-between items-center">
-            <p className="text-xs font-bold uppercase text-sky-800">Repasses Pendentes</p>
-            <span className="text-xs text-sky-600 font-semibold group-hover:underline">Efetuar →</span>
+            <p className="text-xs font-bold uppercase text-[#0a2540]">Repasses Pendentes</p>
+            <span className="text-xs text-[#0a2540] font-semibold group-hover:underline">Efetuar →</span>
           </div>
-          <p className="text-2xl font-bold text-sky-700 mt-1">{loading ? '…' : formatCurrency(repassesPendentes)}</p>
+          <p className="text-2xl font-bold text-[#0a2540] mt-1">{loading ? '…' : formatCurrency(repassesPendentes)}</p>
           <p className="text-xs text-slate-400 mt-1">A pagar aos proprietários legais</p>
         </Link>
 
-        <Link to="/despesas" className="bg-white p-6 rounded-2xl border border-rose-100 shadow-sm hover:border-rose-300 transition group">
+        <Link to="/despesas" className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:border-[#0a2540]/30 hover:shadow-md transition group">
           <div className="flex justify-between items-center">
-            <p className="text-xs font-bold uppercase text-rose-800">Despesas & Multas</p>
-            <span className="text-xs text-rose-600 font-semibold group-hover:underline">Ver custos →</span>
+            <p className="text-xs font-bold uppercase text-[#0a2540]">Despesas & Multas</p>
+            <span className="text-xs text-[#0a2540] font-semibold group-hover:underline">Ver custos →</span>
           </div>
-          <p className="text-2xl font-bold text-rose-700 mt-1">
+          <p className="text-2xl font-bold text-[#0a2540] mt-1">
             {loading ? '…' : formatCurrency(despesas.rows.reduce((s, d) => s + Number(d.valor || 0), 0))}
           </p>
           <p className="text-xs text-slate-400 mt-1">

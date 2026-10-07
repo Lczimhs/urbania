@@ -381,30 +381,30 @@ export function FinanceiroList() {
 
       {/* Cards de Resumo Financeiro */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-xs">
-          <span className="text-xs font-bold text-slate-400 uppercase">Receitas Liquidadas</span>
-          <p className="text-2xl font-bold text-emerald-700 mt-1">{formatCurrency(totalReceitas)}</p>
+        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:border-[#0a2540]/30 transition">
+          <span className="text-xs font-bold text-[#0a2540] uppercase">Receitas Liquidadas</span>
+          <p className="text-2xl font-bold text-[#0a2540] mt-1">{formatCurrency(totalReceitas)}</p>
           <p className="text-[11px] text-slate-400 mt-0.5">Aluguéis e comissões recebidas</p>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-xs">
-          <span className="text-xs font-bold text-slate-400 uppercase">Despesas & Saídas</span>
-          <p className="text-2xl font-bold text-rose-700 mt-1">{formatCurrency(totalDespesas)}</p>
+        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:border-[#0a2540]/30 transition">
+          <span className="text-xs font-bold text-[#0a2540] uppercase">Despesas & Saídas</span>
+          <p className="text-2xl font-bold text-[#0a2540] mt-1">{formatCurrency(totalDespesas)}</p>
           <p className="text-[11px] text-slate-400 mt-0.5">Custos operacionais e repasses pagos</p>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-xs">
-          <span className="text-xs font-bold text-slate-400 uppercase">Saldo Operacional Líquido</span>
-          <p className={`text-2xl font-bold mt-1 ${saldoOperacional >= 0 ? 'text-indigo-700' : 'text-rose-600'}`}>
+        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:border-[#0a2540]/30 transition">
+          <span className="text-xs font-bold text-[#0a2540] uppercase">Saldo Operacional Líquido</span>
+          <p className="text-2xl font-bold text-[#0a2540] mt-1">
             {formatCurrency(saldoOperacional)}
           </p>
           <p className="text-[11px] text-slate-400 mt-0.5">Receitas - Despesas</p>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-sky-100 shadow-xs">
-          <span className="text-xs font-bold text-sky-800 uppercase">Repasses Pendentes</span>
-          <p className="text-2xl font-bold text-sky-700 mt-1">{formatCurrency(repassesPendentes)}</p>
-          <p className="text-[11px] text-sky-600 mt-0.5">A pagar aos proprietários</p>
+        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:border-[#0a2540]/30 transition">
+          <span className="text-xs font-bold text-[#0a2540] uppercase">Repasses Pendentes</span>
+          <p className="text-2xl font-bold text-[#0a2540] mt-1">{formatCurrency(repassesPendentes)}</p>
+          <p className="text-[11px] text-slate-400 mt-0.5">A pagar aos proprietários</p>
         </div>
       </div>
 
