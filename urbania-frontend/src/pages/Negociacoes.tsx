@@ -471,7 +471,7 @@ export function NegociacaoPage({ mode }: { mode: Mode }) {
         {
           key: 'corretorId',
           label: 'Corretor Responsável',
-          type: 'select',
+          type: 'search-select',
           required: true,
           options: corretoresAtivos.map(c => ({ value: c.id, label: `${c.nome}${c.creci ? ` (CRECI ${c.creci})` : ''}` })),
           renderView: (val, form) => {

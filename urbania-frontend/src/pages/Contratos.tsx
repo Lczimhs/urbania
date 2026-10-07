@@ -1,4 +1,3 @@
-import { Select } from '../components/Select';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -21,7 +20,6 @@ import { Badge, Card, DataTable, FilterSelect, PageHeader, RowActions, SearchInp
 import { Avatar } from '../components/EntityForm';
 import type { Mode, TabDef } from '../components/EntityForm';
 import { EntityPage, RelatedGrid } from '../components/EntityPage';
-import { Modal } from '../components/Modal';
 import { apiError, useToast } from '../components/Toast';
 import { useDelete } from '../components/useDelete';
 import { useList } from '../lib/useApi';
@@ -29,13 +27,11 @@ import { parsePhotos } from '../lib/files';
 import { formatCurrency, formatDate, fullAddress, todayISO } from '../lib/format';
 import {
   FINALIDADES_CONTRATO,
-  FINALIDADES_IMOVEL,
   FORMAS_PAGAMENTO_CONTRATO,
   INDICES_REAJUSTE,
   STATUS_CONTRATO,
   TIPOS_CONTRATO,
   TIPOS_GARANTIA,
-  TIPOS_IMOVEL,
   statusColor,
 } from '../lib/options';
 import { StatusDropdown } from '../components/StatusDropdown';
@@ -104,76 +100,7 @@ function exportContratosToCsv(data: any[], filename: string) {
   document.body.removeChild(link);
 }
 
-// Modal para busca e seleção avançada de imóveis (RNF 1.3 / 1.4 do PDF)
-function SelecionarImovelContratoModal({
-  imoveis,
-  onSelect,
-  onClose,
-}: {
-  imoveis: any[];
-  onSelect: (imovel: any) => void;
-  onClose: () => void;
-}) {
-  const [term, setTerm] = useState('');
-  const [finalidade, setFinalidade] = useState('');
-  const [tipo, setTipo] = useState('');
 
-  const filtered = imoveis.filter(i =>
-    matches(term, i.titulo, i.id, i.cidade, i.bairro) &&
-    (!finalidade || i.finalidade === finalidade) &&
-    (!tipo || i.tipo === tipo)
-  );
-
-  return (
-    <Modal title="Selecionar Imóvel para Contrato" onClose={onClose} wide>
-      <Toolbar>
-        <SearchInput value={term} onChange={setTerm} placeholder="Buscar por título, código, bairro ou cidade..." />
-        <FilterSelect value={finalidade} onChange={setFinalidade} options={FINALIDADES_IMOVEL} placeholder="Todas as finalidades" />
-        <FilterSelect value={tipo} onChange={setTipo} options={TIPOS_IMOVEL} placeholder="Todos os tipos" />
-      </Toolbar>
-      <DataTable
-        compact
-        pageSize={6}
-        rows={filtered}
-        onRowClick={onSelect}
-        empty="Nenhum imóvel disponível encontrado."
-        columns={[
-          { key: 'id', label: 'Código', render: r => `#${r.id}`, className: 'font-mono text-slate-500 w-16' },
-          {
-            key: 'titulo',
-            label: 'Imóvel',
-            render: r => {
-              const foto = parsePhotos(r.fotos)[0];
-              return (
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg overflow-hidden bg-slate-100 shrink-0 border border-slate-200/60 flex items-center justify-center">
-                    {foto ? <img src={foto} alt="" className="w-full h-full object-cover" /> : <Building2 size={18} className="text-slate-400" />}
-                  </div>
-                  <div>
-                    <p className="font-semibold text-slate-800 leading-snug">{r.titulo}</p>
-                    <p className="text-xs text-slate-400">{enderecoCurto(r)}</p>
-                  </div>
-                </div>
-              );
-            },
-          },
-          { key: 'tipo', label: 'Tipo', render: r => <span className="text-xs font-semibold text-cadastro">{r.tipo}</span> },
-          { key: 'finalidade', label: 'Finalidade' },
-          {
-            key: 'precos',
-            label: 'Valores Registrados',
-            render: r => (
-              <div className="text-xs">
-                {r.precoAluguel ? <p className="text-teal-700 font-semibold">{formatCurrency(r.precoAluguel)}/mês</p> : null}
-                {r.precoVenda ? <p className="text-indigo-700 font-semibold">{formatCurrency(r.precoVenda)}</p> : null}
-              </div>
-            ),
-          },
-        ]}
-      />
-    </Modal>
-  );
-}
 
 // Consultar Contratos (Listagem padronizada Urbânia com filtros rápidos, pesquisa, status inline e exportação)
 const PERIODOS_CONTRATO = [
@@ -608,7 +535,6 @@ export function ContratoPage({ mode }: { mode: Mode }) {
   const imoveis = useList('imoveis');
   const proprietarios = useList('proprietarios');
   const corretores = useList('funcionarios', { cargo: 'Corretor', status: 'Ativo' });
-  const [modalImovel, setModalImovel] = useState<((imovel: any) => void) | null>(null);
 
   if (clientes.loading || imoveis.loading || proprietarios.loading || corretores.loading) {
     return <p className="text-slate-400 p-8">Carregando dados necessários...</p>;
@@ -624,97 +550,54 @@ export function ContratoPage({ mode }: { mode: Mode }) {
         {
           key: 'imovelId',
           label: 'Imóvel Contratado',
-          type: 'custom',
+          type: 'search-select',
           required: true,
+          disabled: (_, m) => m === 'edit',
+          placeholder: 'Selecione um imóvel...',
+          options: imoveis.rows.map(i => ({
+            value: i.id,
+            label: `#${i.id} - ${i.titulo}`,
+            hint: [
+              i.tipo,
+              i.finalidade,
+              [i.bairro, i.cidade].filter(Boolean).join(', '),
+              i.precoAluguel ? `${formatCurrency(i.precoAluguel)}/mês` : null,
+              i.precoVenda ? formatCurrency(i.precoVenda) : null,
+            ].filter(Boolean).join(' · '),
+          })),
           renderView: (val, form) => {
             const im = imoveis.rows.find(i => String(i.id) === String(val));
             return im ? `#${im.id} - ${im.titulo}` : form.imovelTitulo || (val ? `Imóvel #${val}` : '—');
           },
-          render: (value, set, { disabled, invalid, form }) => {
-            const imv = find(imoveis.rows, value);
-            return (
-              <div className="space-y-2">
-                <div className="flex gap-2">
-                  <div className="flex-1">
-                    <Select
-                      value={value ?? ''}
-                      disabled={disabled || mode === 'edit'}
-                      onChange={selectedValue => {
-                        const id = selectedValue ? Number(selectedValue) : null;
-                        const sel = find(imoveis.rows, id);
-                        if (sel) {
-                          const tipoSugerido = (sel.finalidade === 'Aluguel' || sel.finalidade === 'Temporada') ? 'Locação' : 'Compra e Venda';
-                          const valorSugerido = tipoSugerido === 'Locação' ? (sel.precoAluguel || 0) : (sel.precoVenda || 0);
-                          const prop = find(proprietarios.rows, sel.proprietarioId);
-                          const taxa = tipoSugerido === 'Locação' ? 10 : 6;
-                          const repasse = valorSugerido - (valorSugerido * taxa / 100);
-                          set(id);
-                          // Atualiza campos vinculados no formulário
-                          if (form) {
-                            form.imovelTitulo = sel.titulo;
-                            form.proprietarioId = sel.proprietarioId;
-                            form.proprietarioNome = prop?.nome || null;
-                            const corrAtivo = corretoresAtivos.find(c => String(c.id) === String(sel.responsavelId));
-                            form.corretorId = corrAtivo ? corrAtivo.id : (corretoresAtivos.some(c => String(c.id) === String(form.corretorId)) ? form.corretorId : null);
-                            form.tipo = form.tipo || tipoSugerido;
-                            form.valor = form.valor || valorSugerido;
-                            form.condominio = sel.condominio || 0;
-                            form.iptu = sel.iptu || 0;
-                            form.taxaAdministracao = form.taxaAdministracao || taxa;
-                            form.repasseProprietario = repasse;
-                          }
-                        } else {
-                          set(null);
-                        }
-                      }}
-                      aria-invalid={invalid} className={`w-full px-3 py-2 border ${invalid ? 'border-red-500' : 'border-slate-300'} rounded-lg bg-white outline-none focus:ring-2 focus:ring-[#0a2540] disabled:bg-slate-100 disabled:text-slate-500`}
-                    >
-                      <option value="">Selecione um imóvel...</option>
-                      {imoveis.rows.map(i => (
-                        <option key={i.id} value={i.id}>
-                          #{i.id} - {i.titulo} ({i.tipo} · {i.finalidade})
-                        </option>
-                      ))}
-                    </Select>
-                  </div>
-                  {!disabled && mode !== 'edit' && (
-                    <button
-                      type="button"
-                      onClick={() => setModalImovel(() => (sel: any) => {
-                        const tipoSugerido = (sel.finalidade === 'Aluguel' || sel.finalidade === 'Temporada') ? 'Locação' : 'Compra e Venda';
-                        const valorSugerido = tipoSugerido === 'Locação' ? (sel.precoAluguel || 0) : (sel.precoVenda || 0);
-                        const prop = find(proprietarios.rows, sel.proprietarioId);
-                        const taxa = tipoSugerido === 'Locação' ? 10 : 6;
-                        const repasse = valorSugerido - (valorSugerido * taxa / 100);
-                        set(sel.id);
-                        if (form) {
-                          form.imovelTitulo = sel.titulo;
-                          form.proprietarioId = sel.proprietarioId;
-                          form.proprietarioNome = prop?.nome || null;
-                          const corrAtivo = corretoresAtivos.find(c => String(c.id) === String(sel.responsavelId));
-                          form.corretorId = corrAtivo ? corrAtivo.id : (corretoresAtivos.some(c => String(c.id) === String(form.corretorId)) ? form.corretorId : null);
-                          form.tipo = form.tipo || tipoSugerido;
-                          form.valor = form.valor || valorSugerido;
-                          form.condominio = sel.condominio || 0;
-                          form.iptu = sel.iptu || 0;
-                          form.taxaAdministracao = form.taxaAdministracao || taxa;
-                          form.repasseProprietario = repasse;
-                        }
-                      })}
-                      className="px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-700 hover:bg-slate-50 font-semibold text-xs flex items-center gap-1.5 transition shadow-sm"
-                      title="Abrir busca avançada de imóveis"
-                    >
-                      <Building2 size={16} className="text-sky-600" /> Buscar Imóvel
-                    </button>
-                  )}
-                </div>
-                {imv && (
-                  <p className="text-xs text-slate-500">
-                    {imv.tipo} · {imv.finalidade} · {enderecoCurto(imv)}
-                  </p>
-                )}
-              </div>
-            );
+          onChange: (imovelId, form) => {
+            const id = imovelId ? Number(imovelId) : null;
+            const sel = find(imoveis.rows, id);
+            if (sel) {
+              const tipoSugerido = (sel.finalidade === 'Aluguel' || sel.finalidade === 'Temporada') ? 'Locação' : 'Compra e Venda';
+              const valorSugerido = tipoSugerido === 'Locação' ? (sel.precoAluguel || 0) : (sel.precoVenda || 0);
+              const prop = find(proprietarios.rows, sel.proprietarioId);
+              const taxa = tipoSugerido === 'Locação' ? 10 : 6;
+              const repasse = valorSugerido - (valorSugerido * taxa / 100);
+              const corrAtivo = corretoresAtivos.find(c => String(c.id) === String(sel.responsavelId));
+              return {
+                ...form,
+                imovelId: id,
+                imovelTitulo: sel.titulo,
+                proprietarioId: sel.proprietarioId,
+                proprietarioNome: prop?.nome || null,
+                corretorId: corrAtivo ? corrAtivo.id : (corretoresAtivos.some(c => String(c.id) === String(form.corretorId)) ? form.corretorId : null),
+                tipo: form.tipo || tipoSugerido,
+                valor: form.valor || valorSugerido,
+                condominio: sel.condominio || 0,
+                iptu: sel.iptu || 0,
+                taxaAdministracao: form.taxaAdministracao || taxa,
+                repasseProprietario: repasse,
+              };
+            }
+            return {
+              ...form,
+              imovelId: null,
+            };
           },
         },
         {
@@ -736,7 +619,7 @@ export function ContratoPage({ mode }: { mode: Mode }) {
         {
           key: 'corretorId',
           label: 'Corretor Intermediador',
-          type: 'select',
+          type: 'search-select',
           required: true,
           options: corretoresAtivos.map(c => ({
             value: c.id,
@@ -1068,17 +951,6 @@ export function ContratoPage({ mode }: { mode: Mode }) {
           },
         ]}
       />
-
-      {modalImovel && (
-        <SelecionarImovelContratoModal
-          imoveis={imoveis.rows}
-          onSelect={imv => {
-            modalImovel(imv);
-            setModalImovel(null);
-          }}
-          onClose={() => setModalImovel(null)}
-        />
-      )}
     </>
   );
 }

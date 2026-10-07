@@ -412,7 +412,7 @@ export function ImovelPage({ mode }: { mode: Mode }) {
       { key: 'finalidade', label: 'Finalidade', type: 'select', options: FINALIDADES_IMOVEL, required: true },
       { key: 'proprietarioId', label: 'Proprietário', type: 'search-select', required: true,
         options: proprietarios.rows.map(p => ({ value: p.id, label: p.nome, hint: p.tipo === 'Jurídica' ? p.cnpj : p.cpfCnpj })) },
-      { key: 'responsavelId', label: 'Responsável (Corretor)', type: 'select',
+      { key: 'responsavelId', label: 'Responsável (Corretor)', type: 'search-select',
         options: corretoresAtivos.map(c => ({ value: c.id, label: c.nome })) },
       { key: 'titulo', label: 'Título', required: true, full: true, placeholder: 'Ex.: Apartamento 3 quartos no Centro' },
       { key: 'descricao', label: 'Descrição', type: 'textarea' },
