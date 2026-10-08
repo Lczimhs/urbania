@@ -111,7 +111,7 @@
 
 /* ===== Card de login ===== */
 .lg-cardwrap {
-  position: relative; width: 100%; max-width: 440px;
+  position: relative; width: 100%; max-width: 520px;
   animation: lgCardIn 1.1s cubic-bezier(.2,.8,.2,1) .25s both;
 }
 .lg-tilt {
@@ -126,10 +126,10 @@
 .lg-card {
   position: relative;
   background: #fff; border-radius: 28px;
-  padding: 46px 40px 30px;
+  padding: 56px 52px 38px;
   box-shadow: 0 50px 90px -30px rgba(0,0,0,.75), 0 0 0 1px rgba(255,255,255,.8), 0 0 90px -20px rgba(56,189,248,.5);
 }
-.lg-title { margin: 0; padding-right: 72px; font-size: 32px; font-weight: 800; letter-spacing: -.02em; color: var(--navy); line-height: 1.15; }
+.lg-title { margin: 0; padding-right: 72px; font-size: 36px; font-weight: 800; letter-spacing: -.02em; color: var(--navy); line-height: 1.15; }
 .lg-subtitle { margin: 10px 0 30px; padding-right: 64px; font-size: 16px; color: var(--text-muted); }
 
 /* Chaveiro: a argola fica parada; haste + etiqueta balançam (entrada no wrapper externo, hover no interno) */
@@ -156,7 +156,7 @@
 .lg-label { display: block; margin-bottom: 8px; font-size: 14px; font-weight: 600; color: var(--navy); }
 .lg-field {
   display: flex; align-items: center; gap: 12px;
-  height: 56px; padding: 0 16px;
+  height: 60px; padding: 0 18px;
   border: 1.5px solid var(--field-border); border-radius: 14px; background: var(--field-bg);
   color: var(--icon);
   transition: border-color .2s, background-color .2s, box-shadow .2s;
@@ -179,7 +179,7 @@
 
 .lg-btn {
   position: relative; overflow: hidden;
-  height: 58px; margin-top: 4px;
+  height: 62px; margin-top: 4px;
   display: flex; align-items: center; justify-content: center; gap: 10px;
   border: 0; border-radius: 14px; background: var(--navy-btn); color: #fff;
   font: inherit; font-size: 16.5px; font-weight: 700; cursor: pointer;
@@ -230,7 +230,9 @@
 /* ===== Responsivo ===== */
 @media (max-width: 760px) {
   .lg-left { min-height: 180px; padding: 28px 20px 12px; }
-  .lg-right { padding: 72px 16px 32px; }
+  .lg-right { padding: 56px 16px 24px; }
+  .lg-field { height: 56px; }
+  .lg-btn { height: 58px; }
   .lg-shade-h { background: linear-gradient(180deg, rgba(6,26,51,.2), rgba(6,26,51,.85) 55%); }
   .lg-card { padding: 42px 24px 26px; }
   .lg-title { font-size: 28px; }
@@ -240,4 +242,13 @@
 /* Reduzir movimento: página estática */
 @media (prefers-reduced-motion: reduce) {
   .lg-root *, .lg-root *::before, .lg-root *::after { animation: none !important; transition: none !important; }
+}
+
+/* Desktop: card maior e no centro da tela (logo e crédito continuam nos cantos à esquerda) */
+@media (min-width: 761px) {
+  .lg-left { flex: 1 1 100%; }
+  .lg-right { position: absolute; inset: 0; padding: 64px 24px; pointer-events: none; }
+  .lg-cardwrap { pointer-events: auto; }
+  .lg-shade-h { background: radial-gradient(ellipse 55% 75% at 50% 50%, rgba(6,26,51,.9) 0%, rgba(6,26,51,.6) 55%, rgba(6,26,51,.3) 100%); }
+  .lg-glow { right: auto; left: 50%; transform: translate(calc(-50% + var(--mx) * 60px), calc(-50% + var(--my) * 40px)); }
 }

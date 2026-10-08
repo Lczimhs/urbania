@@ -149,17 +149,16 @@ export default function Layout({ children }: { children: ReactNode }) {
 
         {/* Marca + botão recolher */}
         <div className={`flex items-center gap-3 px-4 h-16 border-b border-white/10 shrink-0 ${mini ? 'md:justify-center md:px-0' : ''}`}>
-          <div
-            className={`bg-white p-1 rounded-lg shadow shrink-0 ${mini ? 'cursor-pointer hover:ring-2 hover:ring-sky-400/50 transition' : ''}`}
-            onClick={mini ? toggleCollapsed : undefined}
-            title={mini ? 'Expandir menu' : undefined}
-          >
-            <img src={config.logo || logoImg} alt={`${nomeImobiliaria} Logotipo`} className="h-8 w-8 object-contain" />
-          </div>
-          <div className={`flex flex-col min-w-0 flex-1 ${mini ? 'md:hidden' : ''}`}>
-            <span className="text-white font-extrabold text-[15px] tracking-wide leading-tight truncate">{nomeImobiliaria}</span>
-            <span className="text-[10px] text-teal-400 font-bold tracking-wider uppercase truncate">Imobiliária</span>
-          </div>
+          {/* Logo + nome levam para a tela inicial */}
+          <Link to="/" title="Ir para o Painel" className={`flex items-center gap-3 min-w-0 flex-1 group ${mini ? 'md:flex-none' : ''}`}>
+            <div className="bg-white p-1 rounded-lg shadow shrink-0 group-hover:ring-2 group-hover:ring-sky-400/50 transition">
+              <img src={config.logo || logoImg} alt={`${nomeImobiliaria} Logotipo`} className="h-8 w-8 object-contain" />
+            </div>
+            <div className={`flex flex-col min-w-0 flex-1 ${mini ? 'md:hidden' : ''}`}>
+              <span className="text-white font-extrabold text-[15px] tracking-wide leading-tight truncate">{nomeImobiliaria}</span>
+              <span className="text-[10px] text-teal-400 font-bold tracking-wider uppercase truncate">Imobiliária</span>
+            </div>
+          </Link>
           <button
             type="button"
             onClick={toggleCollapsed}
@@ -181,16 +180,17 @@ export default function Layout({ children }: { children: ReactNode }) {
             const open = !section.collapsible || mini || hasActive || !closedGroups.includes(section.id);
             return (
               <div key={section.id}>
+                {/* Recolhido: separador com a mesma altura do título (h-4 + mb-1), para os ícones não mudarem de posição */}
                 {mini ? (
-                  <div className="hidden md:block h-px bg-white/10 mx-2 mb-2" />
+                  <div className="hidden md:flex items-center h-4 mb-1 mx-2"><div className="h-px w-full bg-white/10" /></div>
                 ) : section.collapsible ? (
                   <button type="button" onClick={() => toggleGroup(section.id)}
-                    className="w-full flex items-center justify-between px-2 mb-1 text-[10.5px] font-bold text-slate-400 uppercase tracking-widest hover:text-slate-200">
+                    className="w-full h-4 flex items-center justify-between px-2 mb-1 text-[10.5px] font-bold text-slate-400 uppercase tracking-widest hover:text-slate-200">
                     {section.title}
                     <ChevronDown size={14} className={`transition-transform ${open ? '' : '-rotate-90'}`} />
                   </button>
                 ) : (
-                  <p className="px-2 mb-1 text-[10.5px] font-bold text-slate-400 uppercase tracking-widest">{section.title}</p>
+                  <p className="h-4 flex items-center px-2 mb-1 text-[10.5px] font-bold text-slate-400 uppercase tracking-widest">{section.title}</p>
                 )}
                 {open && (
                   <div className="space-y-0.5">
@@ -201,7 +201,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                           key={item.path}
                           to={item.path}
                           title={mini ? item.label : undefined}
-                          className={`flex items-center gap-3 px-2.5 py-2 rounded-lg text-[13.5px] font-medium transition-colors ${mini ? 'md:justify-center' : ''} ${active ? 'bg-sky-600 text-white shadow-md shadow-sky-900/30' : 'hover:bg-white/[0.07] hover:text-white'}`}
+                          className={`flex items-center gap-3 h-9 px-2.5 rounded-lg text-[13.5px] font-medium transition-colors ${mini ? 'md:justify-center' : ''} ${active ? 'bg-sky-600 text-white shadow-md shadow-sky-900/30' : 'hover:bg-white/[0.07] hover:text-white'}`}
                         >
                           <span className={`shrink-0 ${active ? 'text-white' : 'text-slate-400'}`}>{item.icon}</span>
                           <span className={`truncate ${mini ? 'md:hidden' : ''}`}>{item.label}</span>
@@ -216,8 +216,9 @@ export default function Layout({ children }: { children: ReactNode }) {
         </nav>
 
         {/* Usuário logado + Sair */}
-        <div className={`p-3 border-t border-white/10 flex items-center gap-2 shrink-0 ${mini ? 'md:flex-col md:px-2' : ''}`}>
-          <div className="w-9 h-9 rounded-full bg-teal-600 flex items-center justify-center text-white font-bold text-xs shrink-0 shadow" title={mini ? user?.nome : undefined}>
+        {/* h-16 nos dois estados (igual ao cabeçalho); recolhido: avatar e Sair lado a lado */}
+        <div className={`h-16 px-3 border-t border-white/10 flex items-center gap-2 shrink-0 ${mini ? 'md:px-1.5 md:gap-1 md:justify-center' : ''}`}>
+          <div className={`w-9 h-9 ${mini ? 'md:w-8 md:h-8' : ''} rounded-full bg-teal-600 flex items-center justify-center text-white font-bold text-xs shrink-0 shadow`} title={mini ? user?.nome : undefined}>
             {initials}
           </div>
           <div className={`min-w-0 flex-1 ${mini ? 'md:hidden' : ''}`}>
@@ -228,7 +229,7 @@ export default function Layout({ children }: { children: ReactNode }) {
             type="button"
             onClick={handleLogout}
             title="Encerrar Sessão"
-            className="p-2 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition shrink-0 cursor-pointer"
+            className={`p-2 ${mini ? 'md:p-1.5' : ''} text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition shrink-0 cursor-pointer`}
           >
             <LogOut size={16} />
           </button>
