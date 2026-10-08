@@ -43,7 +43,7 @@
 /* ===== Vitrine 3D ===== */
 .lg-showcase { perspective: 1600px; overflow: hidden; }
 .lg-wall {
-  position: absolute; top: -40%; left: -18%; width: 120%; height: 180%;
+  position: absolute; top: -60%; left: -45%; width: 190%; height: 220%;
   display: flex; gap: 22px; justify-content: center;
   transform-origin: 40% 50%;
   transform:
@@ -58,7 +58,7 @@
 /* flex impede que a margem do último card "vaze" do trilho (o que deixaria a metade 11px menor) */
 .lg-track { display: flex; flex-direction: column; will-change: transform; animation: lgUp 90s linear infinite; }
 .lg-col:nth-child(even) .lg-track { animation-name: lgDown; animation-duration: 110s; }
-.lg-col:nth-child(3) .lg-track, .lg-col:nth-child(4) .lg-track { animation-duration: 130s; }
+.lg-col:nth-child(6n+3) .lg-track, .lg-col:nth-child(6n+4) .lg-track { animation-duration: 130s; }
 
 /* margin-bottom (em vez de gap) mantém as duas metades do trilho idênticas: o loop não "pula" */
 .lg-ad {
