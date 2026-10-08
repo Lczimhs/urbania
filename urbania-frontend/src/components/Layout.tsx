@@ -124,8 +124,11 @@ export default function Layout({ children }: { children: ReactNode }) {
   useEffect(() => setMenuOpen(false), [loc.pathname]);
 
   // Busca global "Buscar ou ir para…"
-  const [buscaAberta, setBuscaAberta] = useState(false);
-  const fecharBusca = useCallback(() => setBuscaAberta(false), []);
+  // fechando: animação de saída rodando (o painel só sai da tela no fim dela)
+  const [busca, setBusca] = useState<'fechada' | 'aberta' | 'fechando'>('fechada');
+  const alternarBusca = useCallback(() => setBusca(b => (b === 'aberta' ? 'fechando' : 'aberta')), []);
+  const fecharBusca = useCallback(() => setBusca(b => (b === 'aberta' ? 'fechando' : b)), []);
+  const buscaFechada = useCallback(() => setBusca('fechada'), []);
 
   const { tema, alternar: alternarTema } = useTema();
 
@@ -134,12 +137,12 @@ export default function Layout({ children }: { children: ReactNode }) {
     const onKey = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        setBuscaAberta(aberta => !aberta);
+        alternarBusca();
       }
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, []);
+  }, [alternarBusca]);
 
   const toggleCollapsed = () => {
     setCollapsed(!collapsed);
@@ -295,7 +298,7 @@ export default function Layout({ children }: { children: ReactNode }) {
           {/* 3. Busca (Ctrl/Cmd+K); abaixo de 900px só o ícone. O painel abre no lugar da barra. */}
           <div className="relative shrink-0">
           <button
-            type="button" data-busca-gatilho onClick={() => setBuscaAberta(aberta => !aberta)} title="Buscar (Ctrl+K)" aria-label="Buscar ou ir para… (Ctrl+K)" aria-expanded={buscaAberta}
+            type="button" data-busca-gatilho onClick={alternarBusca} title="Buscar (Ctrl+K)" aria-label="Buscar ou ir para… (Ctrl+K)" aria-expanded={busca === 'aberta'}
             className="shrink-0 min-w-[220px] h-8 flex items-center gap-2 px-2.5 bg-[#f4f7fa] border border-[#cdd8e3] rounded-[2px] text-slate-500 hover:border-[#b3c2d1] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0d9488] max-[900px]:min-w-0 max-[900px]:w-8 max-[900px]:justify-center max-[900px]:px-0 dark:bg-[#0f2f52] dark:border-[#1c4068] dark:text-slate-300"
           >
             <Search size={15} className="shrink-0" />
@@ -303,9 +306,11 @@ export default function Layout({ children }: { children: ReactNode }) {
             <kbd className="font-sans text-[10px] leading-none text-[#7f90a4] border border-[#cdd8e3] rounded-[2px] px-1 py-[3px] max-[900px]:hidden dark:border-[#1c4068]">Ctrl K</kbd>
           </button>
           {/* Só os módulos que o perfil pode ver */}
-          {buscaAberta && (
+          {busca !== 'fechada' && (
             <CommandPalette
+              fechando={busca === 'fechando'}
               onClose={fecharBusca}
+              onFechado={buscaFechada}
               items={visibleSections.flatMap(s => s.items.map(i => ({ ...i, grupo: s.title })))}
             />
           )}

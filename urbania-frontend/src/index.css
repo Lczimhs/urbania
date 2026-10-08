@@ -149,11 +149,42 @@
   display: none;
 }
 
-/* Busca do cabeçalho: abre no lugar da barra e "cresce" para a esquerda até a largura do painel */
-@keyframes busca-expandir {
-  from { width: 220px; opacity: 0.7; }
-  to { width: 520px; opacity: 1; }
+/*
+ * Busca do cabeçalho. O painel já nasce no tamanho final e é "revelado" por uma máscara (clip-path)
+ * que parte do tamanho/posição da barra (220px à direita, 40px de altura) e se abre para a esquerda e
+ * para baixo. Assim o texto não é espremido durante a animação. Fechar faz o caminho inverso.
+ * A área final da máscara sobra para fora do painel para não cortar a sombra.
+ */
+@keyframes busca-abrir {
+  from { clip-path: inset(0 0 calc(100% - 40px) calc(100% - 220px) round 6px); }
+  to { clip-path: inset(-40px -40px -70px -40px round 12px); }
 }
-@media (min-width: 901px) and (prefers-reduced-motion: no-preference) {
-  .busca-expandir { animation: busca-expandir 0.22s cubic-bezier(.2, .8, .2, 1); }
+@keyframes busca-fechar {
+  from { clip-path: inset(-40px -40px -70px -40px round 12px); opacity: 1; }
+  to { clip-path: inset(0 0 calc(100% - 40px) calc(100% - 220px) round 6px); opacity: 0; }
+}
+@keyframes busca-conteudo {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}
+/* Celular: o painel ocupa a largura da tela, então só aparece/some com um leve deslize */
+@keyframes busca-abrir-celular {
+  from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes busca-fechar-celular {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translateY(-6px) scale(0.98); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .busca-painel { animation: busca-abrir 0.34s cubic-bezier(.16, 1, .3, 1); }
+  .busca-painel.busca-fechando { animation: busca-fechar 0.2s cubic-bezier(.4, 0, 1, 1) forwards; }
+  .busca-painel .busca-conteudo { animation: busca-conteudo 0.26s ease-out 0.08s both; }
+  .busca-painel.busca-fechando .busca-conteudo { animation: none; }
+
+  @media (max-width: 900px) {
+    .busca-painel { animation: busca-abrir-celular 0.22s cubic-bezier(.16, 1, .3, 1); }
+    .busca-painel.busca-fechando { animation: busca-fechar-celular 0.16s ease-in forwards; }
+  }
 }

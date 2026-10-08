@@ -18,7 +18,10 @@ const FONTES = [
 const POR_SECAO = 5;
 
 // Busca global "Buscar ou ir para…" (botão do cabeçalho ou Ctrl/Cmd+K)
-export function CommandPalette({ items, onClose }: { items: PaletteItem[]; onClose: () => void }) {
+// fechando: o painel continua na tela enquanto a animação de fechar roda; no fim chama onFechado
+export function CommandPalette({ items, fechando = false, onClose, onFechado }: {
+  items: PaletteItem[]; fechando?: boolean; onClose: () => void; onFechado: () => void;
+}) {
   const navigate = useNavigate();
   const { pode } = useAuth();
   const [termo, setTermo] = useState('');
@@ -36,6 +39,14 @@ export function CommandPalette({ items, onClose }: { items: PaletteItem[]; onClo
     document.addEventListener('mousedown', fora);
     return () => document.removeEventListener('mousedown', fora);
   }, [onClose]);
+
+  // Sem animação (reduzir movimento) não há animationend: remove na hora. O timer é só uma garantia.
+  useEffect(() => {
+    if (!fechando) return;
+    if (!painelRef.current || getComputedStyle(painelRef.current).animationName === 'none') { onFechado(); return; }
+    const garantia = setTimeout(onFechado, 400);
+    return () => clearTimeout(garantia);
+  }, [fechando, onFechado]);
 
   // Carrega os registros uma vez ao abrir
   useEffect(() => {
@@ -79,7 +90,8 @@ export function CommandPalette({ items, onClose }: { items: PaletteItem[]; onClo
     // Abre no lugar da própria barra de busca: o campo fica onde a barra estava e os resultados descem abaixo.
     // Abaixo de 900px (barra vira só o ícone) abre como painel no topo da tela.
     <div ref={painelRef} role="dialog" aria-label="Buscar ou ir para"
-      className="busca-expandir absolute right-0 -top-1 z-30 w-[520px] bg-white rounded-xl border border-slate-200 shadow-2xl shadow-slate-900/15 overflow-hidden max-[900px]:fixed max-[900px]:inset-x-3 max-[900px]:top-3 max-[900px]:w-auto">
+      onAnimationEnd={e => { if (fechando && e.target === e.currentTarget) onFechado(); }}
+      className={`busca-painel ${fechando ? 'busca-fechando pointer-events-none' : ''} absolute right-0 -top-1 z-30 w-[520px] bg-white rounded-xl border border-slate-200 shadow-2xl shadow-slate-900/15 overflow-hidden max-[900px]:fixed max-[900px]:inset-x-3 max-[900px]:top-3 max-[900px]:w-auto`}>
       <div>
         <div className="flex items-center gap-3 px-4 border-b border-slate-200">
           <Search size={18} className="text-slate-400 shrink-0" />
@@ -92,7 +104,7 @@ export function CommandPalette({ items, onClose }: { items: PaletteItem[]; onClo
           <kbd className="text-[10px] text-slate-400 border border-slate-200 rounded px-1.5 py-0.5">Esc</kbd>
         </div>
 
-        <div ref={listaRef} id="busca-resultados" role="listbox" className="max-h-[60vh] overflow-y-auto py-2">
+        <div ref={listaRef} id="busca-resultados" role="listbox" className="busca-conteudo max-h-[60vh] overflow-y-auto py-2">
           {!resultados.length && (
             <p className="px-4 py-8 text-center text-sm text-slate-400">Nada encontrado para "{termo}".</p>
           )}
@@ -119,7 +131,7 @@ export function CommandPalette({ items, onClose }: { items: PaletteItem[]; onClo
           ))}
         </div>
 
-        <div className="px-4 py-2.5 border-t border-slate-200 flex gap-4 text-[11px] text-slate-400">
+        <div className="busca-conteudo px-4 py-2.5 border-t border-slate-200 flex gap-4 text-[11px] text-slate-400">
           <span><kbd className="font-sans">↑</kbd> <kbd className="font-sans">↓</kbd> navegar</span>
           <span><kbd className="font-sans">Enter</kbd> abrir</span>
           <span><kbd className="font-sans">Esc</kbd> fechar</span>
