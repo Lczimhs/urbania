@@ -11,21 +11,22 @@ import {
   ChevronDown,
   ChevronsLeft,
   ChevronsRight,
-  ChevronRight,
   ClipboardList,
   DollarSign,
   FileText,
   Handshake,
   HardHat,
-  Home,
   LayoutDashboard,
   LogOut,
   Megaphone,
   Menu,
+  Moon,
   Radio,
   Receipt,
   Settings,
+  Search,
   ShieldCheck,
+  Sun,
   Users,
   UserSquare2,
   Wrench,
@@ -33,7 +34,9 @@ import {
 import { useAuth } from '../lib/auth';
 import { useConfig } from '../lib/config';
 import { moduloDaRota } from '../lib/permissoes';
-import { NotificationsMenu, UserMenu } from './HeaderMenus';
+import { useTema } from '../lib/theme';
+import { NotificationsMenu } from './HeaderMenus';
+import { CommandPalette } from './CommandPalette';
 import logoImg from '../assets/logo.png';
 
 type NavItem = { path: string; label: string; icon: ReactNode };
@@ -77,6 +80,15 @@ const sections: NavSection[] = [
 
 const allItems = sections.flatMap(s => s.items);
 
+// Grupo do menu de cada módulo, para o breadcrumb do cabeçalho (ex.: Clientes → CRM)
+const grupoDoModulo = new Map(sections.flatMap(s => s.items.map(item => [item.path, s.title] as const)));
+
+// Botões quadrados do cabeçalho (menu e tema): borda só no hover, foco visível em teal
+const headerIconButton =
+  'w-8 h-8 shrink-0 inline-flex items-center justify-center rounded-[2px] border border-transparent text-slate-500 transition-colors ' +
+  'hover:border-[#cdd8e3] hover:text-slate-800 dark:text-slate-300 dark:hover:border-[#1c4068] dark:hover:text-white ' +
+  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0d9488]';
+
 // Módulo ativo também nas subpáginas (ex.: /clientes/3/editar)
 const isActive = (path: string, current: string) => (path === '/' ? current === '/' : current === path || current.startsWith(path + '/'));
 
@@ -103,12 +115,31 @@ export default function Layout({ children }: { children: ReactNode }) {
     .map(s => ({ ...s, items: s.items.filter(i => { const m = moduloDaRota(i.path); return !m || pode(m); }) }))
     .filter(s => s.items.length);
   const currentModule = allItems.find(x => isActive(x.path, loc.pathname));
+  const grupo = currentModule && grupoDoModulo.get(currentModule.path);
   const [menuOpen, setMenuOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(() => lerPreferencia('urbania_menu_recolhido', false));
   const [closedGroups, setClosedGroups] = useState<string[]>(() => lerPreferencia('urbania_menu_grupos_fechados', []));
 
   // No celular o menu fecha sozinho ao trocar de página
   useEffect(() => setMenuOpen(false), [loc.pathname]);
+
+  // Busca global "Buscar ou ir para…"
+  const [buscaAberta, setBuscaAberta] = useState(false);
+  const abrirBusca = () => setBuscaAberta(true);
+
+  const { tema, alternar: alternarTema } = useTema();
+
+  // Atalho Ctrl+K (Cmd+K no Mac) abre/fecha a busca
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setBuscaAberta(aberta => !aberta);
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, []);
 
   const toggleCollapsed = () => {
     setCollapsed(!collapsed);
@@ -215,16 +246,21 @@ export default function Layout({ children }: { children: ReactNode }) {
           })}
         </nav>
 
-        {/* Usuário logado + Sair */}
+        {/* Usuário logado (abre a tela de Perfil) + Sair */}
         {/* h-16 nos dois estados (igual ao cabeçalho); recolhido: avatar e Sair lado a lado */}
         <div className={`h-16 px-3 border-t border-white/10 flex items-center gap-2 shrink-0 ${mini ? 'md:px-1.5 md:gap-1 md:justify-center' : ''}`}>
-          <div className={`w-9 h-9 ${mini ? 'md:w-8 md:h-8' : ''} rounded-full bg-teal-600 flex items-center justify-center text-white font-bold text-xs shrink-0 shadow`} title={mini ? user?.nome : undefined}>
-            {initials}
-          </div>
-          <div className={`min-w-0 flex-1 ${mini ? 'md:hidden' : ''}`}>
-            <p className="text-white text-xs font-bold leading-tight truncate">{user?.nome || 'Imobiliária'}</p>
-            <p className="text-slate-400 text-[11px] truncate">{user?.email || user?.cargo || 'Administrador'}</p>
-          </div>
+          <Link
+            to="/perfil" title={mini ? `${user?.nome || 'Perfil'} · Ver perfil` : 'Ver perfil'}
+            className={`flex items-center gap-2 min-w-0 flex-1 -my-1 py-1 -ml-1 pl-1 rounded-lg group hover:bg-white/[0.07] transition focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#0d9488] ${mini ? 'md:flex-none md:m-0 md:p-0' : ''} ${isActive('/perfil', loc.pathname) ? 'bg-white/[0.07]' : ''}`}
+          >
+            <span className={`w-9 h-9 ${mini ? 'md:w-8 md:h-8' : ''} rounded-full bg-teal-600 flex items-center justify-center text-white font-bold text-xs shrink-0 shadow group-hover:ring-2 group-hover:ring-teal-300/40`}>
+              {initials}
+            </span>
+            <span className={`min-w-0 flex-1 ${mini ? 'md:hidden' : ''}`}>
+              <span className="block text-white text-xs font-bold leading-tight truncate">{user?.nome || 'Imobiliária'}</span>
+              <span className="block text-slate-400 text-[11px] truncate">{user?.email || user?.cargo || 'Administrador'}</span>
+            </span>
+          </Link>
           <button
             type="button"
             onClick={handleLogout}
@@ -236,61 +272,58 @@ export default function Layout({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      {/* MAIN CONTENT */}
-      <main className="flex-1 min-w-0 flex flex-col overflow-hidden">
+      {/* MAIN CONTENT: a própria coluna é o container de rolagem, para o conteúdo passar por baixo do header */}
+      <main className="flex-1 min-w-0 overflow-auto">
 
-        {/* BARRA SUPERIOR FLUTUANTE MODERNA (Card suspenso com cantos arredondados) */}
-        <header className="px-4 md:px-8 pt-4 pb-1 shrink-0 z-20">
-          <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-sm border border-slate-200/80 px-4 md:px-6 h-16 flex items-center justify-between transition-all">
-            {/* Esquerda: Menu Mobile e Breadcrumbs Estilizados */}
-            <div className="flex items-center gap-2 md:gap-3 min-w-0">
-              <button
-                onClick={() => setMenuOpen(true)}
-                className="md:hidden p-2 -ml-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition"
-                title="Abrir menu"
-              >
-                <Menu size={22} />
-              </button>
+        {/* CABEÇALHO FIXO: sticky dentro do container que rola, com fundo translúcido + desfoque */}
+        <header
+          className="sticky z-20 flex items-center gap-3.5 py-3 px-6 max-[900px]:px-4 border-b border-[#cdd8e3] bg-white/[.88] backdrop-blur-[6px] dark:border-[#1c4068] dark:bg-[#0a2541]/[.88]"
+          style={{ top: 'env(safe-area-inset-top, 0px)' }} // respeita o notch do iPhone; o Tailwind já gera o -webkit-backdrop-filter
+        >
+          {/* 1. Menu (só abaixo de md): abre a gaveta lateral */}
+          <button type="button" onClick={() => setMenuOpen(true)} title="Abrir menu" aria-label="Abrir menu" className={`md:hidden ${headerIconButton}`}>
+            <Menu size={18} />
+          </button>
 
-              <Link
-                to="/"
-                className="hidden sm:flex items-center gap-2 text-xs md:text-sm font-semibold text-slate-500 hover:text-sky-700 transition px-2.5 py-1.5 rounded-xl hover:bg-slate-100"
-                title="Ir para o início"
-              >
-                <Home size={15} className="text-slate-400" />
-                <span>{nomeImobiliaria}</span>
-              </Link>
-
-              {currentModule && currentModule.path !== '/' ? (
-                <>
-                  <ChevronRight size={14} className="text-slate-300 hidden sm:block shrink-0" />
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-sky-50 border border-sky-100 text-sky-800 text-xs md:text-sm font-bold shadow-xs">
-                    <span className="text-sky-600 shrink-0">{currentModule.icon}</span>
-                    <span className="truncate">{currentModule.label}</span>
-                  </div>
-                </>
-              ) : (
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 text-slate-800 text-xs md:text-sm font-bold">
-                  <LayoutDashboard size={15} className="text-sky-600 shrink-0" />
-                  <span>Painel Geral</span>
-                </div>
-              )}
-            </div>
-
-            {/* Direita: Notificações, Divisor e Menu de Usuário */}
-            <div className="flex items-center gap-2 md:gap-3.5">
-              <NotificationsMenu />
-              <div className="h-6 w-px bg-slate-200" />
-              <UserMenu />
-            </div>
+          {/* 2. Breadcrumb: Grupo / Módulo */}
+          <div className="flex-1 min-w-0 flex items-baseline gap-2.5">
+            <span className="min-w-0 truncate text-[11px] font-semibold uppercase tracking-[.08em] text-[#7f90a4]">
+              {grupo && currentModule ? `${grupo} / ${currentModule.label}` : nomeImobiliaria}
+            </span>
           </div>
+
+          {/* 3. Busca (Ctrl/Cmd+K); abaixo de 900px só o ícone */}
+          <button
+            type="button" onClick={abrirBusca} title="Buscar (Ctrl+K)" aria-label="Buscar ou ir para… (Ctrl+K)"
+            className="shrink-0 min-w-[220px] h-8 flex items-center gap-2 px-2.5 bg-[#f4f7fa] border border-[#cdd8e3] rounded-[2px] text-slate-500 hover:border-[#b3c2d1] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0d9488] max-[900px]:min-w-0 max-[900px]:w-8 max-[900px]:justify-center max-[900px]:px-0 dark:bg-[#0f2f52] dark:border-[#1c4068] dark:text-slate-300"
+          >
+            <Search size={15} className="shrink-0" />
+            <span className="flex-1 text-left text-[13px] text-[#7f90a4] max-[900px]:hidden">Buscar ou ir para…</span>
+            <kbd className="font-sans text-[10px] leading-none text-[#7f90a4] border border-[#cdd8e3] rounded-[2px] px-1 py-[3px] max-[900px]:hidden dark:border-[#1c4068]">Ctrl K</kbd>
+          </button>
+
+          {/* 4. Alternar tema */}
+          <button type="button" onClick={alternarTema} title={tema === 'escuro' ? 'Usar tema claro' : 'Usar tema escuro'} aria-label="Alternar tema" className={headerIconButton}>
+            {tema === 'escuro' ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
+
+          {/* 5. Notificações (o usuário logado fica só na sidebar) */}
+          <NotificationsMenu />
         </header>
 
         {/* PAGE CONTENT */}
-        <div className="flex-1 overflow-auto px-4 md:px-8 pb-6 pt-3">
+        <div className="px-4 md:px-8 pb-6 pt-4">
           {children}
         </div>
       </main>
+
+      {/* Busca: só os módulos que o perfil pode ver */}
+      {buscaAberta && (
+        <CommandPalette
+          onClose={() => setBuscaAberta(false)}
+          items={visibleSections.flatMap(s => s.items.map(i => ({ ...i, grupo: s.title })))}
+        />
+      )}
     </div>
   )
 }

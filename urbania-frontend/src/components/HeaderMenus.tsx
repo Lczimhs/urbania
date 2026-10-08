@@ -60,10 +60,11 @@ export function NotificationsMenu() {
   return (
     <div ref={ref} className="relative">
       <button type="button" onClick={() => { if (!open) recarregar(); setOpen(!open); }} title="Notificações"
-        className={`relative p-2 rounded-xl transition ${open ? 'bg-sky-50 text-sky-600 ring-2 ring-sky-200' : 'text-slate-500 hover:text-sky-600 hover:bg-slate-100'}`}>
+        className={`relative p-2 rounded-xl transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0d9488] ${open ? 'bg-sky-50 text-sky-600 ring-2 ring-sky-200' : 'text-slate-500 hover:text-sky-600 hover:bg-slate-100'}`}>
         {naoLidas ? <BellRing size={20} /> : <Bell size={20} />}
         {naoLidas > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-white shadow-xs">
+          // Badge quadrado no canto superior direito
+          <span className="absolute top-0 right-0 min-w-[15px] h-[15px] px-[3px] bg-[#be123c] text-white text-[9px] font-bold leading-none flex items-center justify-center">
             {naoLidas > 9 ? '9+' : naoLidas}
           </span>
         )}
@@ -127,7 +128,7 @@ export function UserMenu() {
   return (
     <div ref={ref} className="relative">
       <button type="button" onClick={() => setOpen(!open)}
-        className={`flex items-center gap-2.5 pl-1.5 pr-2.5 py-1 rounded-xl border transition ${open ? 'border-sky-300 bg-sky-50/70 shadow-xs' : 'border-slate-200/80 bg-slate-50/60 hover:border-slate-300 hover:bg-slate-100/70'}`}>
+        className={`flex items-center gap-2.5 pl-1.5 pr-2.5 py-1 rounded-xl border transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0d9488] ${open ? 'border-sky-300 bg-sky-50/70 shadow-xs' : 'border-slate-200/80 bg-slate-50/60 hover:border-slate-300 hover:bg-slate-100/70'}`}>
         <span className="w-8 h-8 rounded-lg bg-[#0a2540] flex items-center justify-center text-white font-bold text-xs shadow-xs">{iniciais}</span>
         <span className="hidden sm:flex flex-col text-left">
           <span className="text-xs font-bold text-slate-800 leading-tight max-w-[12rem] truncate">{nome}</span>
