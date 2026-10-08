@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
@@ -125,7 +125,7 @@ export default function Layout({ children }: { children: ReactNode }) {
 
   // Busca global "Buscar ou ir para…"
   const [buscaAberta, setBuscaAberta] = useState(false);
-  const abrirBusca = () => setBuscaAberta(true);
+  const fecharBusca = useCallback(() => setBuscaAberta(false), []);
 
   const { tema, alternar: alternarTema } = useTema();
 
@@ -292,15 +292,24 @@ export default function Layout({ children }: { children: ReactNode }) {
             </span>
           </div>
 
-          {/* 3. Busca (Ctrl/Cmd+K); abaixo de 900px só o ícone */}
+          {/* 3. Busca (Ctrl/Cmd+K); abaixo de 900px só o ícone. O painel abre no lugar da barra. */}
+          <div className="relative shrink-0">
           <button
-            type="button" onClick={abrirBusca} title="Buscar (Ctrl+K)" aria-label="Buscar ou ir para… (Ctrl+K)"
+            type="button" data-busca-gatilho onClick={() => setBuscaAberta(aberta => !aberta)} title="Buscar (Ctrl+K)" aria-label="Buscar ou ir para… (Ctrl+K)" aria-expanded={buscaAberta}
             className="shrink-0 min-w-[220px] h-8 flex items-center gap-2 px-2.5 bg-[#f4f7fa] border border-[#cdd8e3] rounded-[2px] text-slate-500 hover:border-[#b3c2d1] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0d9488] max-[900px]:min-w-0 max-[900px]:w-8 max-[900px]:justify-center max-[900px]:px-0 dark:bg-[#0f2f52] dark:border-[#1c4068] dark:text-slate-300"
           >
             <Search size={15} className="shrink-0" />
             <span className="flex-1 text-left text-[13px] text-[#7f90a4] max-[900px]:hidden">Buscar ou ir para…</span>
             <kbd className="font-sans text-[10px] leading-none text-[#7f90a4] border border-[#cdd8e3] rounded-[2px] px-1 py-[3px] max-[900px]:hidden dark:border-[#1c4068]">Ctrl K</kbd>
           </button>
+          {/* Só os módulos que o perfil pode ver */}
+          {buscaAberta && (
+            <CommandPalette
+              onClose={fecharBusca}
+              items={visibleSections.flatMap(s => s.items.map(i => ({ ...i, grupo: s.title })))}
+            />
+          )}
+          </div>
 
           {/* 4. Alternar tema */}
           <button type="button" onClick={alternarTema} title={tema === 'escuro' ? 'Usar tema claro' : 'Usar tema escuro'} aria-label="Alternar tema" className={headerIconButton}>
@@ -316,14 +325,6 @@ export default function Layout({ children }: { children: ReactNode }) {
           {children}
         </div>
       </main>
-
-      {/* Busca: só os módulos que o perfil pode ver */}
-      {buscaAberta && (
-        <CommandPalette
-          onClose={() => setBuscaAberta(false)}
-          items={visibleSections.flatMap(s => s.items.map(i => ({ ...i, grupo: s.title })))}
-        />
-      )}
     </div>
   )
 }
