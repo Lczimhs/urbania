@@ -25,13 +25,16 @@ export default function Perfil() {
       <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden">
         <div className="h-24 bg-gradient-to-r from-[#0a2540] via-sky-800 to-teal-600" />
         <div className="px-6 pb-6">
-          <div className="-mt-10 flex items-end gap-4">
-            {funcionario?.foto
-              ? <img src={funcionario.foto} alt={nome} className="w-20 h-20 rounded-2xl object-cover ring-4 ring-white shadow" />
-              : <div className="w-20 h-20 rounded-2xl bg-teal-600 ring-4 ring-white shadow flex items-center justify-center text-white text-2xl font-bold">{iniciais}</div>}
-            <div className="pb-1 min-w-0">
-              <p className="text-xl font-bold text-slate-800 truncate">{nome}</p>
-              <p className="text-sm text-teal-600 font-medium">{user?.cargo}</p>
+          {/* Só o avatar sobe sobre a faixa; nome e cargo ficam abaixo dela */}
+          <div className="flex items-start gap-4">
+            <div className="-mt-10 shrink-0">
+              {funcionario?.foto
+                ? <img src={funcionario.foto} alt={nome} className="w-20 h-20 rounded-2xl object-cover ring-4 ring-white shadow" />
+                : <div className="w-20 h-20 rounded-2xl bg-teal-600 ring-4 ring-white shadow flex items-center justify-center text-white text-2xl font-bold">{iniciais}</div>}
+            </div>
+            <div className="pt-3 min-w-0">
+              <p className="text-xl font-bold text-slate-800 truncate leading-tight">{nome}</p>
+              <p className="text-sm text-teal-600 font-medium mt-0.5">{user?.cargo}</p>
             </div>
           </div>
 

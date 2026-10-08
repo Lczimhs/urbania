@@ -10,6 +10,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <!-- Aplica o tema escuro salvo antes de a página desenhar (evita piscar claro) -->
+    <script>
+      try { if (localStorage.getItem('urbania_tema') === 'escuro') { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; } } catch (e) {}
+    </script>
     <title>Urbânia - Gestão Imobiliária Inteligente</title>
   </head>
   <body>

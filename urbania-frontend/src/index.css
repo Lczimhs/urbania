@@ -1,4 +1,9 @@
 @import "tailwindcss";
+@import "./theme-dark.css";
+
+/* Tema escuro só pela classe .dark no <html> (e não pela preferência do sistema operacional),
+   para nenhuma tela ficar "meio escura" enquanto o tema escuro não estiver completo. */
+@custom-variant dark (&:where(.dark, .dark *));
 
 /* Shared navy dropdowns, including the option menu. */
 .system-select {
