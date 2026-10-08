@@ -15,8 +15,9 @@ const TAGS = [
   { label: 'Administração', cls: 'lg-pill-admin' },
 ];
 const SKIES = [['#0e3a6b', '#081f3d'], ['#1e3a8a', '#0b2545'], ['#0c4a6e', '#082f49'], ['#172554', '#0a1b3a']];
-const COL_PADDING = [0, 140, 60, 0, 180, 40];
-const CARDS_PER_COL = 6;
+// 14 colunas (o padrão de deslocamento se repete) para cobrir também monitores largos
+const COL_PADDING = Array.from({ length: 14 }, (_, i) => [0, 140, 60, 0, 180, 40][i % 6]);
+const CARDS_PER_COL = 7;
 
 // Janela acesa; o atraso varia para as janelas não piscarem todas juntas
 const Win = ({ x, y, w = 7, h = 8, d = 0 }: { x: number; y: number; w?: number; h?: number; d?: number }) => (
