@@ -25,6 +25,17 @@ export function CommandPalette({ items, onClose }: { items: PaletteItem[]; onClo
   const [ativo, setAtivo] = useState(0);
   const [registros, setRegistros] = useState<Record<string, any[]>>({});
   const listaRef = useRef<HTMLDivElement>(null);
+  const painelRef = useRef<HTMLDivElement>(null);
+
+  // Fecha ao clicar fora do painel (o clique no próprio botão da barra é tratado pelo cabeçalho)
+  useEffect(() => {
+    const fora = (e: MouseEvent) => {
+      const alvo = e.target as Node;
+      if (!painelRef.current?.contains(alvo) && !(alvo as Element).closest?.('[data-busca-gatilho]')) onClose();
+    };
+    document.addEventListener('mousedown', fora);
+    return () => document.removeEventListener('mousedown', fora);
+  }, [onClose]);
 
   // Carrega os registros uma vez ao abrir
   useEffect(() => {
@@ -65,22 +76,23 @@ export function CommandPalette({ items, onClose }: { items: PaletteItem[]; onClo
   };
 
   return (
-    <div className="fixed inset-0 z-[60] bg-slate-900/40 backdrop-blur-sm flex items-start justify-center px-4 pt-[12vh]" onMouseDown={onClose}>
-      <div role="dialog" aria-modal="true" aria-label="Buscar ou ir para"
-        className="w-full max-w-xl bg-white rounded-xl border border-slate-200 shadow-2xl overflow-hidden"
-        onMouseDown={e => e.stopPropagation()}>
+    // Abre no lugar da própria barra de busca: o campo fica onde a barra estava e os resultados descem abaixo.
+    // Abaixo de 900px (barra vira só o ícone) abre como painel no topo da tela.
+    <div ref={painelRef} role="dialog" aria-label="Buscar ou ir para"
+      className="busca-expandir absolute right-0 -top-1 z-30 w-[520px] bg-white rounded-xl border border-slate-200 shadow-2xl shadow-slate-900/15 overflow-hidden max-[900px]:fixed max-[900px]:inset-x-3 max-[900px]:top-3 max-[900px]:w-auto">
+      <div>
         <div className="flex items-center gap-3 px-4 border-b border-slate-200">
           <Search size={18} className="text-slate-400 shrink-0" />
           <input
             autoFocus value={termo} onChange={e => { setTermo(e.target.value); setAtivo(0); }} onKeyDown={onKeyDown}
             placeholder="Buscar clientes, imóveis, proprietários ou ir para um módulo…"
             role="combobox" aria-expanded="true" aria-controls="busca-resultados" aria-activedescendant={resultados[ativo] ? `busca-${ativo}` : undefined}
-            className="flex-1 h-14 bg-transparent outline-none text-[15px] text-slate-800 placeholder:text-slate-400"
+            className="flex-1 h-12 bg-transparent outline-none text-[15px] text-slate-800 placeholder:text-slate-400"
           />
           <kbd className="text-[10px] text-slate-400 border border-slate-200 rounded px-1.5 py-0.5">Esc</kbd>
         </div>
 
-        <div ref={listaRef} id="busca-resultados" role="listbox" className="max-h-[55vh] overflow-y-auto py-2">
+        <div ref={listaRef} id="busca-resultados" role="listbox" className="max-h-[60vh] overflow-y-auto py-2">
           {!resultados.length && (
             <p className="px-4 py-8 text-center text-sm text-slate-400">Nada encontrado para "{termo}".</p>
           )}

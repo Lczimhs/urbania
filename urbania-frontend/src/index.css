@@ -148,3 +148,12 @@
 .sidebar-scroll::-webkit-scrollbar {
   display: none;
 }
+
+/* Busca do cabeçalho: abre no lugar da barra e "cresce" para a esquerda até a largura do painel */
+@keyframes busca-expandir {
+  from { width: 220px; opacity: 0.7; }
+  to { width: 520px; opacity: 1; }
+}
+@media (min-width: 901px) and (prefers-reduced-motion: no-preference) {
+  .busca-expandir { animation: busca-expandir 0.22s cubic-bezier(.2, .8, .2, 1); }
+}
