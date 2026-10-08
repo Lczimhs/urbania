@@ -10,7 +10,6 @@ import {
   Calendar,
   ChevronDown,
   ChevronsLeft,
-  ChevronsRight,
   ClipboardList,
   DollarSign,
   FileText,
@@ -172,6 +171,18 @@ export default function Layout({ children }: { children: ReactNode }) {
 
   // No celular o menu sempre aparece completo (gaveta); recolher só vale em telas maiores
   const mini = collapsed && !menuOpen;
+  // Textos da sidebar: somem na hora ao recolher; ao expandir aparecem com um pequeno atraso (quando já há espaço)
+  const textoVisivel = mini ? 'md:opacity-0 md:pointer-events-none' : 'opacity-100 delay-100';
+  const textoFade = `transition-opacity duration-200 ${textoVisivel}`;
+
+  // Recolhido mostra todos os grupos (não há títulos para abri-los). Ao recolher, só abre os grupos fechados
+  // depois que a largura terminou de animar, para os itens não "pularem" no meio do movimento.
+  const [gruposTodosAbertos, setGruposTodosAbertos] = useState(mini);
+  useEffect(() => {
+    if (!mini) { setGruposTodosAbertos(false); return; }
+    const t = setTimeout(() => setGruposTodosAbertos(true), 300);
+    return () => clearTimeout(t);
+  }, [mini]);
   const nomeImobiliaria = config.nomeFantasia || 'Urbânia';
 
   return (
@@ -179,66 +190,72 @@ export default function Layout({ children }: { children: ReactNode }) {
 
       {/* SIDEBAR (gaveta no celular, fixa a partir de telas médias) */}
       {menuOpen && <div className="fixed inset-0 bg-slate-900/40 z-30 md:hidden" onClick={() => setMenuOpen(false)} />}
-      <aside className={`fixed md:relative inset-y-0 left-0 z-40 shrink-0 bg-[#0a2540] text-slate-300 flex flex-col transition-all duration-200 w-64 ${mini ? 'md:w-[76px]' : ''} ${menuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 shadow-xl`}>
+      {/*
+        Recolher/expandir suave nos dois sentidos: a geometria é a mesma nos dois estados (ícones, logo e avatar
+        já ficam na posição do menu recolhido de 76px), só a largura anima e os textos aparecem/somem com fade.
+        Ao recolher o texto some na hora; ao expandir ele só aparece depois que já existe espaço.
+      */}
+      <aside className={`fixed md:relative inset-y-0 left-0 z-40 shrink-0 bg-[#0a2540] text-slate-300 flex flex-col transition-[width,transform] duration-300 ease-[cubic-bezier(.4,0,.2,1)] w-64 ${mini ? 'md:w-[76px]' : ''} ${menuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 shadow-xl`}>
 
-        {/* Marca + botão recolher */}
-        <div className={`flex items-center gap-3 px-4 h-16 border-b border-white/10 shrink-0 ${mini ? 'md:justify-center md:px-0' : ''}`}>
+        {/* Marca (logo centralizada na largura recolhida: 18px + 40px + 18px) */}
+        <div className="flex items-center px-[18px] h-16 border-b border-white/10 shrink-0 overflow-hidden">
           {/* Logo + nome levam para a tela inicial */}
-          <Link to="/" title="Ir para o Painel" className={`flex items-center gap-3 min-w-0 flex-1 group ${mini ? 'md:flex-none' : ''}`}>
+          <Link to="/" title="Ir para o Painel" className="flex items-center min-w-0 flex-1 group">
             <div className="bg-white p-1 rounded-lg shadow shrink-0 group-hover:ring-2 group-hover:ring-sky-400/50 transition">
               <img src={config.logo || logoImg} alt={`${nomeImobiliaria} Logotipo`} className="h-8 w-8 object-contain" />
             </div>
-            <div className={`flex flex-col min-w-0 flex-1 ${mini ? 'md:hidden' : ''}`}>
+            <div className={`ml-3 flex flex-col min-w-0 flex-1 whitespace-nowrap ${textoFade}`}>
               <span className="text-white font-extrabold text-[15px] tracking-wide leading-tight truncate">{nomeImobiliaria}</span>
               <span className="text-[10px] text-teal-400 font-bold tracking-wider uppercase truncate">Imobiliária</span>
             </div>
           </Link>
-          <button
-            type="button"
-            onClick={toggleCollapsed}
-            title={collapsed ? 'Expandir menu' : 'Recolher menu'}
-            className={
-              mini
-                ? 'hidden md:flex items-center justify-center w-6 h-6 rounded-full bg-[#0a2540] text-slate-300 hover:text-white hover:bg-sky-600 border border-white/30 shadow-md absolute -right-3 top-5 z-50 transition-colors cursor-pointer'
-                : 'hidden md:flex items-center justify-center p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition cursor-pointer'
-            }
-          >
-            {collapsed ? <ChevronsRight size={13} className="ml-0.5" /> : <ChevronsLeft size={16} />}
-          </button>
         </div>
+
+        {/* Recolher/expandir: bolinha na borda, nos dois estados (acompanha a borda enquanto a largura anima) */}
+        <button
+          type="button"
+          onClick={toggleCollapsed}
+          title={collapsed ? 'Expandir menu' : 'Recolher menu'}
+          aria-label={collapsed ? 'Expandir menu' : 'Recolher menu'}
+          className="hidden md:flex items-center justify-center w-6 h-6 rounded-full bg-[#0a2540] text-slate-300 hover:text-white hover:bg-sky-600 border border-white/30 shadow-md absolute -right-3 top-5 z-50 transition-colors cursor-pointer"
+        >
+          <ChevronsLeft size={13} className={`transition-transform duration-300 ${collapsed ? 'rotate-180' : ''}`} />
+        </button>
 
         {/* Navegação */}
         <nav className="flex-1 overflow-y-auto overflow-x-hidden py-3 px-3 space-y-4 sidebar-scroll">
           {visibleSections.map(section => {
             const hasActive = section.items.some(i => isActive(i.path, loc.pathname));
-            const open = !section.collapsible || mini || hasActive || !closedGroups.includes(section.id);
+            const open = !section.collapsible || gruposTodosAbertos || hasActive || !closedGroups.includes(section.id);
             return (
               <div key={section.id}>
-                {/* Recolhido: separador com a mesma altura do título (h-4 + mb-1), para os ícones não mudarem de posição */}
-                {mini ? (
-                  <div className="hidden md:flex items-center h-4 mb-1 mx-2"><div className="h-px w-full bg-white/10" /></div>
-                ) : section.collapsible ? (
-                  <button type="button" onClick={() => toggleGroup(section.id)}
-                    className="w-full h-4 flex items-center justify-between px-2 mb-1 text-[10.5px] font-bold text-slate-400 uppercase tracking-widest hover:text-slate-200">
-                    {section.title}
-                    <ChevronDown size={14} className={`transition-transform ${open ? '' : '-rotate-90'}`} />
-                  </button>
-                ) : (
-                  <p className="h-4 flex items-center px-2 mb-1 text-[10.5px] font-bold text-slate-400 uppercase tracking-widest">{section.title}</p>
-                )}
+                {/* Título da seção (aberto) e separador (recolhido) ocupam o mesmo espaço e trocam com fade */}
+                <div className="relative h-4 mb-1">
+                  <div className={`hidden md:block absolute inset-x-2 top-1/2 h-px bg-white/10 transition-opacity duration-200 ${mini ? 'opacity-100 delay-100' : 'opacity-0'}`} />
+                  {section.collapsible ? (
+                    <button type="button" onClick={() => toggleGroup(section.id)} tabIndex={mini ? -1 : undefined}
+                      className={`absolute inset-0 flex items-center justify-between px-2 text-[10.5px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap hover:text-slate-200 ${textoFade}`}>
+                      {section.title}
+                      <ChevronDown size={14} className={`shrink-0 transition-transform ${open ? '' : '-rotate-90'}`} />
+                    </button>
+                  ) : (
+                    <p className={`absolute inset-0 flex items-center px-2 text-[10.5px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap ${textoFade}`}>{section.title}</p>
+                  )}
+                </div>
                 {open && (
                   <div className="space-y-0.5">
                     {section.items.map(item => {
                       const active = isActive(item.path, loc.pathname);
                       return (
+                        // Ícone centralizado na largura recolhida (52px úteis: 17px + 18px + 17px)
                         <Link
                           key={item.path}
                           to={item.path}
                           title={mini ? item.label : undefined}
-                          className={`flex items-center gap-3 h-9 px-2.5 rounded-lg text-[13.5px] font-medium transition-colors ${mini ? 'md:justify-center' : ''} ${active ? 'bg-sky-600 text-white shadow-md shadow-sky-900/30' : 'hover:bg-white/[0.07] hover:text-white'}`}
+                          className={`flex items-center h-9 pl-[17px] pr-2.5 rounded-lg text-[13.5px] font-medium whitespace-nowrap overflow-hidden transition-colors ${active ? 'bg-sky-600 text-white shadow-md shadow-sky-900/30' : 'hover:bg-white/[0.07] hover:text-white'}`}
                         >
                           <span className={`shrink-0 ${active ? 'text-white' : 'text-slate-400'}`}>{item.icon}</span>
-                          <span className={`truncate ${mini ? 'md:hidden' : ''}`}>{item.label}</span>
+                          <span className={`ml-3 truncate ${textoFade}`}>{item.label}</span>
                         </Link>
                       );
                     })}
@@ -249,17 +266,16 @@ export default function Layout({ children }: { children: ReactNode }) {
           })}
         </nav>
 
-        {/* Usuário logado (abre a tela de Perfil) + Sair */}
-        {/* h-16 nos dois estados (igual ao cabeçalho); recolhido: avatar e Sair lado a lado */}
-        <div className={`h-16 px-3 border-t border-white/10 flex items-center gap-2 shrink-0 ${mini ? 'md:px-1.5 md:gap-1 md:justify-center' : ''}`}>
+        {/* Usuário logado (abre a tela de Perfil) + Sair. Recolhido: avatar e Sair lado a lado (6 + 32 + 4 + 28 + 6 = 76px) */}
+        <div className={`h-16 border-t border-white/10 flex items-center shrink-0 overflow-hidden transition-[padding] duration-300 ease-[cubic-bezier(.4,0,.2,1)] ${mini ? 'md:px-1.5 px-3' : 'px-3'}`}>
           <Link
             to="/perfil" title={mini ? `${user?.nome || 'Perfil'} · Ver perfil` : 'Ver perfil'}
-            className={`flex items-center gap-2 min-w-0 flex-1 -my-1 py-1 -ml-1 pl-1 rounded-lg group hover:bg-white/[0.07] transition focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#0d9488] ${mini ? 'md:flex-none md:m-0 md:p-0' : ''} ${isActive('/perfil', loc.pathname) ? 'bg-white/[0.07]' : ''}`}
+            className={`flex items-center min-w-0 flex-1 rounded-lg group hover:bg-white/[0.07] transition focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#0d9488] ${isActive('/perfil', loc.pathname) ? 'bg-white/[0.07]' : ''}`}
           >
-            <span className={`w-9 h-9 ${mini ? 'md:w-8 md:h-8' : ''} rounded-full bg-teal-600 flex items-center justify-center text-white font-bold text-xs shrink-0 shadow group-hover:ring-2 group-hover:ring-teal-300/40`}>
+            <span className={`rounded-full bg-teal-600 flex items-center justify-center text-white font-bold text-xs shrink-0 shadow group-hover:ring-2 group-hover:ring-teal-300/40 transition-[width,height] duration-300 ${mini ? 'w-9 h-9 md:w-8 md:h-8' : 'w-9 h-9'}`}>
               {initials}
             </span>
-            <span className={`min-w-0 flex-1 ${mini ? 'md:hidden' : ''}`}>
+            <span className={`min-w-0 flex-1 overflow-hidden whitespace-nowrap transition-[margin,opacity] duration-300 ${mini ? 'ml-2 md:ml-0' : 'ml-2'} ${textoVisivel}`}>
               <span className="block text-white text-xs font-bold leading-tight truncate">{user?.nome || 'Imobiliária'}</span>
               <span className="block text-slate-400 text-[11px] truncate">{user?.email || user?.cargo || 'Administrador'}</span>
             </span>
@@ -268,7 +284,7 @@ export default function Layout({ children }: { children: ReactNode }) {
             type="button"
             onClick={handleLogout}
             title="Encerrar Sessão"
-            className={`p-2 ${mini ? 'md:p-1.5' : ''} text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition shrink-0 cursor-pointer`}
+            className={`shrink-0 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg cursor-pointer transition-[padding,margin,color,background-color] duration-300 ${mini ? 'ml-2 p-2 md:ml-1 md:p-1.5' : 'ml-2 p-2'}`}
           >
             <LogOut size={16} />
           </button>
