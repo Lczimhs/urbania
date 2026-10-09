@@ -288,8 +288,8 @@ export default function Auditoria() {
 
   const exportarXlsx = () => {
     const dataHora = new Date().toISOString().slice(0, 10);
-    // Ordem das informações solicitada: ID > USUÁRIO > COMPUTADOR > ENDEREÇO IP > DATA > HORA > ENTIDADE > DETALHES
-    const headers = ['ID', 'USUÁRIO', 'COMPUTADOR', 'ENDEREÇO IP', 'DATA', 'HORA', 'ENTIDADE', 'DETALHES'];
+    // Ordem das informações: ID > USUÁRIO > COMPUTADOR > ENDEREÇO IP > DATA > HORA > DETALHES > ENTIDADE
+    const headers = ['ID', 'USUÁRIO', 'COMPUTADOR', 'ENDEREÇO IP', 'DATA', 'HORA', 'DETALHES', 'ENTIDADE'];
     const rows = rowsSequenciais.map(a => [
       a.seqId || a.id,
       formatUsuarioDisplay(a.usuario).full,
@@ -297,8 +297,8 @@ export default function Auditoria() {
       formatIp(a.ip),
       formatDate(a.data),
       formatHora(a.hora),
-      a.acao || a.entidade || '',
       formatDetalhesTexto(a.detalhes, a),
+      a.acao || a.entidade || '',
     ]);
     exportGridToXlsx(headers, rows, `urbania_auditoria_${dataHora}`);
     toast.success('Auditoria exportada com sucesso em planilha Excel (.xlsx).');
@@ -359,7 +359,6 @@ export default function Auditoria() {
           loading={auditoria.loading}
           empty="Nenhum registro de auditoria encontrado."
           onRowClick={r => setSelecionado(r)}
-          layoutFixed
           dense
           columns={[
             {
@@ -371,7 +370,7 @@ export default function Auditoria() {
             {
               key: 'usuario',
               label: 'USUÁRIO',
-              className: 'w-36 lg:w-42 whitespace-nowrap text-left',
+              className: 'w-32 lg:w-36 whitespace-nowrap text-left',
               render: r => {
                 const u = formatUsuarioDisplay(r.usuario);
                 return (
@@ -394,7 +393,7 @@ export default function Auditoria() {
             {
               key: 'computador',
               label: 'COMPUTADOR',
-              className: 'w-32 whitespace-nowrap text-left',
+              className: 'w-26 whitespace-nowrap text-left',
               render: r => {
                 const comp = formatComputador(r);
                 return (
@@ -410,25 +409,38 @@ export default function Auditoria() {
             {
               key: 'ip',
               label: 'ENDEREÇO IP',
-              className: 'w-28 whitespace-nowrap text-left',
+              className: 'w-24 whitespace-nowrap text-left',
               render: r => <span className="font-mono text-xs text-slate-500 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-200 whitespace-nowrap">{formatIp(r.ip)}</span>,
             },
             {
               key: 'data',
               label: 'DATA',
-              className: 'w-24 whitespace-nowrap text-left',
+              className: 'w-22 whitespace-nowrap text-left',
               render: r => <span className="text-xs font-medium text-slate-700 whitespace-nowrap">{formatDate(r.data)}</span>,
             },
             {
               key: 'hora',
               label: 'HORA',
-              className: 'w-24 min-w-[90px] whitespace-nowrap text-left',
+              className: 'w-16 whitespace-nowrap text-left',
               render: r => <span className="text-xs font-mono text-slate-600 whitespace-nowrap">{formatHora(r.hora)}</span>,
+            },
+            {
+              key: 'detalhes',
+              label: 'DETALHES',
+              className: 'min-w-[280px] flex-1 text-slate-700 text-left',
+              render: r => {
+                const txt = formatDetalhesTexto(r.detalhes, r);
+                return (
+                  <span className="text-xs text-slate-700 font-medium block whitespace-normal break-words" title={txt}>
+                    {txt}
+                  </span>
+                );
+              },
             },
             {
               key: 'entidade',
               label: 'ENTIDADE',
-              className: 'w-32 min-w-[120px] whitespace-nowrap text-left',
+              className: 'w-28 whitespace-nowrap text-left',
               render: r => (
                 <div className="whitespace-nowrap inline-flex items-center" title={`${r.entidade || ''}${r.entidadeId ? ` (#${r.entidadeId})` : ''}`}>
                   <Badge className={`text-xs px-2.5 py-0.5 rounded-md font-semibold whitespace-nowrap inline-flex items-center ${
@@ -440,19 +452,6 @@ export default function Auditoria() {
                   </Badge>
                 </div>
               ),
-            },
-            {
-              key: 'detalhes',
-              label: 'DETALHES',
-              className: 'text-slate-600 min-w-0 text-left',
-              render: r => {
-                const txt = formatDetalhesTexto(r.detalhes, r);
-                return (
-                  <span className="text-xs text-slate-600 block truncate" title={txt}>
-                    {txt}
-                  </span>
-                );
-              },
             },
           ]}
         />
