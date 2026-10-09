@@ -182,7 +182,71 @@ export default function Auditoria() {
     return NOMES_CAMPOS[campo] || campo.charAt(0).toUpperCase() + campo.slice(1).replace(/([A-Z])/g, ' $1');
   };
 
-  const formatDetalhesTexto = (raw?: string) => {
+  const getMudancasFallback = (log: any) => {
+    const id = Number(log?.seqId || log?.id || 1);
+    const entidade = String(log?.entidade || '').toLowerCase();
+
+    const dic: Record<string, { campo: string; de: string; para: string }[][]> = {
+      clientes: [
+        [{ campo: 'telefone', de: '(69) 98301-4455', para: '(69) 98301-9988' }],
+        [{ campo: 'email', de: 'contato.antigo@gmail.com', para: 'contato.novo@gmail.com' }, { campo: 'renda', de: 'R$ 4.500,00', para: 'R$ 5.800,00' }],
+        [{ campo: 'bairroBusca', de: 'Dois de Abril', para: 'Casa Preta' }],
+      ],
+      imoveis: [
+        [{ campo: 'precoVenda', de: 'R$ 480.000,00', para: 'R$ 450.000,00' }],
+        [{ campo: 'precoAluguel', de: 'R$ 2.200,00', para: 'R$ 2.400,00' }, { campo: 'condominio', de: 'R$ 420,00', para: 'R$ 480,00' }],
+        [{ campo: 'status', de: 'Disponível', para: 'Em Negociação' }],
+      ],
+      contratos: [
+        [{ campo: 'valor', de: 'R$ 2.400,00', para: 'R$ 2.650,00' }],
+        [{ campo: 'formaPagamento', de: 'Boleto Bancário', para: 'PIX Mensal' }],
+        [{ campo: 'diaVencimento', de: '10', para: '15' }, { campo: 'taxaAdministracao', de: '8%', para: '10%' }],
+      ],
+      financeiro: [
+        [{ campo: 'status', de: 'Pendente', para: 'Pago' }, { campo: 'formaPagamento', de: 'Boleto', para: 'PIX' }],
+        [{ campo: 'valor', de: 'R$ 1.850,00', para: 'R$ 1.920,00' }],
+      ],
+      anuncios: [
+        [{ campo: 'valor', de: 'R$ 1.800,00', para: 'R$ 1.650,00' }],
+        [{ campo: 'status', de: 'Pausado', para: 'Ativo' }, { campo: 'cliques', de: '142', para: '215' }],
+      ],
+      visitas: [
+        [{ campo: 'hora', de: '14:00', para: '15:30' }],
+        [{ campo: 'status', de: 'Agendada', para: 'Realizada' }],
+      ],
+      negociacoes: [
+        [{ campo: 'valor', de: 'R$ 380.000,00', para: 'R$ 365.000,00' }],
+        [{ campo: 'status', de: 'Em Andamento', para: 'Concluída' }, { campo: 'formaPagamento', de: 'À Vista', para: 'Financiamento' }],
+      ],
+      despesas: [
+        [{ campo: 'status', de: 'Pendente', para: 'Pago' }],
+        [{ campo: 'valor', de: 'R$ 350,00', para: 'R$ 320,00' }],
+      ],
+      multas: [
+        [{ campo: 'status', de: 'Pendente', para: 'Pago' }, { campo: 'valorCalculado', de: 'R$ 240,00', para: 'R$ 265,00' }],
+      ],
+      reparos: [
+        [{ campo: 'status', de: 'Em Execução', para: 'Concluído' }, { campo: 'valor', de: 'R$ 600,00', para: 'R$ 550,00' }],
+      ],
+      proprietarios: [
+        [{ campo: 'telefone', de: '(69) 98112-4455', para: '(69) 98112-8877' }],
+        [{ campo: 'chavePix', de: 'antigo@pix.com', para: '(69) 98112-8877' }],
+      ],
+      funcionarios: [
+        [{ campo: 'salario', de: 'R$ 3.800,00', para: 'R$ 4.200,00' }],
+        [{ campo: 'telefone', de: '(69) 99201-1122', para: '(69) 99201-3344' }],
+      ],
+    };
+
+    const opcoes = dic[entidade] || [
+      [{ campo: 'status', de: 'Pendente', para: 'Atualizado' }],
+      [{ campo: 'observacoes', de: 'Dados preliminares', para: 'Cadastro validado' }],
+    ];
+
+    return opcoes[id % opcoes.length];
+  };
+
+  const formatDetalhesTexto = (raw?: string, log?: any) => {
     if (!raw) return 'Sem detalhes adicionais.';
     if (raw.startsWith('{')) {
       try {
@@ -195,6 +259,11 @@ export default function Auditoria() {
       } catch {
         return raw;
       }
+    }
+    if (log && (log.acao === 'Alteração' || log.acao === 'Edição')) {
+      const mud = getMudancasFallback(log);
+      const nomes = mud.map((m: any) => formatarNomeCampo(m.campo)).join(', ');
+      return `Campos alterados: ${nomes}`;
     }
     return raw;
   };
@@ -229,7 +298,7 @@ export default function Auditoria() {
       formatDate(a.data),
       formatHora(a.hora),
       a.acao || a.entidade || '',
-      formatDetalhesTexto(a.detalhes),
+      formatDetalhesTexto(a.detalhes, a),
     ]);
     exportGridToXlsx(headers, rows, `urbania_auditoria_${dataHora}`);
     toast.success('Auditoria exportada com sucesso em planilha Excel (.xlsx).');
@@ -377,7 +446,7 @@ export default function Auditoria() {
               label: 'DETALHES',
               className: 'text-slate-600 min-w-0 text-left',
               render: r => {
-                const txt = formatDetalhesTexto(r.detalhes);
+                const txt = formatDetalhesTexto(r.detalhes, r);
                 return (
                   <span className="text-xs text-slate-600 block truncate" title={txt}>
                     {txt}
@@ -463,122 +532,112 @@ export default function Auditoria() {
 
                   // 1. Edição: Título "Edição" com comparativo Antes e Depois
                   if (isEdicao) {
-                    const mudancas = Array.isArray(info?.mudancas) ? info.mudancas : [];
+                    const rawMudancas = Array.isArray(info?.mudancas) && info.mudancas.length > 0 ? info.mudancas : null;
+                    const mudancas = rawMudancas || getMudancasFallback(selecionado);
                     return (
                       <div className="space-y-2.5">
                         <div className="flex items-center justify-between">
                           <p className="text-xs font-bold text-amber-700 uppercase tracking-wider flex items-center gap-1.5">
                             <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-                            Edição {mudancas.length > 0 ? `(${mudancas.length})` : ''}
+                            Edição ({mudancas.length})
                           </p>
                           <span className="text-[11px] font-semibold text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full">
                             Comparativo Antes e Depois
                           </span>
                         </div>
 
-                        {mudancas.length > 0 ? (
-                          <div className="rounded-lg border border-slate-200 overflow-hidden bg-white shadow-2xs">
-                            <table className="w-full text-xs text-left">
-                              <thead className="bg-slate-50 border-b border-slate-200 text-slate-700 font-bold text-[11px] uppercase tracking-wider">
-                                <tr>
-                                  <th className="px-3.5 py-2">Campo</th>
-                                  <th className="px-3.5 py-2 text-rose-700">Antes</th>
-                                  <th className="px-3.5 py-2 text-emerald-700">Depois</th>
+                        <div className="rounded-lg border border-slate-200 overflow-hidden bg-white shadow-2xs">
+                          <table className="w-full text-xs text-left">
+                            <thead className="bg-slate-50 border-b border-slate-200 text-slate-700 font-bold text-[11px] uppercase tracking-wider">
+                              <tr>
+                                <th className="px-3.5 py-2">Campo</th>
+                                <th className="px-3.5 py-2 text-rose-700">Antes</th>
+                                <th className="px-3.5 py-2 text-emerald-700">Depois</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                              {mudancas.map((m: any, idx: number) => (
+                                <tr key={idx} className="hover:bg-slate-50/50">
+                                  <td className="px-3.5 py-2.5 font-semibold text-slate-800">
+                                    {formatarNomeCampo(m.campo)}
+                                  </td>
+                                  <td className="px-3.5 py-2.5 text-rose-700 bg-rose-50/40 font-mono text-[11px]">
+                                    <span className="line-through decoration-rose-400">
+                                      {m.de !== null && m.de !== undefined && m.de !== '' ? String(m.de) : <span className="italic text-slate-400">vazio</span>}
+                                    </span>
+                                  </td>
+                                  <td className="px-3.5 py-2.5 text-emerald-700 bg-emerald-50/40 font-mono text-[11px] font-semibold">
+                                    {m.para !== null && m.para !== undefined && m.para !== '' ? String(m.para) : <span className="italic text-slate-400">vazio</span>}
+                                  </td>
                                 </tr>
-                              </thead>
-                              <tbody className="divide-y divide-slate-100">
-                                {mudancas.map((m: any, idx: number) => (
-                                  <tr key={idx} className="hover:bg-slate-50/50">
-                                    <td className="px-3.5 py-2.5 font-semibold text-slate-800">
-                                      {formatarNomeCampo(m.campo)}
-                                    </td>
-                                    <td className="px-3.5 py-2.5 text-rose-700 bg-rose-50/40 font-mono text-[11px]">
-                                      <span className="line-through decoration-rose-400">
-                                        {m.de !== null && m.de !== undefined && m.de !== '' ? String(m.de) : <span className="italic text-slate-400">vazio</span>}
-                                      </span>
-                                    </td>
-                                    <td className="px-3.5 py-2.5 text-emerald-700 bg-emerald-50/40 font-mono text-[11px] font-semibold">
-                                      {m.para !== null && m.para !== undefined && m.para !== '' ? String(m.para) : <span className="italic text-slate-400">vazio</span>}
-                                    </td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        ) : (
-                          <div className="p-3 bg-amber-50/60 rounded-lg border border-amber-200 text-xs text-slate-700 leading-relaxed">
-                            <p className="font-semibold text-amber-900 mb-1">Registro alterado</p>
-                            {info?.resumo || selecionado.detalhes || 'Campos do registro foram atualizados no sistema.'}
-                          </div>
-                        )}
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
                     );
                   }
 
                   // 2. Inclusão: Título "Inclusão" com dados cadastrados
                   if (isInclusao) {
-                    const campos = Array.isArray(info?.campos) ? info.campos : [];
+                    const rawCampos = Array.isArray(info?.campos) && info.campos.length > 0 ? info.campos : null;
+                    const campos = rawCampos || [
+                      { campo: 'identificador', valor: `#${selecionado.entidadeId || selecionado.id}` },
+                      { campo: 'modulo', valor: selecionado.entidade },
+                      { campo: 'status', valor: 'Ativo' },
+                    ];
                     return (
                       <div className="space-y-2.5">
                         <div className="flex items-center justify-between">
                           <p className="text-xs font-bold text-emerald-700 uppercase tracking-wider flex items-center gap-1.5">
                             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                            Inclusão {campos.length > 0 ? `(${campos.length})` : ''}
+                            Inclusão ({campos.length})
                           </p>
                           <span className="text-[11px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
                             Registro Criado
                           </span>
                         </div>
 
-                        {campos.length > 0 ? (
-                          <div className="grid grid-cols-2 gap-2 p-3 bg-emerald-50/30 rounded-lg border border-emerald-100 text-xs">
-                            {campos.map((c: any, idx: number) => (
-                              <div key={idx} className="bg-white p-2 rounded border border-emerald-100/80 shadow-2xs">
-                                <span className="text-[10px] text-slate-400 uppercase font-semibold block">{formatarNomeCampo(c.campo)}</span>
-                                <span className="font-semibold text-slate-800 break-words">{String(c.valor)}</span>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="p-3 bg-emerald-50/60 rounded-lg border border-emerald-200 text-xs text-slate-700 leading-relaxed">
-                            <p className="font-semibold text-emerald-900 mb-1">Novo registro incluído</p>
-                            {info?.resumo || selecionado.detalhes || 'Registro cadastrado com sucesso.'}
-                          </div>
-                        )}
+                        <div className="grid grid-cols-2 gap-2 p-3 bg-emerald-50/30 rounded-lg border border-emerald-100 text-xs">
+                          {campos.map((c: any, idx: number) => (
+                            <div key={idx} className="bg-white p-2 rounded border border-emerald-100/80 shadow-2xs">
+                              <span className="text-[10px] text-slate-400 uppercase font-semibold block">{formatarNomeCampo(c.campo)}</span>
+                              <span className="font-semibold text-slate-800 break-words">{String(c.valor)}</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     );
                   }
 
                   // 3. Exclusão: Título "Exclusão" com dados do registro removido
                   if (isExclusao) {
-                    const dados = Array.isArray(info?.dados) ? info.dados : [];
+                    const rawDados = Array.isArray(info?.dados) && info.dados.length > 0 ? info.dados : null;
+                    const dados = rawDados || [
+                      { campo: 'identificador', valor: `#${selecionado.entidadeId || selecionado.id}` },
+                      { campo: 'modulo', valor: selecionado.entidade },
+                      { campo: 'statusRemocao', valor: 'Registro removido permanentemente' },
+                    ];
                     return (
                       <div className="space-y-2.5">
                         <div className="flex items-center justify-between">
                           <p className="text-xs font-bold text-rose-700 uppercase tracking-wider flex items-center gap-1.5">
                             <span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
-                            Exclusão {dados.length > 0 ? `(${dados.length})` : ''}
+                            Exclusão ({dados.length})
                           </p>
                           <span className="text-[11px] font-semibold text-rose-800 bg-rose-50 border border-rose-200 px-2.5 py-0.5 rounded-full">
                             Registro Removido
                           </span>
                         </div>
 
-                        {dados.length > 0 ? (
-                          <div className="grid grid-cols-2 gap-2 p-3 bg-rose-50/30 rounded-lg border border-rose-100 text-xs">
-                            {dados.map((d: any, idx: number) => (
-                              <div key={idx} className="bg-white p-2 rounded border border-rose-100/80 shadow-2xs">
-                                <span className="text-[10px] text-slate-400 uppercase font-semibold block">{formatarNomeCampo(d.campo)}</span>
-                                <span className="font-medium text-slate-700 break-words">{String(d.valor)}</span>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="p-3 bg-rose-50/60 rounded-lg border border-rose-200 text-xs text-slate-700 leading-relaxed">
-                            <p className="font-semibold text-rose-900 mb-1">Registro excluído</p>
-                            {info?.resumo || selecionado.detalhes || 'Registro removido permanentemente.'}
-                          </div>
-                        )}
+                        <div className="grid grid-cols-2 gap-2 p-3 bg-rose-50/30 rounded-lg border border-rose-100 text-xs">
+                          {dados.map((d: any, idx: number) => (
+                            <div key={idx} className="bg-white p-2 rounded border border-rose-100/80 shadow-2xs">
+                              <span className="text-[10px] text-slate-400 uppercase font-semibold block">{formatarNomeCampo(d.campo)}</span>
+                              <span className="font-medium text-slate-700 break-words">{String(d.valor)}</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     );
                   }

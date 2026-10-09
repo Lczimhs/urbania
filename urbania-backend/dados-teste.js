@@ -524,13 +524,56 @@ module.exports = async function popularDadosDeTeste(db) {
       const comp = (f.nome.toLowerCase().includes('admin') || f.nome.toLowerCase().includes('diretoria') || f.nome.toLowerCase().includes('gm'))
         ? 'Pc-GM'
         : `Pc-${primeiroNome}`;
+      let detalhesPayload;
+      if (acao === 'Alteração') {
+        const mudancasDic = {
+          clientes: [{ campo: 'telefone', de: '(69) 98301-4455', para: '(69) 98301-9988' }],
+          imoveis: [{ campo: 'precoVenda', de: 'R$ 480.000,00', para: 'R$ 450.000,00' }],
+          contratos: [{ campo: 'valor', de: 'R$ 2.400,00', para: 'R$ 2.650,00' }],
+          financeiro: [{ campo: 'status', de: 'Pendente', para: 'Pago' }],
+          anuncios: [{ campo: 'valor', de: 'R$ 1.800,00', para: 'R$ 1.650,00' }],
+          visitas: [{ campo: 'hora', de: '14:00', para: '15:30' }],
+          negociacoes: [{ campo: 'valor', de: 'R$ 380.000,00', para: 'R$ 365.000,00' }],
+          despesas: [{ campo: 'status', de: 'Pendente', para: 'Pago' }],
+          multas: [{ campo: 'valorCalculado', de: 'R$ 240,00', para: 'R$ 265,00' }],
+          reparos: [{ campo: 'status', de: 'Em Execução', para: 'Concluído' }],
+          proprietarios: [{ campo: 'telefone', de: '(69) 98112-4455', para: '(69) 98112-8877' }],
+        };
+        const mud = mudancasDic[entidade] || [{ campo: 'status', de: 'Pendente', para: 'Atualizado' }];
+        detalhesPayload = JSON.stringify({
+          tipo: 'alteracao',
+          resumo: `${mud.length} campo(s) alterado(s) no módulo ${entidade}`,
+          mudancas: mud,
+        });
+      } else if (acao === 'Criação') {
+        detalhesPayload = JSON.stringify({
+          tipo: 'criacao',
+          resumo: `Novo registro cadastrado no módulo ${entidade}`,
+          campos: [
+            { campo: 'identificador', valor: `#${entre(1, 30)}` },
+            { campo: 'modulo', valor: entidade },
+            { campo: 'status', valor: 'Ativo' },
+          ],
+        });
+      } else {
+        detalhesPayload = JSON.stringify({
+          tipo: 'exclusao',
+          resumo: `Registro excluído do módulo ${entidade}`,
+          dados: [
+            { campo: 'identificador', valor: `#${entre(1, 30)}` },
+            { campo: 'modulo', valor: entidade },
+            { campo: 'statusRemocao', valor: 'Registro removido permanentemente' },
+          ],
+        });
+      }
+
       eventos.push({
         usuario: `${nomeLimpo} (${f.cargo})`,
         computador: comp,
         acao,
         entidade,
         entidadeId: entre(1, 30),
-        detalhes: `Registro ${{ Criação: 'cadastrado', Alteração: 'atualizado', Exclusão: 'excluído' }[acao]} no módulo ${entidade}`,
+        detalhes: detalhesPayload,
         data: dia(offset),
         hora: `${hora()}:${String(entre(0, 59)).padStart(2, '0')}`,
         ip: ipsPorUsuario[f.id] || '192.168.1.1',
