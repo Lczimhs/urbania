@@ -72,13 +72,13 @@
   animation: fade-in 120ms ease-out;
 }
 .data-table-dense td {
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
-  overflow-wrap: anywhere;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  white-space: nowrap;
 }
 .data-table-dense th {
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
   white-space: nowrap;
 }
 

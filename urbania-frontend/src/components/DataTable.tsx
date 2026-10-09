@@ -38,7 +38,8 @@ export function DataTable<T extends { id: number }>({ columns, rows, loading, on
                   ? (['id', 'codigo'].includes(c.key.toLowerCase()) ? 'w-16' : ['data', 'datahora'].includes(c.key.toLowerCase()) ? 'w-40' : '')
                   : '';
                 const widthMatch = c.className?.match(/\b(w-\S+|min-w-\S+|max-w-\S+)\b/g)?.filter(w => !w.includes('w-full')).join(' ') || defaultFirstWidth;
-                const thWidthClass = widthMatch;
+                const alignMatch = c.className?.match(/\btext-(left|center|right)\b/g)?.join(' ') || '';
+                const thWidthClass = `${widthMatch} ${alignMatch}`.trim();
                 return (
                   <th key={c.key} className={`px-3.5 lg:px-4 py-3.5 whitespace-nowrap ${thWidthClass}`}>
                     {c.label}

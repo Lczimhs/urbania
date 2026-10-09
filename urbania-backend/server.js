@@ -43,6 +43,9 @@ const deleteGuards = {
 const get = (sql, params = []) => new Promise((resolve, reject) =>
   db.get(sql, params, (err, row) => (err ? reject(err) : resolve(row))));
 
+const run = (sql, params = []) => new Promise((resolve, reject) =>
+  db.run(sql, params, function(err) { return err ? reject(err) : resolve(this); }));
+
 const os = require('os');
 
 // Nome usado na auditoria, sem duplicar termos como (Admin) e (Administrador)
@@ -58,30 +61,99 @@ const formatUsuario = (user) => {
 
 const quem = req => req.sessao ? formatUsuario(req.sessao.user) : 'Sistema';
 
-const getClientIp = (req) => {
-  const forwarded = req.headers['x-forwarded-for'];
-  if (forwarded) return String(forwarded).split(',')[0].trim();
-  const remote = req.socket?.remoteAddress || req.ip || '127.0.0.1';
-  return remote === '::1' ? '127.0.0.1' : String(remote).replace(/^::ffff:/, '');
+// Gerenciamento de IP padrão fixo/atribuído por usuário/estação iniciando em 192.168.1.1
+const getWorkstationUser = (req) => {
+  const customUser = req?.headers?.['x-client-user'];
+  if (customUser && customUser.trim()) return customUser.trim();
+  const customDev = req?.headers?.['x-client-device'];
+  if (customDev && customDev.trim()) {
+    return customDev.trim().replace(/^Pc[-_]/i, '');
+  }
+  return process.env.USERNAME || process.env.USER || 'GM';
 };
 
 const getComputerName = (req) => {
-  const custom = req.headers['x-client-device'];
-  if (custom && custom !== 'Pc-Lucas') {
-    return custom;
+  const custom = req?.headers?.['x-client-device'] || req?.headers?.['x-client-user'];
+  if (custom && custom.trim()) {
+    const val = custom.trim();
+    return (val.startsWith('Pc-') || val.startsWith('Pc_')) ? val : `Pc-${val}`;
   }
-  if (req.sessao?.user?.nome) {
-    const nome = req.sessao.user.nome;
-    if (nome.toLowerCase().includes('lucas') || nome.toLowerCase().includes('admin') || nome.toLowerCase().includes('diretoria')) {
-      return 'Pc-Lucas';
-    }
-    const primeiro = nome.trim().split(/\s+/)[0];
-    return `Pc-${primeiro}`;
+  // Identifica o usuário real do computador local no SO (ex: GM -> Pc-GM)
+  const osUser = process.env.USERNAME || process.env.USER;
+  if (osUser && osUser.trim()) {
+    return `Pc-${osUser.trim()}`;
   }
-  return req.headers['x-client-device'] || process.env.COMPUTERNAME || os.hostname() || 'Pc-Lucas';
+  return process.env.COMPUTERNAME || os.hostname() || 'Pc-GM';
 };
 
-const logAudit = (usuario, acao, entidade, entidadeId, detalhes, ip, computador) => {
+const getUserIp = async (req, usuarioNome) => {
+  const comp = getComputerName(req);
+  const osUser = getWorkstationUser(req);
+  const nome = (usuarioNome || 'Sistema').trim();
+
+  try {
+    const compNorm = comp.toLowerCase();
+    const osUserNorm = osUser.toLowerCase();
+
+    // 1. GM / Pc-GM é sempre o IP padrão inicial 192.168.1.1
+    if (compNorm === 'pc-gm' || osUserNorm === 'gm') {
+      const row = await get('SELECT ip FROM usuario_ips WHERE LOWER(usuario) IN ("pc-gm", "gm")');
+      if (row?.ip) return row.ip;
+      await run('INSERT OR IGNORE INTO usuario_ips (usuario, ip, criadoEm) VALUES (?, ?, ?)', ['Pc-GM', '192.168.1.1', new Date().toISOString()]);
+      return '192.168.1.1';
+    }
+
+    // 2. Pc_Lucas / Pc-Lucas / Lucas é sempre 192.168.1.2
+    if (compNorm === 'pc_lucas' || compNorm === 'pc-lucas' || osUserNorm === 'lucas') {
+      const row = await get('SELECT ip FROM usuario_ips WHERE LOWER(usuario) IN ("pc_lucas", "pc-lucas", "lucas")');
+      if (row?.ip) return row.ip;
+      await run('INSERT OR IGNORE INTO usuario_ips (usuario, ip, criadoEm) VALUES (?, ?, ?)', ['Pc_Lucas', '192.168.1.2', new Date().toISOString()]);
+      return '192.168.1.2';
+    }
+
+    // 3. Busca existente por computador exato
+    let row = await get('SELECT ip FROM usuario_ips WHERE LOWER(usuario) = LOWER(?)', [comp]);
+    if (row?.ip) return row.ip;
+
+    // 4. Busca existente por usuário do SO
+    row = await get('SELECT ip FROM usuario_ips WHERE LOWER(usuario) = LOWER(?)', [osUser]);
+    if (row?.ip) return row.ip;
+
+    // 5. Busca existente por usuário do sistema (caso não seja acesso compartilhado de diretoria/admin)
+    if (!nome.toLowerCase().includes('diretoria') && !nome.toLowerCase().includes('admin')) {
+      row = await get('SELECT ip FROM usuario_ips WHERE LOWER(usuario) = LOWER(?)', [nome]);
+      if (row?.ip) return row.ip;
+    }
+
+    // 6. Novo usuário/computador detectado: aloca o próximo IP sequencial (192.168.1.X)
+    const allRows = await new Promise((res, rej) =>
+      db.all('SELECT ip FROM usuario_ips', [], (err, rows) => err ? rej(err) : res(rows || []))
+    );
+    let maxNum = 0;
+    allRows.forEach(r => {
+      const match = String(r.ip || '').match(/^192\.168\.1\.(\d+)$/);
+      if (match) {
+        const n = parseInt(match[1], 10);
+        if (n > maxNum) maxNum = n;
+      }
+    });
+
+    const proximoNumero = Math.max(maxNum + 1, 1);
+    const novoIp = `192.168.1.${proximoNumero}`;
+
+    await run('INSERT OR IGNORE INTO usuario_ips (usuario, ip, criadoEm) VALUES (?, ?, ?)', [
+      comp,
+      novoIp,
+      new Date().toISOString(),
+    ]);
+
+    return novoIp;
+  } catch (err) {
+    return '192.168.1.1';
+  }
+};
+
+const logAudit = async (usuario, acao, entidade, entidadeId, detalhes, req) => {
   if (entidade === 'auditoria') return;
   // Logs gerados apenas em edição, inclusão e exclusão
   const acoesPermitidas = ['Criação', 'Alteração', 'Exclusão', 'Inclusão', 'Edição'];
@@ -90,14 +162,23 @@ const logAudit = (usuario, acao, entidade, entidadeId, detalhes, ip, computador)
   const now = new Date();
   const data = now.toISOString().slice(0, 10);
   const hora = now.toLocaleTimeString('pt-BR', { hour12: false });
-  const comp = computador || process.env.COMPUTERNAME || os.hostname() || 'Pc-Lucas';
-  const cleanIp = ip === '::1' ? '127.0.0.1' : (ip ? String(ip).replace(/^::ffff:/, '') : '127.0.0.1');
+  const comp = getComputerName(req);
+  const userIp = await getUserIp(req, usuario);
 
   db.run(
     `INSERT INTO auditoria (usuario, computador, acao, entidade, entidadeId, detalhes, data, hora, ip) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [usuario || 'Sistema', comp, acao, entidade, entidadeId || null, detalhes || '', data, hora, cleanIp]
+    [usuario || 'Sistema', comp, acao, entidade, entidadeId || null, detalhes || '', data, hora, userIp]
   );
 };
+
+// Rota pública para o frontend descobrir o nome da máquina/usuário do SO
+app.get('/api/device-info', (req, res) => {
+  const osUser = process.env.USERNAME || process.env.USER || 'GM';
+  res.json({
+    osUser,
+    computerName: `Pc-${osUser}`,
+  });
+});
 
 // Impede relacionar funcionário/corretor inativo a qualquer entidade (imóvel, visita, proposta, contrato, reparo)
 const validarFuncionarioAtivo = async (table, data) => {
@@ -175,7 +256,7 @@ tables.forEach(table => {
     db.run(sql, Object.values(data), function(err) {
       if (err) return res.status(500).json({ error: err.message });
       const newId = this.lastID;
-      logAudit(quem(req), 'Criação', table, newId, `Registro cadastrado no módulo ${table}`, getClientIp(req), getComputerName(req));
+      logAudit(quem(req), 'Criação', table, newId, `Registro cadastrado no módulo ${table}`, req);
       res.json(saida(req, { id: newId, ...data }));
     });
   });
@@ -199,7 +280,7 @@ tables.forEach(table => {
 
     db.run(sql, [...Object.values(data), req.params.id], function(err) {
       if (err) return res.status(500).json({ error: err.message });
-      logAudit(quem(req), 'Alteração', table, Number(req.params.id), `Registro atualizado no módulo ${table}`, getClientIp(req), getComputerName(req));
+      logAudit(quem(req), 'Alteração', table, Number(req.params.id), `Registro atualizado no módulo ${table}`, req);
       res.json(saida(req, { id: Number(req.params.id), ...data }));
     });
   });
@@ -221,7 +302,7 @@ tables.forEach(table => {
 
     db.run(`DELETE FROM ${table} WHERE id=?`, [req.params.id], function(err) {
       if (err) return res.status(500).json({ error: err.message });
-      logAudit(quem(req), 'Exclusão', table, Number(req.params.id), `Registro excluído do módulo ${table}`, getClientIp(req), getComputerName(req));
+      logAudit(quem(req), 'Exclusão', table, Number(req.params.id), `Registro excluído do módulo ${table}`, req);
       res.json({ deleted: this.changes });
     });
   });

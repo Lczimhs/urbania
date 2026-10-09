@@ -82,7 +82,7 @@ const carregarSessao = async userId => {
 
 // Middleware: exige o id do usuário logado em todas as rotas /api (menos o login)
 const autenticar = async (req, res, next) => {
-  if (req.path === '/api/auth/login' || !req.path.startsWith('/api/')) return next();
+  if (req.path === '/api/auth/login' || req.path === '/api/device-info' || !req.path.startsWith('/api/')) return next();
   const token = (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
   const userId = lerToken(token);
   if (!userId) return res.status(401).json({ error: 'Faça login para acessar o sistema.' });

@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent, MouseEvent, ReactNode } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { ArrowRight, Eye, EyeOff, Loader2, Lock, Mail } from 'lucide-react';
+import { ArrowRight, Eye, EyeOff, Laptop, Loader2, Lock, Mail } from 'lucide-react';
 import { useAuth } from '../lib/auth';
+import { initDeviceInfo } from '../api';
 import logoImg from '../assets/logo.png';
 import './Login.css';
 
@@ -174,6 +175,20 @@ export default function Login() {
   const [verSenha, setVerSenha] = useState(false);
   const [entrando, setEntrando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [deviceInfo, setDeviceInfo] = useState<{ computerName: string; osUser: string }>(() => ({
+    computerName: localStorage.getItem('urbania_device_name') || 'Pc-GM',
+    osUser: localStorage.getItem('urbania_os_user') || 'GM',
+  }));
+
+  useEffect(() => {
+    initDeviceInfo()
+      .then(d => {
+        if (d?.computerName) {
+          setDeviceInfo({ computerName: d.computerName, osUser: d.osUser || 'GM' });
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // Parallax: grava --mx/--my no root via requestAnimationFrame, sem re-render do React
   const rootRef = useRef<HTMLDivElement>(null);
@@ -235,6 +250,11 @@ export default function Login() {
             <div className="lg-card">
               <h1 className="lg-title">Bem-vindo de volta</h1>
               <p className="lg-subtitle">Entre com seu e-mail e senha para continuar.</p>
+
+              <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-sky-950/60 border border-sky-800/40 text-xs text-sky-200 mt-3 mb-2">
+                <Laptop size={15} className="text-teal-400 shrink-0" />
+                <span>Estação: <strong className="text-white font-mono">{deviceInfo.computerName}</strong> (Usuário SO: <span className="text-teal-300 font-semibold">{deviceInfo.osUser}</span>)</span>
+              </div>
 
               {erro && <p role="alert" className="lg-error">{erro}</p>}
 

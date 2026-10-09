@@ -68,18 +68,62 @@ export default function Auditoria() {
     .filter(a => filtraData(a.data))
     .filter(a => matches(term, a.id, a.usuario, a.computador, a.acao, a.entidade, a.entidadeId, a.detalhes, a.ip));
 
+  const formatComputador = (r: any) => {
+    if (r.computador && (r.computador.startsWith('Pc-') || r.computador.startsWith('Pc_'))) {
+      return r.computador;
+    }
+    if (r.computador && r.computador.trim()) {
+      return `Pc-${r.computador.trim().replace(/^Pc[-_]/i, '')}`;
+    }
+    const activeDevice = localStorage.getItem('urbania_device_name');
+    if (activeDevice) return activeDevice;
+    return 'Pc-GM';
+  };
+
+  const formatUsuarioDisplay = (rawUsuario?: string) => {
+    const str = (rawUsuario || 'Sistema').trim();
+    const match = str.match(/^(.*?)(?:\s*\((.*?)\))?$/);
+    let nome = match?.[1]?.trim() || str;
+    let cargo = match?.[2]?.trim();
+
+    nome = nome.replace(/\s*\((?:Admin|Administrador)\)\s*/gi, '').trim();
+
+    if (!cargo || /admin|administrador|diretoria/i.test(cargo)) {
+      cargo = 'Administração';
+    }
+
+    return {
+      nome,
+      cargo: `(${cargo})`,
+      full: `${nome} (${cargo})`,
+    };
+  };
+
+  const formatIp = (rawIp?: string) => {
+    if (!rawIp || rawIp === '::1' || rawIp === '::ffff:127.0.0.1' || rawIp === '127.0.0.1') {
+      return '192.168.1.1';
+    }
+    return String(rawIp).replace(/^::ffff:/, '');
+  };
+
+  // Garante listagem contínua e sequencial sem vãos/saltos de IDs
+  const rowsSequenciais = filtered.map((a, idx) => ({
+    ...a,
+    seqId: filtered.length - idx,
+  }));
+
   const exportarXlsx = () => {
     const dataHora = new Date().toISOString().slice(0, 10);
     // Ordem das informações solicitada: ID > USUÁRIO > COMPUTADOR > ENDEREÇO IP > DATA > HORA > ENTIDADE > DETALHES
     const headers = ['ID', 'USUÁRIO', 'COMPUTADOR', 'ENDEREÇO IP', 'DATA', 'HORA', 'ENTIDADE', 'DETALHES'];
-    const rows = filtered.map(a => [
-      a.id,
-      a.usuario || 'Sistema',
-      a.computador || 'Pc-Lucas',
-      a.ip || '127.0.0.1',
+    const rows = rowsSequenciais.map(a => [
+      a.seqId || a.id,
+      formatUsuarioDisplay(a.usuario).full,
+      formatComputador(a),
+      formatIp(a.ip),
       formatDate(a.data),
       a.hora || '—',
-      `${a.entidade || ''}${a.entidadeId ? ` (#${a.entidadeId})` : ''}`,
+      a.acao || a.entidade || '',
       a.detalhes || '',
     ]);
     exportGridToXlsx(headers, rows, `urbania_auditoria_${dataHora}`);
@@ -87,7 +131,7 @@ export default function Auditoria() {
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto print:space-y-0 print:m-0 print:p-0 print:max-w-none">
+    <div className="space-y-6 w-full max-w-[1600px] mx-auto print:space-y-0 print:m-0 print:p-0 print:max-w-none">
       <PageHeader
         title="Auditoria"
         subtitle={`${filtered.length} logs de operações registradas`}
@@ -137,87 +181,101 @@ export default function Auditoria() {
         {/* Grid com a ordem exata das colunas: ID > USUÁRIO > COMPUTADOR > ENDEREÇO IP > DATA > HORA > ENTIDADE > DETALHES */}
         <DataTable
           pageSize={30}
-          rows={filtered}
+          rows={rowsSequenciais}
           loading={auditoria.loading}
           empty="Nenhum registro de auditoria encontrado."
           onRowClick={r => setSelecionado(r)}
+          layoutFixed
+          dense
           columns={[
             {
               key: 'id',
               label: 'ID',
-              className: 'w-16 whitespace-nowrap',
-              render: r => <span className="font-mono text-slate-500 text-xs font-semibold">#{r.id}</span>,
+              className: 'w-12 whitespace-nowrap text-left',
+              render: r => <span className="font-mono text-slate-500 text-xs font-semibold whitespace-nowrap">#{r.seqId || r.id}</span>,
             },
             {
               key: 'usuario',
               label: 'USUÁRIO',
-              className: 'min-w-[170px]',
-              render: r => (
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 shrink-0">
-                    <User size={13} />
+              className: 'w-36 lg:w-42 whitespace-nowrap text-left',
+              render: r => {
+                const u = formatUsuarioDisplay(r.usuario);
+                return (
+                  <div className="flex items-center gap-1.5 whitespace-nowrap min-w-0 py-0.5" title={u.full}>
+                    <div className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 shrink-0">
+                      <User size={12} />
+                    </div>
+                    <div className="flex flex-col min-w-0 leading-tight">
+                      <span className="font-semibold text-slate-800 text-xs truncate">
+                        {u.nome}
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-normal truncate">
+                        {u.cargo}
+                      </span>
+                    </div>
                   </div>
-                  <span className="font-semibold text-slate-800 text-xs truncate" title={r.usuario}>
-                    {r.usuario || 'Sistema'}
-                  </span>
-                </div>
-              ),
+                );
+              },
             },
             {
               key: 'computador',
               label: 'COMPUTADOR',
-              className: 'min-w-[130px]',
-              render: r => (
-                <div className="flex items-center gap-1.5">
-                  <Laptop size={14} className="text-teal-600 shrink-0" />
-                  <span className="font-medium text-slate-700 text-xs bg-slate-100/80 px-2 py-0.5 rounded border border-slate-200">
-                    {r.computador || 'Pc-Lucas'}
-                  </span>
-                </div>
-              ),
+              className: 'w-32 whitespace-nowrap text-left',
+              render: r => {
+                const comp = formatComputador(r);
+                return (
+                  <div className="flex items-center gap-1.5 whitespace-nowrap min-w-0" title={comp}>
+                    <Laptop size={14} className="text-teal-600 shrink-0" />
+                    <span className="font-medium text-slate-700 text-xs bg-slate-100/80 px-2 py-0.5 rounded border border-slate-200 whitespace-nowrap inline-block">
+                      {comp}
+                    </span>
+                  </div>
+                );
+              },
             },
             {
               key: 'ip',
               label: 'ENDEREÇO IP',
-              className: 'w-28 whitespace-nowrap',
-              render: r => <span className="font-mono text-xs text-slate-500 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-200">{r.ip || '127.0.0.1'}</span>,
+              className: 'w-28 whitespace-nowrap text-left',
+              render: r => <span className="font-mono text-xs text-slate-500 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-200 whitespace-nowrap">{formatIp(r.ip)}</span>,
             },
             {
               key: 'data',
               label: 'DATA',
-              className: 'w-24 whitespace-nowrap',
-              render: r => <span className="text-xs font-medium text-slate-700">{formatDate(r.data)}</span>,
+              className: 'w-24 whitespace-nowrap text-left',
+              render: r => <span className="text-xs font-medium text-slate-700 whitespace-nowrap">{formatDate(r.data)}</span>,
             },
             {
               key: 'hora',
               label: 'HORA',
-              className: 'w-20 whitespace-nowrap',
-              render: r => <span className="text-xs font-mono text-slate-600">{r.hora || '—'}</span>,
+              className: 'w-16 whitespace-nowrap text-left',
+              render: r => <span className="text-xs font-mono text-slate-600 whitespace-nowrap">{r.hora || '—'}</span>,
             },
             {
               key: 'entidade',
               label: 'ENTIDADE',
-              className: 'min-w-[140px]',
+              className: 'w-28 whitespace-nowrap text-left',
               render: r => (
-                <div className="flex items-center gap-1.5">
-                  <Badge className={
+                <div className="whitespace-nowrap" title={`${r.entidade || ''}${r.entidadeId ? ` (#${r.entidadeId})` : ''}`}>
+                  <Badge className={`text-xs px-2.5 py-0.5 rounded-md font-semibold whitespace-nowrap inline-flex items-center ${
                     r.acao === 'Criação' || r.acao === 'Inclusão' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' :
                     r.acao === 'Exclusão' ? 'bg-rose-100 text-rose-800 border border-rose-200' :
                     'bg-amber-100 text-amber-800 border border-amber-200'
-                  }>
+                  }`}>
                     {r.acao}
                   </Badge>
-                  <span className="text-xs font-mono text-slate-700 font-medium">
-                    {r.entidade}{r.entidadeId ? ` (#${r.entidadeId})` : ''}
-                  </span>
                 </div>
               ),
             },
             {
               key: 'detalhes',
               label: 'DETALHES',
-              className: 'min-w-[220px]',
-              render: r => <span className="text-xs text-slate-600 line-clamp-1">{r.detalhes}</span>,
+              className: 'text-slate-600 min-w-0 text-left',
+              render: r => (
+                <span className="text-xs text-slate-600 block truncate" title={r.detalhes}>
+                  {r.detalhes}
+                </span>
+              ),
             },
           ]}
         />
@@ -245,17 +303,17 @@ export default function Auditoria() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Usuário</p>
-                  <p className="font-bold text-slate-800 mt-0.5">{selecionado.usuario || 'Sistema'}</p>
+                  <p className="font-bold text-slate-800 mt-0.5">{formatUsuarioDisplay(selecionado.usuario).full}</p>
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Computador</p>
                   <p className="font-bold text-teal-700 mt-0.5 flex items-center gap-1.5">
-                    <Laptop size={15} /> {selecionado.computador || 'Pc-Lucas'}
+                    <Laptop size={15} /> {formatComputador(selecionado)}
                   </p>
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">ID do Log</p>
-                  <p className="font-mono text-slate-700 mt-0.5 font-semibold">#{selecionado.id}</p>
+                  <p className="font-mono text-slate-700 mt-0.5 font-semibold">#{selecionado.seqId || selecionado.id}</p>
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Data e Hora</p>
@@ -263,7 +321,7 @@ export default function Auditoria() {
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Endereço IP</p>
-                  <p className="font-mono text-slate-700 mt-0.5">{selecionado.ip || '127.0.0.1'}</p>
+                  <p className="font-mono text-slate-700 mt-0.5">{formatIp(selecionado.ip)}</p>
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Operação Realizada</p>
