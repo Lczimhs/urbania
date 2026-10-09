@@ -217,7 +217,7 @@ type CampoDeBusca = { aplicar: () => void; limpar: () => void };
 type BuscaCtx = { registrar: (id: string, campo: CampoDeBusca) => () => void };
 const BuscaContext = createContext<BuscaCtx | null>(null);
 
-function useCampoDeBusca(value: string, onChange: (v: string) => void) {
+export function useCampoDeBusca(value: string, onChange: (v: string) => void) {
   const ctx = useContext(BuscaContext);
   const id = useId();
   const [rascunho, setRascunho] = useState(value);
@@ -360,3 +360,6 @@ export function Badge({ children, className }: { children: ReactNode; className:
 // Busca "inteligente": ignora acentos e maiúsculas
 export const normalize = (v: unknown) => String(v ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 export const matches = (term: string, ...values: unknown[]) => !term || values.some(v => normalize(v).includes(normalize(term)));
+
+export { DateInput, DateRangeFilter } from './DateRangeFilter';
+export type { DateInputProps, DateRangeFilterProps } from './DateRangeFilter';

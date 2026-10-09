@@ -14,7 +14,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { api } from '../api';
-import { Card, DataTable, FilterSelect, PageHeader, RowActions, SearchInput, Toolbar, matches } from '../components/DataTable';
+import { Card, DataTable, DateRangeFilter, FilterSelect, PageHeader, RowActions, SearchInput, Toolbar, matches } from '../components/DataTable';
 import { Avatar } from '../components/EntityForm';
 import type { Mode, TabDef } from '../components/EntityForm';
 import { EntityPage, RelatedGrid } from '../components/EntityPage';
@@ -27,13 +27,6 @@ import { FORMAS_PAGAMENTO, STATUS_NEGOCIACAO, TIPOS_NEGOCIACAO, statusColor } fr
 import { StatusDropdown } from '../components/StatusDropdown';
 import { Pode } from '../lib/auth';
 
-const PERIODOS_NEGOCIACAO = [
-  { value: 'hoje', label: 'Hoje' },
-  { value: 'mes_atual', label: 'Este mês' },
-  { value: 'mes_anterior', label: 'Mês anterior' },
-  { value: 'ano_atual', label: 'Este ano' },
-  { value: 'ultimos_30', label: 'Últimos 30 dias' },
-];
 
 
 // Exportação nativa para CSV / Excel (RNF 1.3 - pág. 32)
@@ -76,7 +69,8 @@ export function NegociacoesList() {
   const [statusFiltro, setStatusFiltro] = useState('');
   const [corretorFiltro, setCorretorFiltro] = useState('');
   const [tipoFiltro, setTipoFiltro] = useState('');
-  const [periodoFiltro, setPeriodoFiltro] = useState('');
+  const [dataInicio, setDataInicio] = useState('');
+  const [dataFim, setDataFim] = useState('');
   const [cancelarId, setCancelarId] = useState<number | null>(null);
 
   const del = useDelete('negociacoes', 'Negociação', reload);
@@ -84,30 +78,15 @@ export function NegociacoesList() {
   const cliente = (id: number) => clientes.rows.find(c => c.id === id);
   const imovel = (id: number) => imoveis.rows.find(i => i.id === id);
 
-  const hoje = todayISO();
-  const [ano, mes] = hoje.split('-');
-  const mesAtualInicio = `${ano}-${mes}-01`;
-  const mesAnteriorNum = Number(mes) === 1 ? 12 : Number(mes) - 1;
-  const mesAnteriorAno = Number(mes) === 1 ? Number(ano) - 1 : Number(ano);
-  const mesAnteriorInicio = `${mesAnteriorAno}-${String(mesAnteriorNum).padStart(2, '0')}-01`;
-  const mesAnteriorFim = `${mesAnteriorAno}-${String(mesAnteriorNum).padStart(2, '0')}-31`;
-  const anoAtualInicio = `${ano}-01-01`;
-  const d30 = new Date(); d30.setDate(d30.getDate() - 30);
-  const iso30Passado = d30.toISOString().slice(0, 10);
-
   // Filtros combinados (RNF 1.2: filtros por período e por Usuário Responsável)
   const filtered = rows
     .filter(n => (!statusFiltro ? true : n.status === statusFiltro))
     .filter(n => (!corretorFiltro ? true : String(n.corretorId) === String(corretorFiltro) || n.corretor === corretorFiltro))
     .filter(n => (!tipoFiltro ? true : n.tipo === tipoFiltro))
     .filter(n => {
-      if (!periodoFiltro) return true;
-      const d = n.data || '';
-      if (periodoFiltro === 'hoje') return d === hoje;
-      if (periodoFiltro === 'mes_atual') return d >= mesAtualInicio && d <= hoje;
-      if (periodoFiltro === 'mes_anterior') return d >= mesAnteriorInicio && d <= mesAnteriorFim;
-      if (periodoFiltro === 'ano_atual') return d >= anoAtualInicio;
-      if (periodoFiltro === 'ultimos_30') return d >= iso30Passado && d <= hoje;
+      const d = (n.data || '').slice(0, 10);
+      if (dataInicio && d < dataInicio) return false;
+      if (dataFim && d > dataFim) return false;
       return true;
     })
     .filter(n => matches(
@@ -217,11 +196,11 @@ export function NegociacoesList() {
             placeholder="Todos os corretores"
           />
 
-          <FilterSelect
-            value={periodoFiltro}
-            onChange={setPeriodoFiltro}
-            options={PERIODOS_NEGOCIACAO}
-            placeholder="Todos os períodos"
+          <DateRangeFilter
+            dataInicio={dataInicio}
+            dataFim={dataFim}
+            onChangeInicio={setDataInicio}
+            onChangeFim={setDataFim}
           />
         </Toolbar>
 

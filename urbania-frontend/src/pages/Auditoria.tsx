@@ -7,20 +7,12 @@ import {
   User,
   X,
 } from 'lucide-react';
-import { Badge, Card, DataTable, FilterSelect, PageHeader, SearchInput, Toolbar, matches } from '../components/DataTable';
+import { Badge, Card, DataTable, DateRangeFilter, FilterSelect, PageHeader, SearchInput, Toolbar, matches } from '../components/DataTable';
 import { useToast } from '../components/Toast';
 import { useList } from '../lib/useApi';
 import { formatDate } from '../lib/format';
 import { exportGridToXlsx } from '../lib/exportExcel';
 
-const PERIODOS_AUDITORIA = [
-  { value: 'hoje', label: 'Hoje' },
-  { value: 'mes_atual', label: 'Este mês' },
-  { value: 'mes_anterior', label: 'Mês anterior' },
-  { value: 'ano_atual', label: 'Este ano' },
-  { value: 'ultimos_30', label: 'Últimos 30 dias' },
-  { value: 'ultimos_90', label: 'Últimos 90 dias' },
-];
 
 const ACOES_AUDITORIA = [
   { value: 'Criação', label: 'Criação / Inclusão' },
@@ -33,31 +25,16 @@ export default function Auditoria() {
   const auditoria = useList('auditoria');
 
   const [term, setTerm] = useState('');
-  const [periodoFiltro, setPeriodoFiltro] = useState('');
+  const [dataInicio, setDataInicio] = useState('');
+  const [dataFim, setDataFim] = useState('');
   const [acaoFiltro, setAcaoFiltro] = useState('');
   const [selecionado, setSelecionado] = useState<any | null>(null);
 
-  const hoje = new Date().toISOString().slice(0, 10);
-  const [ano, mes] = hoje.split('-');
-  const mesAtualInicio = `${ano}-${mes}-01`;
-  const mesAntNum = Number(mes) === 1 ? 12 : Number(mes) - 1;
-  const mesAntAno = Number(mes) === 1 ? Number(ano) - 1 : Number(ano);
-  const mesAntInicio = `${mesAntAno}-${String(mesAntNum).padStart(2, '0')}-01`;
-  const mesAntFim = `${mesAntAno}-${String(mesAntNum).padStart(2, '0')}-31`;
-  const anoAtualInicio = `${ano}-01-01`;
-  const d30 = new Date(); d30.setDate(d30.getDate() - 30);
-  const iso30 = d30.toISOString().slice(0, 10);
-  const d90 = new Date(); d90.setDate(d90.getDate() - 90);
-  const iso90 = d90.toISOString().slice(0, 10);
-
   const filtraData = (d?: string) => {
-    if (!periodoFiltro || !d) return true;
-    if (periodoFiltro === 'hoje') return d === hoje;
-    if (periodoFiltro === 'mes_atual') return d >= mesAtualInicio && d <= hoje;
-    if (periodoFiltro === 'mes_anterior') return d >= mesAntInicio && d <= mesAntFim;
-    if (periodoFiltro === 'ano_atual') return d >= anoAtualInicio && d <= hoje;
-    if (periodoFiltro === 'ultimos_30') return d >= iso30 && d <= hoje;
-    if (periodoFiltro === 'ultimos_90') return d >= iso90 && d <= hoje;
+    if (!d) return !dataInicio && !dataFim;
+    const dataVal = d.slice(0, 10);
+    if (dataInicio && dataVal < dataInicio) return false;
+    if (dataFim && dataVal > dataFim) return false;
     return true;
   };
 
@@ -343,11 +320,11 @@ export default function Auditoria() {
               placeholder="Todas as operações"
             />
 
-            <FilterSelect
-              value={periodoFiltro}
-              onChange={setPeriodoFiltro}
-              options={PERIODOS_AUDITORIA}
-              placeholder="Todos os períodos"
+            <DateRangeFilter
+              dataInicio={dataInicio}
+              dataFim={dataFim}
+              onChangeInicio={setDataInicio}
+              onChangeFim={setDataFim}
             />
           </Toolbar>
         </div>

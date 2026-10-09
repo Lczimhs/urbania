@@ -16,7 +16,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { api } from '../api';
-import { Badge, Card, DataTable, FilterSelect, PageHeader, RowActions, SearchInput, Toolbar, matches } from '../components/DataTable';
+import { Badge, Card, DataTable, DateRangeFilter, FilterSelect, PageHeader, RowActions, SearchInput, Toolbar, matches } from '../components/DataTable';
 import { Avatar } from '../components/EntityForm';
 import type { Mode, TabDef } from '../components/EntityForm';
 import { EntityPage, RelatedGrid } from '../components/EntityPage';
@@ -123,6 +123,8 @@ export function ContratosList() {
   const [tipoFiltro, setTipoFiltro] = useState('');
   const [statusFiltro, setStatusFiltro] = useState('');
   const [corretorFiltro, setCorretorFiltro] = useState('');
+  const [dataInicio, setDataInicio] = useState('');
+  const [dataFim, setDataFim] = useState('');
   const [periodoVigencia, setPeriodoVigencia] = useState('');
 
   const del = useDelete('contratos', 'Contrato', reload);
@@ -141,6 +143,12 @@ export function ContratosList() {
     .filter(c => (!tipoFiltro ? true : c.tipo === tipoFiltro))
     .filter(c => (!statusFiltro ? true : c.status === statusFiltro))
     .filter(c => (!corretorFiltro ? true : String(c.corretorId) === String(corretorFiltro) || c.corretor === corretorFiltro))
+    .filter(c => {
+      const d = (c.dataInicio || '').slice(0, 10);
+      if (dataInicio && d < dataInicio) return false;
+      if (dataFim && d > dataFim) return false;
+      return true;
+    })
     .filter(c => {
       if (!periodoVigencia) return true;
       if (periodoVigencia === 'vigentes') return (c.dataInicio || '') <= hoje && (!c.dataFim || c.dataFim >= hoje);
@@ -258,11 +266,17 @@ export function ContratosList() {
             placeholder="Todos os corretores"
           />
 
+          <DateRangeFilter
+            dataInicio={dataInicio}
+            dataFim={dataFim}
+            onChangeInicio={setDataInicio}
+            onChangeFim={setDataFim}
+          />
           <FilterSelect
             value={periodoVigencia}
             onChange={setPeriodoVigencia}
             options={PERIODOS_CONTRATO}
-            placeholder="Todos os períodos"
+            placeholder="Todas as vigências"
           />
         </Toolbar>
 

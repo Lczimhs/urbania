@@ -3,31 +3,17 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CalendarX2, MapPin, MoreVertical, Plus } from 'lucide-react';
 import { api } from '../api';
-import { Card, DataTable, FilterSelect, PageHeader, RowActions, SearchInput, Toolbar, matches } from '../components/DataTable';
+import { Card, DataTable, DateRangeFilter, FilterSelect, PageHeader, RowActions, SearchInput, Toolbar, matches } from '../components/DataTable';
 import { Avatar } from '../components/EntityForm';
 import type { Mode, TabDef } from '../components/EntityForm';
 import { EntityPage } from '../components/EntityPage';
 import { ConfirmModal } from '../components/Modal';
 import { apiError, useToast } from '../components/Toast';
 import { useList } from '../lib/useApi';
-import { formatDate, fullAddress, todayISO } from '../lib/format';
+import { formatDate, fullAddress } from '../lib/format';
 import { STATUS_VISITA } from '../lib/options';
 import { Pode } from '../lib/auth';
 
-const PERIODOS_VISITA = [
-  { value: 'Hoje', label: 'Hoje' },
-  { value: 'Esta Semana', label: 'Esta Semana' },
-];
-
-const weekRange = () => {
-  const d = new Date();
-  const monday = new Date(d);
-  const sunday = new Date(d);
-  monday.setDate(d.getDate() - ((d.getDay() + 6) % 7));
-  sunday.setDate(monday.getDate() + 6);
-  const iso = (x: Date) => `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`;
-  return [iso(monday), iso(sunday)];
-};
 
 // Menu de três pontos com atalhos da linha
 export function RowMenu({ items }: { items: { label: string; onClick: () => void; danger?: boolean; hidden?: boolean }[] }) {
@@ -59,19 +45,20 @@ export function VisitasList() {
   const { rows, setRows, loading } = useList('visitas');
   const clientes = useList('clientes');
   const imoveis = useList('imoveis');
-  const [periodo, setPeriodo] = useState('');
+  const [dataInicio, setDataInicio] = useState('');
+  const [dataFim, setDataFim] = useState('');
   const [status, setStatusFiltro] = useState('');
   const [term, setTerm] = useState('');
   const [cancelar, setCancelar] = useState<number | null>(null);
 
   const cliente = (id: number) => clientes.rows.find(c => c.id === id);
   const imovel = (id: number) => imoveis.rows.find(i => i.id === id);
-  const [inicioSemana, fimSemana] = weekRange();
 
   const filtered = rows
     .filter(v => {
-      if (periodo === 'Hoje') return v.data === todayISO();
-      if (periodo === 'Esta Semana') return v.data >= inicioSemana && v.data <= fimSemana;
+      const d = (v.data || '').slice(0, 10);
+      if (dataInicio && d < dataInicio) return false;
+      if (dataFim && d > dataFim) return false;
       return true;
     })
     .filter(v => !status || v.status === status)
@@ -105,7 +92,12 @@ export function VisitasList() {
       <Card>
         <Toolbar>
           <SearchInput value={term} onChange={setTerm} placeholder="Buscar por cliente, imóvel ou código..." />
-          <FilterSelect value={periodo} onChange={setPeriodo} options={PERIODOS_VISITA} placeholder="Todos os períodos" />
+          <DateRangeFilter
+            dataInicio={dataInicio}
+            dataFim={dataFim}
+            onChangeInicio={setDataInicio}
+            onChangeFim={setDataFim}
+          />
           <FilterSelect value={status} onChange={setStatusFiltro} options={STATUS_VISITA} placeholder="Todos os status" />
         </Toolbar>
         <DataTable
