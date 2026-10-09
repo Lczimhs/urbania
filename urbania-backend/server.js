@@ -256,7 +256,18 @@ tables.forEach(table => {
     db.run(sql, Object.values(data), function(err) {
       if (err) return res.status(500).json({ error: err.message });
       const newId = this.lastID;
-      logAudit(quem(req), 'Criação', table, newId, `Registro cadastrado no módulo ${table}`, req);
+
+      const camposCadastrados = Object.entries(data)
+        .filter(([k, v]) => v !== null && v !== undefined && v !== '' && k !== 'senha' && k !== 'foto' && k !== 'fotos')
+        .map(([k, v]) => ({ campo: k, valor: v }));
+
+      const detalhesPayload = JSON.stringify({
+        tipo: 'criacao',
+        resumo: `Novo registro #${newId} cadastrado no módulo ${table}`,
+        campos: camposCadastrados,
+      });
+
+      logAudit(quem(req), 'Criação', table, newId, detalhesPayload, req);
       res.json(saida(req, { id: newId, ...data }));
     });
   });
@@ -276,11 +287,41 @@ tables.forEach(table => {
       return res.status(500).json({ error: err.message });
     }
 
+    // Busca o registro atual antes da alteração para calcular o diff exato campo a campo
+    const registroAnterior = await get(`SELECT * FROM ${table} WHERE id = ?`, [req.params.id]);
+
     const sql = `UPDATE ${table} SET ${keys.map(k => `${k}=?`).join(',')} WHERE id=?`;
 
     db.run(sql, [...Object.values(data), req.params.id], function(err) {
       if (err) return res.status(500).json({ error: err.message });
-      logAudit(quem(req), 'Alteração', table, Number(req.params.id), `Registro atualizado no módulo ${table}`, req);
+
+      const mudancas = [];
+      if (registroAnterior) {
+        keys.forEach(k => {
+          if (k === 'id' || k === 'senha' || k === 'foto' || k === 'fotos') return;
+          const valAntigo = registroAnterior[k];
+          const valNovo = data[k];
+          const a = (valAntigo === null || valAntigo === undefined) ? '' : String(valAntigo).trim();
+          const b = (valNovo === null || valNovo === undefined) ? '' : String(valNovo).trim();
+          if (a !== b) {
+            mudancas.push({
+              campo: k,
+              de: valAntigo !== null && valAntigo !== undefined && valAntigo !== '' ? String(valAntigo) : null,
+              para: valNovo !== null && valNovo !== undefined && valNovo !== '' ? String(valNovo) : null,
+            });
+          }
+        });
+      }
+
+      const detalhesPayload = JSON.stringify({
+        tipo: 'alteracao',
+        resumo: mudancas.length > 0
+          ? `${mudancas.length} campo(s) alterado(s) no módulo ${table}`
+          : `Registro #${req.params.id} atualizado no módulo ${table}`,
+        mudancas: mudancas,
+      });
+
+      logAudit(quem(req), 'Alteração', table, Number(req.params.id), detalhesPayload, req);
       res.json(saida(req, { id: Number(req.params.id), ...data }));
     });
   });
@@ -300,9 +341,28 @@ tables.forEach(table => {
       return res.status(500).json({ error: err.message });
     }
 
+    const registroAntesExcluir = await get(`SELECT * FROM ${table} WHERE id = ?`, [req.params.id]);
+
     db.run(`DELETE FROM ${table} WHERE id=?`, [req.params.id], function(err) {
       if (err) return res.status(500).json({ error: err.message });
-      logAudit(quem(req), 'Exclusão', table, Number(req.params.id), `Registro excluído do módulo ${table}`, req);
+
+      const dadosExcluidos = registroAntesExcluir
+        ? Object.entries(registroAntesExcluir)
+            .filter(([k, v]) => v !== null && v !== undefined && v !== '' && k !== 'senha' && k !== 'foto' && k !== 'fotos')
+            .map(([k, v]) => ({ campo: k, valor: v }))
+        : [];
+
+      const identificador = registroAntesExcluir
+        ? (registroAntesExcluir.nome || registroAntesExcluir.titulo || registroAntesExcluir.descricao || `#${req.params.id}`)
+        : `#${req.params.id}`;
+
+      const detalhesPayload = JSON.stringify({
+        tipo: 'exclusao',
+        resumo: `Registro "${identificador}" excluído do módulo ${table}`,
+        dados: dadosExcluidos,
+      });
+
+      logAudit(quem(req), 'Exclusão', table, Number(req.params.id), detalhesPayload, req);
       res.json({ deleted: this.changes });
     });
   });

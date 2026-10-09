@@ -106,6 +106,99 @@ export default function Auditoria() {
     return String(rawIp).replace(/^::ffff:/, '');
   };
 
+  const NOMES_CAMPOS: Record<string, string> = {
+    nome: 'Nome',
+    telefone: 'Telefone',
+    telefoneFixo: 'Telefone Fixo',
+    email: 'E-mail',
+    status: 'Status',
+    valor: 'Valor (R$)',
+    precoVenda: 'Preço de Venda',
+    precoAluguel: 'Preço de Aluguel',
+    condominio: 'Condomínio',
+    iptu: 'IPTU',
+    data: 'Data',
+    hora: 'Hora',
+    cargo: 'Cargo',
+    responsavel: 'Responsável',
+    responsavelId: 'Responsável',
+    clienteNome: 'Cliente',
+    clienteId: 'Cliente',
+    proprietarioNome: 'Proprietário',
+    proprietarioId: 'Proprietário',
+    imovelTitulo: 'Imóvel',
+    imovelId: 'Imóvel',
+    descricao: 'Descrição',
+    observacoes: 'Observações',
+    bairro: 'Bairro',
+    cidade: 'Cidade',
+    uf: 'UF',
+    cep: 'CEP',
+    logradouro: 'Logradouro',
+    numero: 'Número',
+    complemento: 'Complemento',
+    cpf: 'CPF',
+    cpfCnpj: 'CPF/CNPJ',
+    rg: 'RG',
+    renda: 'Renda',
+    salario: 'Salário',
+    dataNascimento: 'Data de Nascimento',
+    dataAdmissao: 'Data de Admissão',
+    dataInicio: 'Data de Início',
+    dataFim: 'Data de Término',
+    dataAssinatura: 'Data de Assinatura',
+    dataVencimento: 'Data de Vencimento',
+    dataPagamento: 'Data de Pagamento',
+    diaVencimento: 'Dia de Vencimento',
+    formaPagamento: 'Forma de Pagamento',
+    tipo: 'Tipo',
+    finalidade: 'Finalidade',
+    categoria: 'Categoria',
+    reciboNumero: 'Nº do Recibo',
+    cliques: 'Cliques',
+    contatos: 'Contatos',
+    multaAtraso: 'Multa por Atraso',
+    multaRescisoria: 'Multa Rescisória',
+    valorCalculado: 'Valor Calculado',
+    taxaAdministracao: 'Taxa de Adm.',
+    repasseProprietario: 'Repasse ao Proprietário',
+    identificador: 'Identificador',
+    modulo: 'Módulo',
+  };
+
+  const formatarNomeCampo = (campo: string) => {
+    return NOMES_CAMPOS[campo] || campo.charAt(0).toUpperCase() + campo.slice(1).replace(/([A-Z])/g, ' $1');
+  };
+
+  const formatDetalhesTexto = (raw?: string) => {
+    if (!raw) return 'Sem detalhes adicionais.';
+    if (raw.startsWith('{')) {
+      try {
+        const obj = JSON.parse(raw);
+        if (obj.tipo === 'alteracao' && obj.mudancas?.length) {
+          const nomes = obj.mudancas.map((m: any) => formatarNomeCampo(m.campo)).join(', ');
+          return `Campos alterados: ${nomes}`;
+        }
+        return obj.resumo || obj.texto || raw;
+      } catch {
+        return raw;
+      }
+    }
+    return raw;
+  };
+
+  const parseDetalhes = (raw?: string) => {
+    if (!raw) return null;
+    if (raw.startsWith('{')) {
+      try {
+        return JSON.parse(raw);
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  };
+
   // Garante listagem contínua e sequencial sem vãos/saltos de IDs
   const rowsSequenciais = filtered.map((a, idx) => ({
     ...a,
@@ -124,7 +217,7 @@ export default function Auditoria() {
       formatDate(a.data),
       a.hora || '—',
       a.acao || a.entidade || '',
-      a.detalhes || '',
+      formatDetalhesTexto(a.detalhes),
     ]);
     exportGridToXlsx(headers, rows, `urbania_auditoria_${dataHora}`);
     toast.success('Auditoria exportada com sucesso em planilha Excel (.xlsx).');
@@ -271,11 +364,14 @@ export default function Auditoria() {
               key: 'detalhes',
               label: 'DETALHES',
               className: 'text-slate-600 min-w-0 text-left',
-              render: r => (
-                <span className="text-xs text-slate-600 block truncate" title={r.detalhes}>
-                  {r.detalhes}
-                </span>
-              ),
+              render: r => {
+                const txt = formatDetalhesTexto(r.detalhes);
+                return (
+                  <span className="text-xs text-slate-600 block truncate" title={txt}>
+                    {txt}
+                  </span>
+                );
+              },
             },
           ]}
         />
@@ -284,8 +380,8 @@ export default function Auditoria() {
       {/* Modal de Detalhes com Título Exato: "Auditoria" */}
       {selecionado && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-xl overflow-hidden">
-            <div className="px-6 py-4 bg-[#0a2540] text-white flex items-center justify-between">
+          <div className="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-2xl overflow-hidden max-h-[90vh] flex flex-col">
+            <div className="px-6 py-4 bg-[#0a2540] text-white flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2">
                 <Shield size={20} className="text-teal-400" />
                 <h3 className="font-bold text-lg tracking-tight">Auditoria</h3>
@@ -299,7 +395,7 @@ export default function Auditoria() {
               </button>
             </div>
 
-            <div className="p-6 space-y-4 text-sm">
+            <div className="p-6 space-y-4 text-sm overflow-y-auto">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Usuário</p>
@@ -344,11 +440,107 @@ export default function Auditoria() {
                 </p>
               </div>
 
+              {/* O que foi mudado especificamente */}
               <div>
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Detalhes da Ação</p>
-                <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-slate-700 mt-1 leading-relaxed">
-                  {selecionado.detalhes || 'Sem detalhes adicionais.'}
-                </div>
+                {(() => {
+                  const info = parseDetalhes(selecionado.detalhes);
+
+                  // 1. Alteração: Comparativo exato antes e depois campo a campo
+                  if (info?.tipo === 'alteracao' && Array.isArray(info.mudancas) && info.mudancas.length > 0) {
+                    return (
+                      <div className="space-y-2.5">
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                            O que foi alterado especificamente ({info.mudancas.length})
+                          </p>
+                          <span className="text-[11px] font-medium text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded">
+                            Comparativo Antes e Depois
+                          </span>
+                        </div>
+
+                        <div className="rounded-lg border border-slate-200 overflow-hidden bg-white shadow-2xs">
+                          <table className="w-full text-xs text-left">
+                            <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold text-[11px]">
+                              <tr>
+                                <th className="px-3.5 py-2">Campo</th>
+                                <th className="px-3.5 py-2">Valor Anterior</th>
+                                <th className="px-3.5 py-2">Novo Valor</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                              {info.mudancas.map((m: any, idx: number) => (
+                                <tr key={idx} className="hover:bg-slate-50/50">
+                                  <td className="px-3.5 py-2.5 font-semibold text-slate-800">
+                                    {formatarNomeCampo(m.campo)}
+                                  </td>
+                                  <td className="px-3.5 py-2.5 text-rose-700 bg-rose-50/40 font-mono text-[11px]">
+                                    <span className="line-through decoration-rose-400">
+                                      {m.de !== null && m.de !== undefined && m.de !== '' ? String(m.de) : <span className="italic text-slate-400">vazio</span>}
+                                    </span>
+                                  </td>
+                                  <td className="px-3.5 py-2.5 text-emerald-700 bg-emerald-50/40 font-mono text-[11px] font-semibold">
+                                    {m.para !== null && m.para !== undefined && m.para !== '' ? String(m.para) : <span className="italic text-slate-400">vazio</span>}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  // 2. Criação: Campos cadastrados
+                  if (info?.tipo === 'criacao' && Array.isArray(info.campos) && info.campos.length > 0) {
+                    return (
+                      <div className="space-y-2">
+                        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                          Dados cadastrados na criação ({info.campos.length})
+                        </p>
+                        <div className="grid grid-cols-2 gap-2 p-3 bg-emerald-50/30 rounded-lg border border-emerald-100 text-xs">
+                          {info.campos.map((c: any, idx: number) => (
+                            <div key={idx} className="bg-white p-2 rounded border border-emerald-100/80 shadow-2xs">
+                              <span className="text-[10px] text-slate-400 uppercase font-semibold block">{formatarNomeCampo(c.campo)}</span>
+                              <span className="font-semibold text-slate-800 break-words">{String(c.valor)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  // 3. Exclusão: Dados do registro removido
+                  if (info?.tipo === 'exclusao' && Array.isArray(info.dados) && info.dados.length > 0) {
+                    return (
+                      <div className="space-y-2">
+                        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-rose-500"></span>
+                          Dados do registro removido
+                        </p>
+                        <div className="grid grid-cols-2 gap-2 p-3 bg-rose-50/30 rounded-lg border border-rose-100 text-xs">
+                          {info.dados.map((d: any, idx: number) => (
+                            <div key={idx} className="bg-white p-2 rounded border border-rose-100/80 shadow-2xs">
+                              <span className="text-[10px] text-slate-400 uppercase font-semibold block">{formatarNomeCampo(d.campo)}</span>
+                              <span className="font-medium text-slate-700 break-words">{String(d.valor)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  // Fallback para texto simples
+                  return (
+                    <div>
+                      <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Detalhes da Ação</p>
+                      <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-slate-700 mt-1 leading-relaxed">
+                        {info?.resumo || selecionado.detalhes || 'Sem detalhes adicionais.'}
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             </div>
 
