@@ -99,6 +99,18 @@ export default function Auditoria() {
     };
   };
 
+  const formatHora = (rawHora?: string) => {
+    if (!rawHora || rawHora === '—') return '—';
+    const str = String(rawHora).trim();
+    const match = str.match(/^(\d{1,2})[:h](\d{2})/i);
+    if (match) {
+      const h = match[1].padStart(2, '0');
+      const m = match[2];
+      return `${h}:${m}`;
+    }
+    return str.slice(0, 5);
+  };
+
   const formatIp = (rawIp?: string) => {
     if (!rawIp || rawIp === '::1' || rawIp === '::ffff:127.0.0.1' || rawIp === '127.0.0.1') {
       return '192.168.1.1';
@@ -215,7 +227,7 @@ export default function Auditoria() {
       formatComputador(a),
       formatIp(a.ip),
       formatDate(a.data),
-      a.hora || '—',
+      formatHora(a.hora),
       a.acao || a.entidade || '',
       formatDetalhesTexto(a.detalhes),
     ]);
@@ -342,7 +354,7 @@ export default function Auditoria() {
               key: 'hora',
               label: 'HORA',
               className: 'w-24 min-w-[90px] whitespace-nowrap text-left',
-              render: r => <span className="text-xs font-mono text-slate-600 whitespace-nowrap">{r.hora || '—'}</span>,
+              render: r => <span className="text-xs font-mono text-slate-600 whitespace-nowrap">{formatHora(r.hora)}</span>,
             },
             {
               key: 'entidade',
@@ -413,7 +425,7 @@ export default function Auditoria() {
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Data e Hora</p>
-                  <p className="text-slate-700 mt-0.5 font-medium">{formatDate(selecionado.data)} às {selecionado.hora || '—'}</p>
+                  <p className="text-slate-700 mt-0.5 font-medium">{formatDate(selecionado.data)} às {formatHora(selecionado.hora)}</p>
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Endereço IP</p>

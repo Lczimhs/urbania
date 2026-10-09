@@ -532,7 +532,7 @@ module.exports = async function popularDadosDeTeste(db) {
         entidadeId: entre(1, 30),
         detalhes: `Registro ${{ Criação: 'cadastrado', Alteração: 'atualizado', Exclusão: 'excluído' }[acao]} no módulo ${entidade}`,
         data: dia(offset),
-        hora: `${hora()}:${String(entre(0, 59)).padStart(2, '0')}:${String(entre(10, 59)).padStart(2, '0')}`,
+        hora: `${hora()}:${String(entre(0, 59)).padStart(2, '0')}`,
         ip: ipsPorUsuario[f.id] || '192.168.1.1',
       });
     }

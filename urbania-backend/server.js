@@ -155,8 +155,9 @@ const logAudit = async (usuario, acao, entidade, entidadeId, detalhes, req) => {
   if (!acoesPermitidas.includes(acao)) return;
 
   const now = new Date();
-  const data = now.toISOString().slice(0, 10);
-  const hora = now.toLocaleTimeString('pt-BR', { hour12: false });
+  // Horário oficial de Ji-Paraná / Rondônia (RO) - UTC-4 no formato 00:00 (apenas horas e minutos)
+  const data = now.toLocaleDateString('en-CA', { timeZone: 'America/Porto_Velho' });
+  const hora = now.toLocaleTimeString('pt-BR', { timeZone: 'America/Porto_Velho', hour: '2-digit', minute: '2-digit', hour12: false });
   const comp = getComputerName(req);
   const userIp = await getUserIp(req, usuario);
 
