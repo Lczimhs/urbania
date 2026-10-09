@@ -193,6 +193,9 @@
   .print-only {
     display: none !important;
   }
+  .print-table-body {
+    display: none !important;
+  }
 }
 
 /* ==========================================================================
@@ -201,6 +204,14 @@
 @media print {
   .print-only {
     display: block !important;
+  }
+
+  .screen-table-body {
+    display: none !important;
+  }
+
+  .print-table-body {
+    display: table-row-group !important;
   }
 
   /* 1. Ocultar todos os controles de interface, menus, botões e filtros */
@@ -242,13 +253,16 @@
     margin: 0 !important;
     padding: 0 !important;
     height: auto !important;
+    min-height: 0 !important;
     overflow: visible !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
-  /* 3. Desbloquear containers de rolagem para imprimir a listagem completa */
+  /* 3. Desbloquear containers de rolagem para imprimir todas as páginas */
   #root,
+  #root > div,
+  .flex,
   .h-screen,
   main,
   .overflow-auto,
@@ -256,6 +270,7 @@
   .overflow-y-auto,
   .overflow-hidden {
     height: auto !important;
+    min-height: 0 !important;
     max-height: none !important;
     overflow: visible !important;
     display: block !important;
@@ -288,21 +303,30 @@
     color: #475569 !important;
   }
 
-  /* 6. Formatação nítida das tabelas para impressão */
+  /* 6. Formatação nítida das tabelas e quebra multi-página */
   table {
+    display: table !important;
     width: 100% !important;
     border-collapse: collapse !important;
     margin-top: 12px !important;
-    page-break-inside: auto;
+    page-break-inside: auto !important;
+    break-inside: auto !important;
   }
 
   tr {
+    display: table-row !important;
     page-break-inside: avoid !important;
-    page-break-after: auto;
+    break-inside: avoid !important;
+    page-break-after: auto !important;
+    break-after: auto !important;
   }
 
   thead {
     display: table-header-group !important;
+  }
+
+  tbody {
+    display: table-row-group !important;
   }
 
   th {

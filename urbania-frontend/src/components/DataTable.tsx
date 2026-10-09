@@ -24,21 +24,7 @@ export function DataTable<T extends { id: number }>({ columns, rows, loading, on
   // Volta para a primeira página quando um filtro muda a quantidade de linhas
   useEffect(() => setPage(1), [rows.length]);
 
-  const [isPrinting, setIsPrinting] = useState(false);
-
-  useEffect(() => {
-    const handleBeforePrint = () => setIsPrinting(true);
-    const handleAfterPrint = () => setIsPrinting(false);
-    window.addEventListener('beforeprint', handleBeforePrint);
-    window.addEventListener('afterprint', handleAfterPrint);
-    return () => {
-      window.removeEventListener('beforeprint', handleBeforePrint);
-      window.removeEventListener('afterprint', handleAfterPrint);
-    };
-  }, []);
-
   const current = rows.slice((page - 1) * pageSize, page * pageSize);
-  const displayRows = isPrinting ? rows : current;
   const colSpan = columns.length + (actions ? 1 : 0);
 
   return (
@@ -66,12 +52,13 @@ export function DataTable<T extends { id: number }>({ columns, rows, loading, on
               )}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          {/* Tabela de visualização em tela (paginada normalmente) */}
+          <tbody className="divide-y divide-slate-100 screen-table-body">
             {loading ? (
               <tr><td colSpan={colSpan} className="p-12 text-center text-slate-400">Carregando...</td></tr>
             ) : rows.length === 0 ? (
               <tr><td colSpan={colSpan} className="p-12 text-center text-slate-400">{empty || 'Nenhum registro encontrado.'}</td></tr>
-            ) : displayRows.map(row => (
+            ) : current.map(row => (
               <tr key={row.id} onClick={() => onRowClick?.(row)} className={`hover:bg-slate-50/80 transition-colors ${onRowClick ? 'cursor-pointer' : ''}`}>
                 {columns.map((c, idx) => {
                   const defaultFirstWidth = idx === 0
@@ -90,6 +77,26 @@ export function DataTable<T extends { id: number }>({ columns, rows, loading, on
                     {actions(row)}
                   </td>
                 )}
+              </tr>
+            ))}
+          </tbody>
+
+          {/* Tabela de impressão / exportação PDF (TODAS as páginas e registros juntos) */}
+          <tbody className="divide-y divide-slate-100 print-table-body">
+            {rows.map(row => (
+              <tr key={`print-${row.id}`}>
+                {columns.map((c, idx) => {
+                  const defaultFirstWidth = idx === 0
+                    ? (['id', 'codigo'].includes(c.key.toLowerCase()) ? 'w-16' : ['data', 'datahora'].includes(c.key.toLowerCase()) ? 'w-40' : '')
+                    : '';
+                  const cleanClass = (c.className || 'text-slate-700').replace(/\bw-full\b/g, '').trim();
+                  const colClass = `${cleanClass} ${defaultFirstWidth}`.trim();
+                  return (
+                    <td key={`print-${c.key}`} className={`px-3.5 lg:px-4 py-3.5 ${colClass}`}>
+                      {c.render ? c.render(row) : String((row as any)[c.key] ?? '')}
+                    </td>
+                  );
+                })}
               </tr>
             ))}
           </tbody>

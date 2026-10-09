@@ -85,9 +85,10 @@ export default function Auditoria() {
 
   const exportarCsv = () => {
     const dataHora = new Date().toISOString().slice(0, 10);
-    // Ordem das informações solicitada: USUÁRIO > COMPUTADOR > ENDEREÇO IP > DATA > HORA > ENTIDADE > DETALHES > ID
-    const headers = ['USUÁRIO', 'COMPUTADOR', 'ENDEREÇO IP', 'DATA', 'HORA', 'ENTIDADE', 'DETALHES', 'ID'];
+    // Ordem das informações solicitada: ID > USUÁRIO > COMPUTADOR > ENDEREÇO IP > DATA > HORA > ENTIDADE > DETALHES
+    const headers = ['ID', 'USUÁRIO', 'COMPUTADOR', 'ENDEREÇO IP', 'DATA', 'HORA', 'ENTIDADE', 'DETALHES'];
     const rows = filtered.map(a => [
+      a.id,
       a.usuario || 'Sistema',
       a.computador || 'Pc-Lucas',
       a.ip || '127.0.0.1',
@@ -95,7 +96,6 @@ export default function Auditoria() {
       a.hora || '—',
       `${a.entidade || ''}${a.entidadeId ? ` (#${a.entidadeId})` : ''}`,
       a.detalhes || '',
-      a.id,
     ]);
     exportGridToCsv(headers, rows, `urbania_auditoria_${dataHora}`);
     toast.success('Auditoria exportada com sucesso (.csv / Excel).');
@@ -147,7 +147,7 @@ export default function Auditoria() {
           />
         </Toolbar>
 
-        {/* Grid com a ordem exata das colunas: USUÁRIO > COMPUTADOR > ENDEREÇO IP > DATA > HORA > ENTIDADE > DETALHES > ID */}
+        {/* Grid com a ordem exata das colunas: ID > USUÁRIO > COMPUTADOR > ENDEREÇO IP > DATA > HORA > ENTIDADE > DETALHES */}
         <DataTable
           pageSize={30}
           rows={filtered}
@@ -155,6 +155,12 @@ export default function Auditoria() {
           empty="Nenhum registro de auditoria encontrado."
           onRowClick={r => setSelecionado(r)}
           columns={[
+            {
+              key: 'id',
+              label: 'ID',
+              className: 'w-16 whitespace-nowrap',
+              render: r => <span className="font-mono text-slate-500 text-xs font-semibold">#{r.id}</span>,
+            },
             {
               key: 'usuario',
               label: 'USUÁRIO',
@@ -225,12 +231,6 @@ export default function Auditoria() {
               label: 'DETALHES',
               className: 'min-w-[220px]',
               render: r => <span className="text-xs text-slate-600 line-clamp-1">{r.detalhes}</span>,
-            },
-            {
-              key: 'id',
-              label: 'ID',
-              className: 'w-16',
-              render: r => <span className="font-mono text-slate-500 text-xs font-semibold">#{r.id}</span>,
             },
           ]}
         />
