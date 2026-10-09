@@ -43,17 +43,47 @@ const deleteGuards = {
 const get = (sql, params = []) => new Promise((resolve, reject) =>
   db.get(sql, params, (err, row) => (err ? reject(err) : resolve(row))));
 
-// Nome usado na auditoria: "Fulano (Cargo)"
-const quem = req => req.sessao ? `${req.sessao.user.nome} (${req.sessao.user.cargo})` : null;
+const os = require('os');
 
-const logAudit = (usuario, acao, entidade, entidadeId, detalhes, ip) => {
+// Nome usado na auditoria, sem duplicar termos como (Admin) e (Administrador)
+const formatUsuario = (user) => {
+  if (!user) return 'Sistema';
+  let nome = (user.nome || '').replace(/\s*\((?:Admin|Administrador)\)\s*/gi, '').trim();
+  const cargo = (user.cargo || '').trim();
+  if (!cargo || nome.toLowerCase() === cargo.toLowerCase()) {
+    return nome || cargo || 'Sistema';
+  }
+  return `${nome} (${cargo})`;
+};
+
+const quem = req => req.sessao ? formatUsuario(req.sessao.user) : 'Sistema';
+
+const getClientIp = (req) => {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (forwarded) return String(forwarded).split(',')[0].trim();
+  const remote = req.socket?.remoteAddress || req.ip || '127.0.0.1';
+  return remote === '::1' ? '127.0.0.1' : String(remote).replace(/^::ffff:/, '');
+};
+
+const getComputerName = (req) => {
+  return req.headers['x-client-device'] || process.env.COMPUTERNAME || os.hostname() || 'Pc-Lucas';
+};
+
+const logAudit = (usuario, acao, entidade, entidadeId, detalhes, ip, computador) => {
   if (entidade === 'auditoria') return;
+  // Logs gerados apenas em edição, inclusão e exclusão
+  const acoesPermitidas = ['Criação', 'Alteração', 'Exclusão', 'Inclusão', 'Edição'];
+  if (!acoesPermitidas.includes(acao)) return;
+
   const now = new Date();
   const data = now.toISOString().slice(0, 10);
   const hora = now.toLocaleTimeString('pt-BR', { hour12: false });
+  const comp = computador || process.env.COMPUTERNAME || os.hostname() || 'Pc-Lucas';
+  const cleanIp = ip === '::1' ? '127.0.0.1' : (ip ? String(ip).replace(/^::ffff:/, '') : '127.0.0.1');
+
   db.run(
-    `INSERT INTO auditoria (usuario, acao, entidade, entidadeId, detalhes, data, hora, ip) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    [usuario || 'Sistema', acao, entidade, entidadeId || null, detalhes || '', data, hora, ip || '127.0.0.1']
+    `INSERT INTO auditoria (usuario, computador, acao, entidade, entidadeId, detalhes, data, hora, ip) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [usuario || 'Sistema', comp, acao, entidade, entidadeId || null, detalhes || '', data, hora, cleanIp]
   );
 };
 
@@ -133,7 +163,7 @@ tables.forEach(table => {
     db.run(sql, Object.values(data), function(err) {
       if (err) return res.status(500).json({ error: err.message });
       const newId = this.lastID;
-      logAudit(quem(req), 'Criação', table, newId, `Registro cadastrado no módulo ${table}`, req.ip);
+      logAudit(quem(req), 'Criação', table, newId, `Registro cadastrado no módulo ${table}`, getClientIp(req), getComputerName(req));
       res.json(saida(req, { id: newId, ...data }));
     });
   });
@@ -157,7 +187,7 @@ tables.forEach(table => {
 
     db.run(sql, [...Object.values(data), req.params.id], function(err) {
       if (err) return res.status(500).json({ error: err.message });
-      logAudit(quem(req), 'Alteração', table, Number(req.params.id), `Registro atualizado no módulo ${table}`, req.ip);
+      logAudit(quem(req), 'Alteração', table, Number(req.params.id), `Registro atualizado no módulo ${table}`, getClientIp(req), getComputerName(req));
       res.json(saida(req, { id: Number(req.params.id), ...data }));
     });
   });
@@ -179,7 +209,7 @@ tables.forEach(table => {
 
     db.run(`DELETE FROM ${table} WHERE id=?`, [req.params.id], function(err) {
       if (err) return res.status(500).json({ error: err.message });
-      logAudit(quem(req), 'Exclusão', table, Number(req.params.id), `Registro excluído do módulo ${table}`, req.ip);
+      logAudit(quem(req), 'Exclusão', table, Number(req.params.id), `Registro excluído do módulo ${table}`, getClientIp(req), getComputerName(req));
       res.json({ deleted: this.changes });
     });
   });
@@ -198,7 +228,6 @@ app.post('/api/auth/login', async (req, res) => {
     if (!userId) return res.status(500).json({ error: 'Usuário Visitante não encontrado. Rode o seed do banco (node seed.js).' });
 
     const sessao = await carregarSessao(userId);
-    logAudit(`${sessao.user.nome} (${sessao.user.cargo})`, 'Login', 'auth', userId, 'Acesso realizado no sistema', req.ip);
     return res.json({ success: true, token: gerarToken(userId), ...sessao });
   } catch (err) {
     return res.status(500).json({ error: err.message });

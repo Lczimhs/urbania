@@ -25,11 +25,11 @@ import { PerfilPage, PerfisList } from './pages/Perfis';
 import { MultaPage, MultasList } from './pages/Multas';
 import { DespesaPage, DespesasList } from './pages/Despesas';
 import Relatorios from './pages/Relatorios';
+import Auditoria from './pages/Auditoria';
 import Configuracoes from './pages/Configuracoes';
 import Avisos from './pages/Avisos';
 import Perfil from './pages/Perfil';
 import { ConfigProvider } from './lib/config';
-import GenericCrud from './pages/GenericCrud';
 import { acaoDaRota, moduloDaRota } from './lib/permissoes';
 
 const ACAO_TEXTO = { Visualizar: 'visualizar', Criar: 'cadastrar', Editar: 'editar', Excluir: 'excluir' };
@@ -131,8 +131,8 @@ export default function App() {
               <Route path="/avisos" element={<Avisos />} />
               <Route path="/perfil" element={<Perfil />} />
 
-              {/* Auditoria de Acessos e Logs */}
-              <Route path="/auditoria" element={<GenericCrud entity="auditoria" title="Auditoria de Acessos" fields={[{key:'usuario',label:'Usuário'},{key:'acao',label:'Ação'},{key:'data',label:'Data'}]} />} />
+              {/* Auditoria do Sistema */}
+              <Route path="/auditoria" element={<Auditoria />} />
 
               {/* Redirecionamento padrão */}
               <Route path="*" element={<Navigate to="/" replace />} />

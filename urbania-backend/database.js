@@ -99,7 +99,7 @@ const schema = {
     operador: 'TEXT', data: 'TEXT',
   },
   auditoria: {
-    usuario: 'TEXT', acao: 'TEXT', entidade: 'TEXT', entidadeId: 'INTEGER',
+    usuario: 'TEXT', computador: 'TEXT', acao: 'TEXT', entidade: 'TEXT', entidadeId: 'INTEGER',
     detalhes: 'TEXT', data: 'TEXT', hora: 'TEXT', ip: 'TEXT',
   },
   // Configurações gerais da imobiliária (um único registro)

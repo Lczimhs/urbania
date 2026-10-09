@@ -5,10 +5,10 @@ export const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api',
 });
 
-// Envia o token da sessão: o backend identifica o usuário e confere as permissões por ele
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('urbania_token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
+  config.headers['X-Client-Device'] = localStorage.getItem('urbania_device_name') || 'Pc-Lucas';
   return config;
 });
 

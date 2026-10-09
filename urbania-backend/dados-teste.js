@@ -498,18 +498,25 @@ module.exports = async function popularDadosDeTeste(db) {
       });
     }
 
-    // ----- Auditoria (histórico de acessos e alterações) -----
+    // ----- Auditoria (histórico de alterações do sistema) -----
     const modulosAuditoria = ['clientes', 'imoveis', 'visitas', 'negociacoes', 'contratos', 'financeiro', 'despesas', 'multas', 'reparos', 'anuncios', 'proprietarios'];
     const eventos = [];
     for (let i = 0; i < 60; i++) {
       const f = um(funcionarios.filter(x => x.status === 'Ativo'));
       const offset = -entre(0, 30);
-      const acao = um(['Login', 'Login', 'Criação', 'Criação', 'Alteração', 'Alteração', 'Alteração', 'Exclusão']);
-      const entidade = acao === 'Login' ? 'auth' : um(modulosAuditoria);
+      const acao = um(['Criação', 'Criação', 'Alteração', 'Alteração', 'Alteração', 'Exclusão']);
+      const entidade = um(modulosAuditoria);
+      const nomeLimpo = (f.nome || '').replace(/\s*\((?:Admin|Administrador)\)\s*/gi, '').trim();
       eventos.push({
-        usuario: `${f.nome} (${f.cargo})`, acao, entidade, entidadeId: acao === 'Login' ? f.id : entre(1, 30),
-        detalhes: acao === 'Login' ? 'Acesso realizado no sistema' : `Registro ${{ Criação: 'cadastrado', Alteração: 'atualizado', Exclusão: 'excluído' }[acao]} no módulo ${entidade}`,
-        data: dia(offset), hora: `${hora()}:${String(entre(0, 59)).padStart(2, '0')}`, ip: `192.168.1.${entre(10, 90)}`,
+        usuario: `${nomeLimpo} (${f.cargo})`,
+        computador: 'Pc-Lucas',
+        acao,
+        entidade,
+        entidadeId: entre(1, 30),
+        detalhes: `Registro ${{ Criação: 'cadastrado', Alteração: 'atualizado', Exclusão: 'excluído' }[acao]} no módulo ${entidade}`,
+        data: dia(offset),
+        hora: `${hora()}:${String(entre(0, 59)).padStart(2, '0')}:${String(entre(10, 59)).padStart(2, '0')}`,
+        ip: `192.168.1.${entre(10, 90)}`,
       });
     }
     eventos.sort((a, b) => `${a.data} ${a.hora}`.localeCompare(`${b.data} ${b.hora}`));

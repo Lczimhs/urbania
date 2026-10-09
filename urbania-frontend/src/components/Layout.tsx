@@ -24,6 +24,7 @@ import {
   Receipt,
   Settings,
   Search,
+  Shield,
   ShieldCheck,
   Sun,
   Users,
@@ -73,6 +74,7 @@ const sections: NavSection[] = [
     { path: '/funcionarios', label: 'Funcionários', icon: <BadgeCheck size={18} /> },
     { path: '/perfis', label: 'Perfis de Acesso', icon: <ShieldCheck size={18} /> },
     { path: '/notificacoes', label: 'Notificações', icon: <Bell size={18} /> },
+    { path: '/auditoria', label: 'Auditoria', icon: <Shield size={18} /> },
     { path: '/configuracoes', label: 'Configurações', icon: <Settings size={18} /> },
   ] },
 ];
