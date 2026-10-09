@@ -197,7 +197,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         já ficam na posição do menu recolhido de 76px), só a largura anima e os textos aparecem/somem com fade.
         Ao recolher o texto some na hora; ao expandir ele só aparece depois que já existe espaço.
       */}
-      <aside className={`fixed md:relative inset-y-0 left-0 z-40 shrink-0 bg-[#0a2540] text-slate-300 flex flex-col transition-[width,transform] duration-300 ease-[cubic-bezier(.4,0,.2,1)] w-64 ${mini ? 'md:w-[76px]' : ''} ${menuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 shadow-xl`}>
+      <aside className={`no-print fixed md:relative inset-y-0 left-0 z-40 shrink-0 bg-[#0a2540] text-slate-300 flex flex-col transition-[width,transform] duration-300 ease-[cubic-bezier(.4,0,.2,1)] w-64 ${mini ? 'md:w-[76px]' : ''} ${menuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 shadow-xl`}>
 
         {/* Marca (logo centralizada na largura recolhida: 18px + 40px + 18px) */}
         <div className="flex items-center px-[18px] h-16 border-b border-white/10 shrink-0 overflow-hidden">
@@ -298,7 +298,7 @@ export default function Layout({ children }: { children: ReactNode }) {
 
         {/* CABEÇALHO FIXO: sticky dentro do container que rola, com fundo translúcido + desfoque */}
         <header
-          className="sticky z-20 flex items-center gap-3.5 py-3 px-6 max-[900px]:px-4 border-b border-[#cdd8e3] bg-white/[.88] backdrop-blur-[6px] dark:border-[#1c4068] dark:bg-[#0a2541]/[.88]"
+          className="no-print sticky z-20 flex items-center gap-3.5 py-3 px-6 max-[900px]:px-4 border-b border-[#cdd8e3] bg-white/[.88] backdrop-blur-[6px] dark:border-[#1c4068] dark:bg-[#0a2541]/[.88]"
           style={{ top: 'env(safe-area-inset-top, 0px)' }} // respeita o notch do iPhone; o Tailwind já gera o -webkit-backdrop-filter
         >
           {/* 1. Menu (só abaixo de md): abre a gaveta lateral */}

@@ -161,8 +161,8 @@ export default function Relatorios() {
         }
       />
 
-      {/* Seletor de Abas de Relatórios */}
-      <div className="flex border-b border-slate-200 overflow-x-auto gap-2">
+      {/* Seletor de Abas de Relatórios (oculto na impressão) */}
+      <div className="no-print flex border-b border-slate-200 overflow-x-auto gap-2">
         {tabsConfig.map(t => (
           <button
             key={t.id}
@@ -177,6 +177,13 @@ export default function Relatorios() {
             {t.label}
           </button>
         ))}
+      </div>
+
+      {/* Identificador do relatório selecionado visível somente na impressão/PDF */}
+      <div className="print-only mb-3 pb-2 border-b border-slate-300">
+        <h2 className="text-lg font-bold text-slate-800">
+          Módulo: {tabsConfig.find(t => t.id === tab)?.label}
+        </h2>
       </div>
 
       <Card>

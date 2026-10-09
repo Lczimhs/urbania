@@ -24,7 +24,21 @@ export function DataTable<T extends { id: number }>({ columns, rows, loading, on
   // Volta para a primeira página quando um filtro muda a quantidade de linhas
   useEffect(() => setPage(1), [rows.length]);
 
+  const [isPrinting, setIsPrinting] = useState(false);
+
+  useEffect(() => {
+    const handleBeforePrint = () => setIsPrinting(true);
+    const handleAfterPrint = () => setIsPrinting(false);
+    window.addEventListener('beforeprint', handleBeforePrint);
+    window.addEventListener('afterprint', handleAfterPrint);
+    return () => {
+      window.removeEventListener('beforeprint', handleBeforePrint);
+      window.removeEventListener('afterprint', handleAfterPrint);
+    };
+  }, []);
+
   const current = rows.slice((page - 1) * pageSize, page * pageSize);
+  const displayRows = isPrinting ? rows : current;
   const colSpan = columns.length + (actions ? 1 : 0);
 
   return (
@@ -46,7 +60,7 @@ export function DataTable<T extends { id: number }>({ columns, rows, loading, on
                 );
               })}
               {actions && (
-                <th className="px-3.5 lg:px-4 py-3.5 whitespace-nowrap w-32 min-w-[116px] text-left">
+                <th className="px-3.5 lg:px-4 py-3.5 whitespace-nowrap w-32 min-w-[116px] text-left no-print">
                   Ações
                 </th>
               )}
@@ -57,7 +71,7 @@ export function DataTable<T extends { id: number }>({ columns, rows, loading, on
               <tr><td colSpan={colSpan} className="p-12 text-center text-slate-400">Carregando...</td></tr>
             ) : rows.length === 0 ? (
               <tr><td colSpan={colSpan} className="p-12 text-center text-slate-400">{empty || 'Nenhum registro encontrado.'}</td></tr>
-            ) : current.map(row => (
+            ) : displayRows.map(row => (
               <tr key={row.id} onClick={() => onRowClick?.(row)} className={`hover:bg-slate-50/80 transition-colors ${onRowClick ? 'cursor-pointer' : ''}`}>
                 {columns.map((c, idx) => {
                   const defaultFirstWidth = idx === 0
@@ -72,7 +86,7 @@ export function DataTable<T extends { id: number }>({ columns, rows, loading, on
                   );
                 })}
                 {actions && (
-                  <td className="px-3.5 lg:px-4 py-3.5 whitespace-nowrap w-32 min-w-[116px] text-left" onClick={e => e.stopPropagation()}>
+                  <td className="px-3.5 lg:px-4 py-3.5 whitespace-nowrap w-32 min-w-[116px] text-left no-print" onClick={e => e.stopPropagation()}>
                     {actions(row)}
                   </td>
                 )}
@@ -94,7 +108,7 @@ export function Pager({ page, setPage, total, pageSize }: { page: number; setPag
   const end = Math.min(page * pageSize, total);
 
   return (
-    <div className="px-6 py-4 border-t border-slate-100 flex flex-wrap justify-between items-center text-sm text-slate-500 bg-white select-none">
+    <div className="no-print px-6 py-4 border-t border-slate-100 flex flex-wrap justify-between items-center text-sm text-slate-500 bg-white select-none">
       <span>
         {total === 0 ? 'Nenhum registro encontrado' : `Mostrando ${start}–${end} de ${total}`}
       </span>
@@ -278,7 +292,7 @@ export function Toolbar({ children, extraActions }: { children: ReactNode; extra
 
   return (
     <BuscaContext.Provider value={ctx}>
-      <div onKeyDown={onKeyDown} className="p-4 border-b border-slate-100 flex flex-col gap-3.5 bg-slate-50/60">
+      <div onKeyDown={onKeyDown} className="no-print p-4 border-b border-slate-100 flex flex-col gap-3.5 bg-slate-50/60">
         <div className="flex flex-wrap items-center gap-3 w-full">
           {children}
         </div>
@@ -326,7 +340,7 @@ export function PageHeader({ title, subtitle, action }: { title: string; subtitl
         <h1 className="text-2xl font-bold text-slate-800">{title}</h1>
         {subtitle && <p className="text-sm text-slate-500 mt-1">{subtitle}</p>}
       </div>
-      {action}
+      {action && <div className="no-print">{action}</div>}
     </div>
   );
 }

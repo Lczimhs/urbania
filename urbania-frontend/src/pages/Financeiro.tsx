@@ -185,7 +185,7 @@ function EfetuarPagamentoModal({
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-2">
+          <div className="no-print flex justify-end gap-3 pt-2">
             <button
               type="button"
               onClick={() => window.print()}

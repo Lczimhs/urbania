@@ -188,3 +188,157 @@
     .busca-painel.busca-fechando { animation: busca-fechar-celular 0.16s ease-in forwards; }
   }
 }
+
+@media screen {
+  .print-only {
+    display: none !important;
+  }
+}
+
+/* ==========================================================================
+   ESTILOS DE IMPRESSÃO / EXPORTAÇÃO LIMPA PARA PDF (@media print)
+   ========================================================================== */
+@media print {
+  .print-only {
+    display: block !important;
+  }
+
+  /* 1. Ocultar todos os controles de interface, menus, botões e filtros */
+  aside,
+  header,
+  nav,
+  .no-print,
+  button,
+  [data-busca-gatilho],
+  .sidebar-scroll,
+  .toaster,
+  .save-action,
+  input,
+  select,
+  [role="combobox"] {
+    display: none !important;
+  }
+
+  /* Modais quando abertos para impressão (ex: comprovante de pagamento) */
+  .fixed.inset-0 {
+    position: static !important;
+    background: transparent !important;
+    padding: 0 !important;
+    backdrop-filter: none !important;
+    z-index: auto !important;
+  }
+  .fixed.inset-0 > div {
+    max-width: 100% !important;
+    max-height: none !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  /* 2. Resetar página para fundo branco e texto nítido */
+  html, body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    font-size: 10pt !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    height: auto !important;
+    overflow: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* 3. Desbloquear containers de rolagem para imprimir a listagem completa */
+  #root,
+  .h-screen,
+  main,
+  .overflow-auto,
+  .overflow-x-auto,
+  .overflow-y-auto,
+  .overflow-hidden {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    display: block !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    position: static !important;
+  }
+
+  [class*="min-h-"] {
+    min-height: 0 !important;
+  }
+
+  /* 4. Zerar espaçamentos das bordas da tela */
+  .px-4, .md\:px-8, .pb-6, .pt-4, .space-y-6 {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* 5. Títulos limpos e destacados */
+  h1 {
+    font-size: 18pt !important;
+    color: #0a2540 !important;
+    margin-bottom: 4px !important;
+  }
+
+  p {
+    font-size: 9.5pt !important;
+    color: #475569 !important;
+  }
+
+  /* 6. Formatação nítida das tabelas para impressão */
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin-top: 12px !important;
+    page-break-inside: auto;
+  }
+
+  tr {
+    page-break-inside: avoid !important;
+    page-break-after: auto;
+  }
+
+  thead {
+    display: table-header-group !important;
+  }
+
+  th {
+    background-color: #f1f5f9 !important;
+    color: #0a2540 !important;
+    border: 1px solid #cbd5e1 !important;
+    padding: 6px 8px !important;
+    font-size: 8.5pt !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+  }
+
+  td {
+    border: 1px solid #e2e8f0 !important;
+    padding: 6px 8px !important;
+    font-size: 8.5pt !important;
+    color: #1e293b !important;
+  }
+
+  /* 7. Badges simplificados com borda fina */
+  .rounded-full, [class*="Badge"] {
+    border: 1px solid #cbd5e1 !important;
+    font-size: 7.5pt !important;
+    padding: 1px 6px !important;
+    background: #f8fafc !important;
+    color: #334155 !important;
+  }
+
+  /* 8. Remover sombras que criam borrões no PDF */
+  .shadow-sm, .shadow-md, .shadow-xl, .shadow-2xl, .shadow-2xs {
+    box-shadow: none !important;
+  }
+
+  .border, .border-slate-200\/60, .rounded-xl {
+    border-color: #e2e8f0 !important;
+    border-radius: 4px !important;
+  }
+}
