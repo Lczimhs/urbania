@@ -206,30 +206,6 @@
     display: block !important;
   }
 
-  .screen-table-body {
-    display: none !important;
-  }
-
-  .print-table-body {
-    display: table-row-group !important;
-  }
-
-  /* 1. Ocultar todos os controles de interface, menus, botões e filtros */
-  aside,
-  header,
-  nav,
-  .no-print,
-  button,
-  [data-busca-gatilho],
-  .sidebar-scroll,
-  .toaster,
-  .save-action,
-  input,
-  select,
-  [role="combobox"] {
-    display: none !important;
-  }
-
   /* Modais quando abertos para impressão (ex: comprovante de pagamento) */
   .fixed.inset-0 {
     position: static !important;
@@ -245,11 +221,11 @@
     border: none !important;
   }
 
-  /* 2. Resetar página para fundo branco e texto nítido */
+  /* 1. Resetar página para fundo branco e texto nítido */
   html, body {
     background: #ffffff !important;
     color: #0f172a !important;
-    font-size: 10pt !important;
+    font-size: 9.5pt !important;
     margin: 0 !important;
     padding: 0 !important;
     height: auto !important;
@@ -259,12 +235,12 @@
     print-color-adjust: exact !important;
   }
 
-  /* 3. Desbloquear containers de rolagem para imprimir todas as páginas */
+  /* 2. Desbloquear containers de layout para iniciar no topo e imprimir todas as páginas */
   #root,
   #root > div,
-  .flex,
   .h-screen,
   main,
+  main > div,
   .overflow-auto,
   .overflow-x-auto,
   .overflow-y-auto,
@@ -281,36 +257,43 @@
     position: static !important;
   }
 
-  [class*="min-h-"] {
+  [class*="min-h-"],
+  [class*="lg:min-h-"] {
     min-height: 0 !important;
+    height: auto !important;
   }
 
-  /* 4. Zerar espaçamentos das bordas da tela */
+  /* 3. Zerar espaçamentos das bordas da tela */
   .px-4, .md\:px-8, .pb-6, .pt-4, .space-y-6 {
     padding: 0 !important;
     margin: 0 !important;
   }
 
-  /* 5. Títulos limpos e destacados */
+  /* 4. Títulos limpos e compactos no topo da página */
   h1 {
-    font-size: 18pt !important;
+    font-size: 16pt !important;
     color: #0a2540 !important;
-    margin-bottom: 4px !important;
+    margin: 0 0 2px 0 !important;
+    padding: 0 !important;
   }
 
   p {
-    font-size: 9.5pt !important;
+    font-size: 9pt !important;
     color: #475569 !important;
+    margin: 0 0 6px 0 !important;
+    padding: 0 !important;
   }
 
-  /* 6. Formatação nítida das tabelas e quebra multi-página */
+  /* 5. Tabela inicia imediatamente no topo e quebra graciosamente entre páginas */
   table {
     display: table !important;
     width: 100% !important;
     border-collapse: collapse !important;
-    margin-top: 12px !important;
+    margin-top: 4px !important;
     page-break-inside: auto !important;
     break-inside: auto !important;
+    page-break-before: avoid !important;
+    break-before: avoid !important;
   }
 
   tr {
@@ -325,7 +308,7 @@
     display: table-header-group !important;
   }
 
-  tbody {
+  tbody.print-table-body {
     display: table-row-group !important;
   }
 
@@ -333,8 +316,8 @@
     background-color: #f1f5f9 !important;
     color: #0a2540 !important;
     border: 1px solid #cbd5e1 !important;
-    padding: 6px 8px !important;
-    font-size: 8.5pt !important;
+    padding: 5px 6px !important;
+    font-size: 8pt !important;
     font-weight: 700 !important;
     text-transform: uppercase !important;
     letter-spacing: 0.05em !important;
@@ -342,12 +325,12 @@
 
   td {
     border: 1px solid #e2e8f0 !important;
-    padding: 6px 8px !important;
-    font-size: 8.5pt !important;
+    padding: 5px 6px !important;
+    font-size: 8pt !important;
     color: #1e293b !important;
   }
 
-  /* 7. Badges simplificados com borda fina */
+  /* 6. Badges simplificados com borda fina */
   .rounded-full, [class*="Badge"] {
     border: 1px solid #cbd5e1 !important;
     font-size: 7.5pt !important;
@@ -356,7 +339,7 @@
     color: #334155 !important;
   }
 
-  /* 8. Remover sombras que criam borrões no PDF */
+  /* 7. Remover sombras que criam borrões no PDF */
   .shadow-sm, .shadow-md, .shadow-xl, .shadow-2xl, .shadow-2xs {
     box-shadow: none !important;
   }
@@ -364,5 +347,33 @@
   .border, .border-slate-200\/60, .rounded-xl {
     border-color: #e2e8f0 !important;
     border-radius: 4px !important;
+  }
+
+  /* 8. SUPRESSÃO PRIORITÁRIA DE FILTROS, BUSCAS E ELEMENTOS NÃO IMPRIMÍVEIS */
+  .no-print,
+  .no-print *,
+  aside,
+  header,
+  nav,
+  button,
+  [data-busca-gatilho],
+  .sidebar-scroll,
+  .toaster,
+  .save-action,
+  input,
+  select,
+  [role="combobox"],
+  .screen-table-body,
+  .screen-table-body * {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    max-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    opacity: 0 !important;
   }
 }

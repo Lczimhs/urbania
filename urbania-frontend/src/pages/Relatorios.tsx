@@ -14,22 +14,7 @@ import { formatCurrency, formatDate } from '../lib/format';
 import { statusColor } from '../lib/options';
 
 type ReportTab = 'propostas' | 'intervencoes' | 'financeiro' | 'relacionamentos';
-
-// Função utilitária de exportação genérica para CSV/Excel nativo (RNF 1.3 - pág. 32)
-function exportGridToCsv(headers: string[], rows: (string | number | null | undefined)[][], filename: string) {
-  const sanitizedRows = rows.map(r =>
-    r.map(cell => (cell === null || cell === undefined ? '' : `"${String(cell).replace(/"/g, '""')}"`)).join(';')
-  );
-  const csvContent = '\uFEFF' + [headers.join(';'), ...sanitizedRows].join('\r\n');
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.setAttribute('href', url);
-  link.setAttribute('download', `${filename}.csv`);
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-}
+import { exportGridToXlsx } from '../lib/exportExcel';
 
 const PERIODOS_RELATORIO = [
   { value: 'hoje', label: 'Hoje' },
@@ -111,24 +96,24 @@ export default function Relatorios() {
     if (tab === 'propostas') {
       const headers = ['ID Proposta', 'Data', 'Cliente', 'Imóvel', 'Corretor', 'Tipo', 'Valor Proposto', 'Status', 'Forma Pagamento'];
       const rows = filteredPropostas.map(p => [p.id, p.data, p.clienteNome, p.imovelTitulo, p.corretor, p.tipo, p.valor, p.status, p.formaPagamento]);
-      exportGridToCsv(headers, rows, `urbania_relatorio_propostas_${dataHora}`);
+      exportGridToXlsx(headers, rows, `urbania_relatorio_propostas_${dataHora}`);
     } else if (tab === 'intervencoes') {
       const headers = ['ID Reparo', 'Data Solicitação', 'Imóvel #', 'Responsável', 'Orçamento (R$)', 'Status', 'Problemas'];
       const rows = filteredReparos.map(r => [r.id, r.dataSolicitacao, r.imovelId, r.responsavel, r.valor, r.status, r.descricao]);
-      exportGridToCsv(headers, rows, `urbania_relatorio_intervencoes_${dataHora}`);
+      exportGridToXlsx(headers, rows, `urbania_relatorio_intervencoes_${dataHora}`);
     } else if (tab === 'financeiro') {
       const headers = ['ID', 'Tipo', 'Categoria', 'Descrição', 'Valor (R$)', 'Vencimento', 'Pagamento', 'Status', 'Recibo'];
       const rows = filteredFinanceiro.map(f => [f.id, f.tipo, f.categoria, f.descricao, f.valor, f.dataVencimento, f.dataPagamento, f.status, f.reciboNumero]);
-      exportGridToCsv(headers, rows, `urbania_relatorio_financeiro_${dataHora}`);
+      exportGridToXlsx(headers, rows, `urbania_relatorio_financeiro_${dataHora}`);
     } else if (tab === 'relacionamentos') {
       const headers = ['ID Imóvel', 'Título', 'Tipo', 'Finalidade', 'Proprietário Legal', 'Corretor Captador', 'Preço Venda', 'Preço Aluguel'];
       const rows = filteredRelacionamentos.map(i => {
         const prop = proprietarios.rows.find(p => p.id === i.proprietarioId);
         return [i.id, i.titulo, i.tipo, i.finalidade, prop?.nome || '—', i.responsavel || '—', i.precoVenda, i.precoAluguel];
       });
-      exportGridToCsv(headers, rows, `urbania_relatorio_vinculos_${dataHora}`);
+      exportGridToXlsx(headers, rows, `urbania_relatorio_vinculos_${dataHora}`);
     }
-    toast.success('Relatório exportado com sucesso (.csv / Excel).');
+    toast.success('Relatório exportado com sucesso em planilha Excel (.xlsx).');
   };
 
   const tabsConfig = [
@@ -155,7 +140,7 @@ export default function Relatorios() {
               onClick={exportarAtual}
               className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition text-sm shadow-xs"
             >
-              <FileSpreadsheet size={16} /> Exportar (.xlsx/CSV)
+              <FileSpreadsheet size={16} /> Exportar (.xlsx)
             </button>
           </div>
         }

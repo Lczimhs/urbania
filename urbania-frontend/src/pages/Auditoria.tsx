@@ -11,22 +11,7 @@ import { Badge, Card, DataTable, FilterSelect, PageHeader, SearchInput, Toolbar,
 import { useToast } from '../components/Toast';
 import { useList } from '../lib/useApi';
 import { formatDate } from '../lib/format';
-
-// Utilitário para exportação em CSV/Excel nativo
-function exportGridToCsv(headers: string[], rows: (string | number | null | undefined)[][], filename: string) {
-  const sanitizedRows = rows.map(r =>
-    r.map(cell => (cell === null || cell === undefined ? '' : `"${String(cell).replace(/"/g, '""')}"`)).join(';')
-  );
-  const csvContent = '\uFEFF' + [headers.join(';'), ...sanitizedRows].join('\r\n');
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.setAttribute('href', url);
-  link.setAttribute('download', `${filename}.csv`);
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-}
+import { exportGridToXlsx } from '../lib/exportExcel';
 
 const PERIODOS_AUDITORIA = [
   { value: 'hoje', label: 'Hoje' },
@@ -83,7 +68,7 @@ export default function Auditoria() {
     .filter(a => filtraData(a.data))
     .filter(a => matches(term, a.id, a.usuario, a.computador, a.acao, a.entidade, a.entidadeId, a.detalhes, a.ip));
 
-  const exportarCsv = () => {
+  const exportarXlsx = () => {
     const dataHora = new Date().toISOString().slice(0, 10);
     // Ordem das informações solicitada: ID > USUÁRIO > COMPUTADOR > ENDEREÇO IP > DATA > HORA > ENTIDADE > DETALHES
     const headers = ['ID', 'USUÁRIO', 'COMPUTADOR', 'ENDEREÇO IP', 'DATA', 'HORA', 'ENTIDADE', 'DETALHES'];
@@ -97,8 +82,8 @@ export default function Auditoria() {
       `${a.entidade || ''}${a.entidadeId ? ` (#${a.entidadeId})` : ''}`,
       a.detalhes || '',
     ]);
-    exportGridToCsv(headers, rows, `urbania_auditoria_${dataHora}`);
-    toast.success('Auditoria exportada com sucesso (.csv / Excel).');
+    exportGridToXlsx(headers, rows, `urbania_auditoria_${dataHora}`);
+    toast.success('Auditoria exportada com sucesso em planilha Excel (.xlsx).');
   };
 
   return (
@@ -115,10 +100,10 @@ export default function Auditoria() {
               <Printer size={16} /> Imprimir / PDF
             </button>
             <button
-              onClick={exportarCsv}
+              onClick={exportarXlsx}
               className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition text-sm shadow-xs"
             >
-              <FileSpreadsheet size={16} /> Exportar (.xlsx/CSV)
+              <FileSpreadsheet size={16} /> Exportar (.xlsx)
             </button>
           </div>
         }

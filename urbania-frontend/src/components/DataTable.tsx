@@ -28,8 +28,8 @@ export function DataTable<T extends { id: number }>({ columns, rows, loading, on
   const colSpan = columns.length + (actions ? 1 : 0);
 
   return (
-    <div className={`flex flex-col justify-between ${dense ? 'data-table-dense' : ''} ${compact ? 'min-h-0' : 'min-h-[560px] lg:min-h-[calc(100vh-250px)]'}`}>
-      <div className={`${layoutFixed ? 'overflow-x-hidden' : 'overflow-x-auto'} flex-1`}>
+    <div className={`flex flex-col justify-between ${dense ? 'data-table-dense' : ''} ${compact ? 'min-h-0' : 'min-h-[560px] lg:min-h-[calc(100vh-250px)]'} print:min-h-0 print:h-auto print:block print:m-0 print:p-0`}>
+      <div className={`${layoutFixed ? 'overflow-x-hidden' : 'overflow-x-auto'} flex-1 print:overflow-visible print:block print:h-auto`}>
         <table className={`w-full text-sm text-left ${layoutFixed ? 'table-fixed' : ''}`}>
           <thead className="bg-white border-b border-slate-100 text-slate-500 text-[11px] font-bold uppercase tracking-wider">
             <tr>
@@ -299,7 +299,7 @@ export function Toolbar({ children, extraActions }: { children: ReactNode; extra
 
   return (
     <BuscaContext.Provider value={ctx}>
-      <div onKeyDown={onKeyDown} className="no-print p-4 border-b border-slate-100 flex flex-col gap-3.5 bg-slate-50/60">
+      <div onKeyDown={onKeyDown} className="no-print print:hidden p-4 border-b border-slate-100 flex flex-col gap-3.5 bg-slate-50/60">
         <div className="flex flex-wrap items-center gap-3 w-full">
           {children}
         </div>
@@ -333,8 +333,8 @@ export function Toolbar({ children, extraActions }: { children: ReactNode; extra
 
 export function Card({ children, title, className = '' }: { children: ReactNode; title?: ReactNode; className?: string }) {
   return (
-    <div className={`bg-white border border-slate-200/60 rounded-xl overflow-hidden shadow-sm ${className}`}>
-      {title && <div className="px-5 py-3 border-b border-slate-100 font-bold text-slate-800">{title}</div>}
+    <div className={`bg-white border border-slate-200/60 rounded-xl overflow-hidden shadow-sm print:border-none print:shadow-none print:rounded-none print:bg-transparent print:p-0 print:m-0 ${className}`}>
+      {title && <div className="px-5 py-3 border-b border-slate-100 font-bold text-slate-800 print:hidden">{title}</div>}
       {children}
     </div>
   );
