@@ -85,17 +85,17 @@ export default function Auditoria() {
 
   const exportarCsv = () => {
     const dataHora = new Date().toISOString().slice(0, 10);
-    // Ordem das informações solicitada: USUÁRIO > COMPUTADOR > ID > DATA > HORA > ENDEREÇO IP > ENTIDADE > DETALHES
-    const headers = ['USUÁRIO', 'COMPUTADOR', 'ID', 'DATA', 'HORA', 'ENDEREÇO IP', 'ENTIDADE', 'DETALHES'];
+    // Ordem das informações solicitada: USUÁRIO > COMPUTADOR > ENDEREÇO IP > DATA > HORA > ENTIDADE > DETALHES > ID
+    const headers = ['USUÁRIO', 'COMPUTADOR', 'ENDEREÇO IP', 'DATA', 'HORA', 'ENTIDADE', 'DETALHES', 'ID'];
     const rows = filtered.map(a => [
       a.usuario || 'Sistema',
       a.computador || 'Pc-Lucas',
-      a.id,
+      a.ip || '127.0.0.1',
       formatDate(a.data),
       a.hora || '—',
-      a.ip || '127.0.0.1',
       `${a.entidade || ''}${a.entidadeId ? ` (#${a.entidadeId})` : ''}`,
       a.detalhes || '',
+      a.id,
     ]);
     exportGridToCsv(headers, rows, `urbania_auditoria_${dataHora}`);
     toast.success('Auditoria exportada com sucesso (.csv / Excel).');
@@ -147,7 +147,7 @@ export default function Auditoria() {
           />
         </Toolbar>
 
-        {/* Grid com a ordem exata das colunas: USUÁRIO > COMPUTADOR > ID > DATA > HORA > ENDEREÇO IP > ENTIDADE > DETALHES */}
+        {/* Grid com a ordem exata das colunas: USUÁRIO > COMPUTADOR > ENDEREÇO IP > DATA > HORA > ENTIDADE > DETALHES > ID */}
         <DataTable
           pageSize={30}
           rows={filtered}
@@ -184,10 +184,10 @@ export default function Auditoria() {
               ),
             },
             {
-              key: 'id',
-              label: 'ID',
-              className: 'w-16',
-              render: r => <span className="font-mono text-slate-500 text-xs font-semibold">#{r.id}</span>,
+              key: 'ip',
+              label: 'ENDEREÇO IP',
+              className: 'w-28 whitespace-nowrap',
+              render: r => <span className="font-mono text-xs text-slate-500 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-200">{r.ip || '127.0.0.1'}</span>,
             },
             {
               key: 'data',
@@ -200,12 +200,6 @@ export default function Auditoria() {
               label: 'HORA',
               className: 'w-20 whitespace-nowrap',
               render: r => <span className="text-xs font-mono text-slate-600">{r.hora || '—'}</span>,
-            },
-            {
-              key: 'ip',
-              label: 'ENDEREÇO IP',
-              className: 'w-28 whitespace-nowrap',
-              render: r => <span className="font-mono text-xs text-slate-500 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-200">{r.ip || '127.0.0.1'}</span>,
             },
             {
               key: 'entidade',
@@ -231,6 +225,12 @@ export default function Auditoria() {
               label: 'DETALHES',
               className: 'min-w-[220px]',
               render: r => <span className="text-xs text-slate-600 line-clamp-1">{r.detalhes}</span>,
+            },
+            {
+              key: 'id',
+              label: 'ID',
+              className: 'w-16',
+              render: r => <span className="font-mono text-slate-500 text-xs font-semibold">#{r.id}</span>,
             },
           ]}
         />
