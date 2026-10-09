@@ -498,6 +498,19 @@ module.exports = async function popularDadosDeTeste(db) {
       });
     }
 
+    // Mapeamento de IP consistente por usuário iniciando em 192.168.1.1
+    const ipsPorUsuario = {};
+    let proximoIpNum = 1;
+    funcionarios.forEach(f => {
+      const nomeLower = (f.nome || '').toLowerCase();
+      if (nomeLower.includes('admin') || nomeLower.includes('diretoria')) {
+        ipsPorUsuario[f.id] = '192.168.1.1';
+      } else {
+        proximoIpNum += 1;
+        ipsPorUsuario[f.id] = `192.168.1.${proximoIpNum}`;
+      }
+    });
+
     // ----- Auditoria (histórico de alterações do sistema) -----
     const modulosAuditoria = ['clientes', 'imoveis', 'visitas', 'negociacoes', 'contratos', 'financeiro', 'despesas', 'multas', 'reparos', 'anuncios', 'proprietarios'];
     const eventos = [];
@@ -508,8 +521,8 @@ module.exports = async function popularDadosDeTeste(db) {
       const entidade = um(modulosAuditoria);
       const nomeLimpo = (f.nome || '').replace(/\s*\((?:Admin|Administrador)\)\s*/gi, '').trim();
       const primeiroNome = f.nome.trim().split(/\s+/)[0];
-      const comp = (f.nome.toLowerCase().includes('admin') || f.nome.toLowerCase().includes('diretoria') || f.nome.toLowerCase().includes('lucas'))
-        ? 'Pc-Lucas'
+      const comp = (f.nome.toLowerCase().includes('admin') || f.nome.toLowerCase().includes('diretoria') || f.nome.toLowerCase().includes('gm'))
+        ? 'Pc-GM'
         : `Pc-${primeiroNome}`;
       eventos.push({
         usuario: `${nomeLimpo} (${f.cargo})`,
@@ -520,7 +533,7 @@ module.exports = async function popularDadosDeTeste(db) {
         detalhes: `Registro ${{ Criação: 'cadastrado', Alteração: 'atualizado', Exclusão: 'excluído' }[acao]} no módulo ${entidade}`,
         data: dia(offset),
         hora: `${hora()}:${String(entre(0, 59)).padStart(2, '0')}:${String(entre(10, 59)).padStart(2, '0')}`,
-        ip: `192.168.1.${entre(10, 90)}`,
+        ip: ipsPorUsuario[f.id] || '192.168.1.1',
       });
     }
     eventos.sort((a, b) => `${a.data} ${a.hora}`.localeCompare(`${b.data} ${b.hora}`));

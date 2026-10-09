@@ -102,6 +102,9 @@ const schema = {
     usuario: 'TEXT', computador: 'TEXT', acao: 'TEXT', entidade: 'TEXT', entidadeId: 'INTEGER',
     detalhes: 'TEXT', data: 'TEXT', hora: 'TEXT', ip: 'TEXT',
   },
+  usuario_ips: {
+    usuario: 'TEXT', computador: 'TEXT', ip: 'TEXT', criadoEm: 'TEXT',
+  },
   // Configurações gerais da imobiliária (um único registro)
   configuracoes: {
     nomeFantasia: 'TEXT', razaoSocial: 'TEXT', cnpj: 'TEXT', creci: 'TEXT', telefone: 'TEXT', email: 'TEXT', site: 'TEXT', logo: 'TEXT',

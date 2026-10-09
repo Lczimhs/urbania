@@ -8,11 +8,17 @@ export const api = axios.create({
 // Inicialização automática das informações do computador/usuário do SO
 export const initDeviceInfo = async () => {
   try {
+    const savedDev = localStorage.getItem('urbania_device_name');
+    if (!savedDev || /lucas/i.test(savedDev) || /srv-/i.test(savedDev) || /root/i.test(savedDev)) {
+      localStorage.setItem('urbania_device_name', 'Pc-GM');
+      localStorage.setItem('urbania_os_user', 'GM');
+    }
+
     const res = await api.get('/device-info');
-    if (res.data?.computerName) {
+    if (res.data?.computerName && !res.data.computerName.startsWith('Pc-srv-') && !res.data.computerName.startsWith('Pc-root')) {
       localStorage.setItem('urbania_device_name', res.data.computerName);
     }
-    if (res.data?.osUser) {
+    if (res.data?.osUser && res.data.osUser !== 'root' && !res.data.osUser.startsWith('srv-')) {
       localStorage.setItem('urbania_os_user', res.data.osUser);
     }
     return res.data;
@@ -31,10 +37,18 @@ api.interceptors.request.use((config) => {
   const token = localStorage.getItem('urbania_token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
   
-  const device = localStorage.getItem('urbania_device_name') || 'Pc-GM';
+  let device = localStorage.getItem('urbania_device_name');
+  if (!device || /lucas/i.test(device) || /srv-/i.test(device) || /root/i.test(device)) {
+    device = 'Pc-GM';
+    localStorage.setItem('urbania_device_name', 'Pc-GM');
+  }
   config.headers['X-Client-Device'] = device;
 
-  const osUser = localStorage.getItem('urbania_os_user') || 'GM';
+  let osUser = localStorage.getItem('urbania_os_user');
+  if (!osUser || /lucas/i.test(osUser) || /srv-/i.test(osUser) || /root/i.test(osUser)) {
+    osUser = 'GM';
+    localStorage.setItem('urbania_os_user', 'GM');
+  }
   config.headers['X-Client-User'] = osUser;
 
   return config;

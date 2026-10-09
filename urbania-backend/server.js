@@ -61,71 +61,68 @@ const formatUsuario = (user) => {
 
 const quem = req => req.sessao ? formatUsuario(req.sessao.user) : 'Sistema';
 
-// Gerenciamento de IP padrão fixo/atribuído por usuário/estação iniciando em 192.168.1.1
+// Gerenciamento de IP padrão fixo/atribuído por usuário iniciando em 192.168.1.1
 const getWorkstationUser = (req) => {
   const customUser = req?.headers?.['x-client-user'];
-  if (customUser && customUser.trim()) return customUser.trim();
+  if (customUser && customUser.trim() && customUser !== 'root') return customUser.trim();
   const customDev = req?.headers?.['x-client-device'];
-  if (customDev && customDev.trim()) {
+  if (customDev && customDev.trim() && !customDev.startsWith('srv-') && customDev !== 'root') {
     return customDev.trim().replace(/^Pc[-_]/i, '');
   }
-  return process.env.USERNAME || process.env.USER || 'GM';
+  const osUser = process.env.USERNAME || process.env.USER;
+  if (osUser && osUser.trim() && osUser !== 'root' && !osUser.startsWith('srv-')) {
+    return osUser.trim();
+  }
+  return 'GM';
 };
 
 const getComputerName = (req) => {
   const custom = req?.headers?.['x-client-device'] || req?.headers?.['x-client-user'];
   if (custom && custom.trim()) {
-    const val = custom.trim();
-    return (val.startsWith('Pc-') || val.startsWith('Pc_')) ? val : `Pc-${val}`;
+    let val = custom.trim();
+    if (!val.startsWith('srv-') && val !== 'root' && val !== 'Pc-root') {
+      return (val.startsWith('Pc-') || val.startsWith('Pc_')) ? val : `Pc-${val}`;
+    }
   }
-  // Identifica o usuário real do computador local no SO (ex: GM -> Pc-GM)
   const osUser = process.env.USERNAME || process.env.USER;
-  if (osUser && osUser.trim()) {
+  if (osUser && osUser.trim() && osUser !== 'root' && !osUser.startsWith('srv-')) {
     return `Pc-${osUser.trim()}`;
   }
-  return process.env.COMPUTERNAME || os.hostname() || 'Pc-GM';
+  const host = process.env.COMPUTERNAME || os.hostname();
+  if (host && !host.startsWith('srv-') && host !== 'localhost') {
+    return host.startsWith('Pc-') ? host : `Pc-${host}`;
+  }
+  return 'Pc-GM';
 };
 
 const getUserIp = async (req, usuarioNome) => {
   const comp = getComputerName(req);
-  const osUser = getWorkstationUser(req);
-  const nome = (usuarioNome || 'Sistema').trim();
+  const nome = (usuarioNome || quem(req) || 'Sistema').trim();
 
   try {
-    const compNorm = comp.toLowerCase();
-    const osUserNorm = osUser.toLowerCase();
-
-    // 1. GM / Pc-GM é sempre o IP padrão inicial 192.168.1.1
-    if (compNorm === 'pc-gm' || osUserNorm === 'gm') {
-      const row = await get('SELECT ip FROM usuario_ips WHERE LOWER(usuario) IN ("pc-gm", "gm")');
-      if (row?.ip) return row.ip;
-      await run('INSERT OR IGNORE INTO usuario_ips (usuario, ip, criadoEm) VALUES (?, ?, ?)', ['Pc-GM', '192.168.1.1', new Date().toISOString()]);
-      return '192.168.1.1';
-    }
-
-    // 2. Pc_Lucas / Pc-Lucas / Lucas é sempre 192.168.1.2
-    if (compNorm === 'pc_lucas' || compNorm === 'pc-lucas' || osUserNorm === 'lucas') {
-      const row = await get('SELECT ip FROM usuario_ips WHERE LOWER(usuario) IN ("pc_lucas", "pc-lucas", "lucas")');
-      if (row?.ip) return row.ip;
-      await run('INSERT OR IGNORE INTO usuario_ips (usuario, ip, criadoEm) VALUES (?, ?, ?)', ['Pc_Lucas', '192.168.1.2', new Date().toISOString()]);
-      return '192.168.1.2';
-    }
-
-    // 3. Busca existente por computador exato
-    let row = await get('SELECT ip FROM usuario_ips WHERE LOWER(usuario) = LOWER(?)', [comp]);
+    // 1. Procura se este usuário já possui IP atribuído na tabela usuario_ips
+    let row = await get('SELECT ip FROM usuario_ips WHERE LOWER(usuario) = LOWER(?)', [nome]);
     if (row?.ip) return row.ip;
 
-    // 4. Busca existente por usuário do SO
-    row = await get('SELECT ip FROM usuario_ips WHERE LOWER(usuario) = LOWER(?)', [osUser]);
-    if (row?.ip) return row.ip;
-
-    // 5. Busca existente por usuário do sistema (caso não seja acesso compartilhado de diretoria/admin)
-    if (!nome.toLowerCase().includes('diretoria') && !nome.toLowerCase().includes('admin')) {
-      row = await get('SELECT ip FROM usuario_ips WHERE LOWER(usuario) = LOWER(?)', [nome]);
-      if (row?.ip) return row.ip;
+    // 2. Se for Diretoria / Admin ou o computador for Pc-GM, o primeiro IP padrão é 192.168.1.1
+    if (nome.toLowerCase().includes('diretoria') || nome.toLowerCase().includes('admin') || comp.toLowerCase() === 'pc-gm') {
+      const primeiroIp = '192.168.1.1';
+      await run('INSERT INTO usuario_ips (usuario, computador, ip, criadoEm) VALUES (?, ?, ?, ?)', [
+        nome, comp, primeiroIp, new Date().toISOString()
+      ]);
+      return primeiroIp;
     }
 
-    // 6. Novo usuário/computador detectado: aloca o próximo IP sequencial (192.168.1.X)
+    // 3. Procura pelo computador caso já tenha recebido IP
+    row = await get('SELECT ip FROM usuario_ips WHERE LOWER(computador) = LOWER(?)', [comp]);
+    if (row?.ip) {
+      await run('INSERT INTO usuario_ips (usuario, computador, ip, criadoEm) VALUES (?, ?, ?, ?)', [
+        nome, comp, row.ip, new Date().toISOString()
+      ]);
+      return row.ip;
+    }
+
+    // 4. Usuário diferente: busca o maior número de IP alocado no padrão 192.168.1.X e incrementa +1
     const allRows = await new Promise((res, rej) =>
       db.all('SELECT ip FROM usuario_ips', [], (err, rows) => err ? rej(err) : res(rows || []))
     );
@@ -138,13 +135,11 @@ const getUserIp = async (req, usuarioNome) => {
       }
     });
 
-    const proximoNumero = Math.max(maxNum + 1, 1);
+    const proximoNumero = maxNum + 1;
     const novoIp = `192.168.1.${proximoNumero}`;
 
-    await run('INSERT OR IGNORE INTO usuario_ips (usuario, ip, criadoEm) VALUES (?, ?, ?)', [
-      comp,
-      novoIp,
-      new Date().toISOString(),
+    await run('INSERT INTO usuario_ips (usuario, computador, ip, criadoEm) VALUES (?, ?, ?, ?)', [
+      nome, comp, novoIp, new Date().toISOString()
     ]);
 
     return novoIp;
@@ -173,7 +168,10 @@ const logAudit = async (usuario, acao, entidade, entidadeId, detalhes, req) => {
 
 // Rota pública para o frontend descobrir o nome da máquina/usuário do SO
 app.get('/api/device-info', (req, res) => {
-  const osUser = process.env.USERNAME || process.env.USER || 'GM';
+  let osUser = process.env.USERNAME || process.env.USER;
+  if (!osUser || osUser === 'root' || osUser.startsWith('srv-')) {
+    osUser = 'GM';
+  }
   res.json({
     osUser,
     computerName: `Pc-${osUser}`,

@@ -341,15 +341,15 @@ export default function Auditoria() {
             {
               key: 'hora',
               label: 'HORA',
-              className: 'w-16 whitespace-nowrap text-left',
+              className: 'w-24 min-w-[90px] whitespace-nowrap text-left',
               render: r => <span className="text-xs font-mono text-slate-600 whitespace-nowrap">{r.hora || '—'}</span>,
             },
             {
               key: 'entidade',
               label: 'ENTIDADE',
-              className: 'w-28 whitespace-nowrap text-left',
+              className: 'w-32 min-w-[120px] whitespace-nowrap text-left',
               render: r => (
-                <div className="whitespace-nowrap" title={`${r.entidade || ''}${r.entidadeId ? ` (#${r.entidadeId})` : ''}`}>
+                <div className="whitespace-nowrap inline-flex items-center" title={`${r.entidade || ''}${r.entidadeId ? ` (#${r.entidadeId})` : ''}`}>
                   <Badge className={`text-xs px-2.5 py-0.5 rounded-md font-semibold whitespace-nowrap inline-flex items-center ${
                     r.acao === 'Criação' || r.acao === 'Inclusão' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' :
                     r.acao === 'Exclusão' ? 'bg-rose-100 text-rose-800 border border-rose-200' :
@@ -444,98 +444,138 @@ export default function Auditoria() {
               <div>
                 {(() => {
                   const info = parseDetalhes(selecionado.detalhes);
+                  const acao = selecionado.acao || '';
+                  const isEdicao = acao === 'Alteração' || acao === 'Edição' || info?.tipo === 'alteracao' || info?.tipo === 'edicao';
+                  const isInclusao = acao === 'Criação' || acao === 'Inclusão' || info?.tipo === 'criacao' || info?.tipo === 'inclusao';
+                  const isExclusao = acao === 'Exclusão' || info?.tipo === 'exclusao';
 
-                  // 1. Alteração: Comparativo exato antes e depois campo a campo
-                  if (info?.tipo === 'alteracao' && Array.isArray(info.mudancas) && info.mudancas.length > 0) {
+                  // 1. Edição: Título "Edição" com comparativo Antes e Depois
+                  if (isEdicao) {
+                    const mudancas = Array.isArray(info?.mudancas) ? info.mudancas : [];
                     return (
                       <div className="space-y-2.5">
                         <div className="flex items-center justify-between">
-                          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                            <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-                            {info.mudancas.length === 1 ? 'Modificação' : 'Modificações'} ({info.mudancas.length})
+                          <p className="text-xs font-bold text-amber-700 uppercase tracking-wider flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                            Edição {mudancas.length > 0 ? `(${mudancas.length})` : ''}
                           </p>
-                          <span className="text-[11px] font-medium text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded">
+                          <span className="text-[11px] font-semibold text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full">
                             Comparativo Antes e Depois
                           </span>
                         </div>
 
-                        <div className="rounded-lg border border-slate-200 overflow-hidden bg-white shadow-2xs">
-                          <table className="w-full text-xs text-left">
-                            <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold text-[11px]">
-                              <tr>
-                                <th className="px-3.5 py-2">Campo</th>
-                                <th className="px-3.5 py-2">Valor Anterior</th>
-                                <th className="px-3.5 py-2">Novo Valor</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100">
-                              {info.mudancas.map((m: any, idx: number) => (
-                                <tr key={idx} className="hover:bg-slate-50/50">
-                                  <td className="px-3.5 py-2.5 font-semibold text-slate-800">
-                                    {formatarNomeCampo(m.campo)}
-                                  </td>
-                                  <td className="px-3.5 py-2.5 text-rose-700 bg-rose-50/40 font-mono text-[11px]">
-                                    <span className="line-through decoration-rose-400">
-                                      {m.de !== null && m.de !== undefined && m.de !== '' ? String(m.de) : <span className="italic text-slate-400">vazio</span>}
-                                    </span>
-                                  </td>
-                                  <td className="px-3.5 py-2.5 text-emerald-700 bg-emerald-50/40 font-mono text-[11px] font-semibold">
-                                    {m.para !== null && m.para !== undefined && m.para !== '' ? String(m.para) : <span className="italic text-slate-400">vazio</span>}
-                                  </td>
+                        {mudancas.length > 0 ? (
+                          <div className="rounded-lg border border-slate-200 overflow-hidden bg-white shadow-2xs">
+                            <table className="w-full text-xs text-left">
+                              <thead className="bg-slate-50 border-b border-slate-200 text-slate-700 font-bold text-[11px] uppercase tracking-wider">
+                                <tr>
+                                  <th className="px-3.5 py-2">Campo</th>
+                                  <th className="px-3.5 py-2 text-rose-700">Antes</th>
+                                  <th className="px-3.5 py-2 text-emerald-700">Depois</th>
                                 </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
+                              </thead>
+                              <tbody className="divide-y divide-slate-100">
+                                {mudancas.map((m: any, idx: number) => (
+                                  <tr key={idx} className="hover:bg-slate-50/50">
+                                    <td className="px-3.5 py-2.5 font-semibold text-slate-800">
+                                      {formatarNomeCampo(m.campo)}
+                                    </td>
+                                    <td className="px-3.5 py-2.5 text-rose-700 bg-rose-50/40 font-mono text-[11px]">
+                                      <span className="line-through decoration-rose-400">
+                                        {m.de !== null && m.de !== undefined && m.de !== '' ? String(m.de) : <span className="italic text-slate-400">vazio</span>}
+                                      </span>
+                                    </td>
+                                    <td className="px-3.5 py-2.5 text-emerald-700 bg-emerald-50/40 font-mono text-[11px] font-semibold">
+                                      {m.para !== null && m.para !== undefined && m.para !== '' ? String(m.para) : <span className="italic text-slate-400">vazio</span>}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        ) : (
+                          <div className="p-3 bg-amber-50/60 rounded-lg border border-amber-200 text-xs text-slate-700 leading-relaxed">
+                            <p className="font-semibold text-amber-900 mb-1">Registro alterado</p>
+                            {info?.resumo || selecionado.detalhes || 'Campos do registro foram atualizados no sistema.'}
+                          </div>
+                        )}
                       </div>
                     );
                   }
 
-                  // 2. Criação: Campos cadastrados
-                  if (info?.tipo === 'criacao' && Array.isArray(info.campos) && info.campos.length > 0) {
+                  // 2. Inclusão: Título "Inclusão" com dados cadastrados
+                  if (isInclusao) {
+                    const campos = Array.isArray(info?.campos) ? info.campos : [];
                     return (
-                      <div className="space-y-2">
-                        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                          <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                          Dados cadastrados na criação ({info.campos.length})
-                        </p>
-                        <div className="grid grid-cols-2 gap-2 p-3 bg-emerald-50/30 rounded-lg border border-emerald-100 text-xs">
-                          {info.campos.map((c: any, idx: number) => (
-                            <div key={idx} className="bg-white p-2 rounded border border-emerald-100/80 shadow-2xs">
-                              <span className="text-[10px] text-slate-400 uppercase font-semibold block">{formatarNomeCampo(c.campo)}</span>
-                              <span className="font-semibold text-slate-800 break-words">{String(c.valor)}</span>
-                            </div>
-                          ))}
+                      <div className="space-y-2.5">
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs font-bold text-emerald-700 uppercase tracking-wider flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                            Inclusão {campos.length > 0 ? `(${campos.length})` : ''}
+                          </p>
+                          <span className="text-[11px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                            Registro Criado
+                          </span>
                         </div>
+
+                        {campos.length > 0 ? (
+                          <div className="grid grid-cols-2 gap-2 p-3 bg-emerald-50/30 rounded-lg border border-emerald-100 text-xs">
+                            {campos.map((c: any, idx: number) => (
+                              <div key={idx} className="bg-white p-2 rounded border border-emerald-100/80 shadow-2xs">
+                                <span className="text-[10px] text-slate-400 uppercase font-semibold block">{formatarNomeCampo(c.campo)}</span>
+                                <span className="font-semibold text-slate-800 break-words">{String(c.valor)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="p-3 bg-emerald-50/60 rounded-lg border border-emerald-200 text-xs text-slate-700 leading-relaxed">
+                            <p className="font-semibold text-emerald-900 mb-1">Novo registro incluído</p>
+                            {info?.resumo || selecionado.detalhes || 'Registro cadastrado com sucesso.'}
+                          </div>
+                        )}
                       </div>
                     );
                   }
 
-                  // 3. Exclusão: Dados do registro removido
-                  if (info?.tipo === 'exclusao' && Array.isArray(info.dados) && info.dados.length > 0) {
+                  // 3. Exclusão: Título "Exclusão" com dados do registro removido
+                  if (isExclusao) {
+                    const dados = Array.isArray(info?.dados) ? info.dados : [];
                     return (
-                      <div className="space-y-2">
-                        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                          <span className="w-2 h-2 rounded-full bg-rose-500"></span>
-                          Dados do registro removido
-                        </p>
-                        <div className="grid grid-cols-2 gap-2 p-3 bg-rose-50/30 rounded-lg border border-rose-100 text-xs">
-                          {info.dados.map((d: any, idx: number) => (
-                            <div key={idx} className="bg-white p-2 rounded border border-rose-100/80 shadow-2xs">
-                              <span className="text-[10px] text-slate-400 uppercase font-semibold block">{formatarNomeCampo(d.campo)}</span>
-                              <span className="font-medium text-slate-700 break-words">{String(d.valor)}</span>
-                            </div>
-                          ))}
+                      <div className="space-y-2.5">
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs font-bold text-rose-700 uppercase tracking-wider flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+                            Exclusão {dados.length > 0 ? `(${dados.length})` : ''}
+                          </p>
+                          <span className="text-[11px] font-semibold text-rose-800 bg-rose-50 border border-rose-200 px-2.5 py-0.5 rounded-full">
+                            Registro Removido
+                          </span>
                         </div>
+
+                        {dados.length > 0 ? (
+                          <div className="grid grid-cols-2 gap-2 p-3 bg-rose-50/30 rounded-lg border border-rose-100 text-xs">
+                            {dados.map((d: any, idx: number) => (
+                              <div key={idx} className="bg-white p-2 rounded border border-rose-100/80 shadow-2xs">
+                                <span className="text-[10px] text-slate-400 uppercase font-semibold block">{formatarNomeCampo(d.campo)}</span>
+                                <span className="font-medium text-slate-700 break-words">{String(d.valor)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="p-3 bg-rose-50/60 rounded-lg border border-rose-200 text-xs text-slate-700 leading-relaxed">
+                            <p className="font-semibold text-rose-900 mb-1">Registro excluído</p>
+                            {info?.resumo || selecionado.detalhes || 'Registro removido permanentemente.'}
+                          </div>
+                        )}
                       </div>
                     );
                   }
 
-                  // Fallback para texto simples
+                  // Fallback para outros tipos de ação
                   return (
                     <div>
                       <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Detalhes da Ação</p>
-                      <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-slate-700 mt-1 leading-relaxed">
+                      <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-slate-700 mt-1 leading-relaxed text-xs">
                         {info?.resumo || selecionado.detalhes || 'Sem detalhes adicionais.'}
                       </div>
                     </div>
