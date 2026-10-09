@@ -452,7 +452,7 @@ export default function Auditoria() {
                         <div className="flex items-center justify-between">
                           <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
                             <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-                            O que foi alterado especificamente ({info.mudancas.length})
+                            Modificação / Modificações ({info.mudancas.length})
                           </p>
                           <span className="text-[11px] font-medium text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded">
                             Comparativo Antes e Depois
