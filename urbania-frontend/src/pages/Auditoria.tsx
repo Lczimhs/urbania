@@ -69,10 +69,10 @@ export default function Auditoria() {
     .filter(a => matches(term, a.id, a.usuario, a.computador, a.acao, a.entidade, a.entidadeId, a.detalhes, a.ip));
 
   const formatComputador = (r: any) => {
-    if (r.computador && (r.computador.startsWith('Pc-') || r.computador.startsWith('Pc_'))) {
+    if (r.computador && !r.computador.startsWith('srv-') && (r.computador.startsWith('Pc-') || r.computador.startsWith('Pc_'))) {
       return r.computador;
     }
-    if (r.computador && r.computador.trim()) {
+    if (r.computador && !r.computador.startsWith('srv-') && r.computador.trim()) {
       return `Pc-${r.computador.trim().replace(/^Pc[-_]/i, '')}`;
     }
     const activeDevice = localStorage.getItem('urbania_device_name');
