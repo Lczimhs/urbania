@@ -66,6 +66,18 @@ const getClientIp = (req) => {
 };
 
 const getComputerName = (req) => {
+  const custom = req.headers['x-client-device'];
+  if (custom && custom !== 'Pc-Lucas') {
+    return custom;
+  }
+  if (req.sessao?.user?.nome) {
+    const nome = req.sessao.user.nome;
+    if (nome.toLowerCase().includes('lucas') || nome.toLowerCase().includes('admin') || nome.toLowerCase().includes('diretoria')) {
+      return 'Pc-Lucas';
+    }
+    const primeiro = nome.trim().split(/\s+/)[0];
+    return `Pc-${primeiro}`;
+  }
   return req.headers['x-client-device'] || process.env.COMPUTERNAME || os.hostname() || 'Pc-Lucas';
 };
 

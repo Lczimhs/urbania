@@ -507,9 +507,13 @@ module.exports = async function popularDadosDeTeste(db) {
       const acao = um(['Criação', 'Criação', 'Alteração', 'Alteração', 'Alteração', 'Exclusão']);
       const entidade = um(modulosAuditoria);
       const nomeLimpo = (f.nome || '').replace(/\s*\((?:Admin|Administrador)\)\s*/gi, '').trim();
+      const primeiroNome = f.nome.trim().split(/\s+/)[0];
+      const comp = (f.nome.toLowerCase().includes('admin') || f.nome.toLowerCase().includes('diretoria') || f.nome.toLowerCase().includes('lucas'))
+        ? 'Pc-Lucas'
+        : `Pc-${primeiroNome}`;
       eventos.push({
         usuario: `${nomeLimpo} (${f.cargo})`,
-        computador: 'Pc-Lucas',
+        computador: comp,
         acao,
         entidade,
         entidadeId: entre(1, 30),
