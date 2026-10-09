@@ -87,7 +87,7 @@ export default function Auditoria() {
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="space-y-6 max-w-7xl mx-auto print:space-y-0 print:m-0 print:p-0 print:max-w-none">
       <PageHeader
         title="Auditoria"
         subtitle={`${filtered.length} logs de operações registradas`}
@@ -110,27 +110,29 @@ export default function Auditoria() {
       />
 
       <Card>
-        <Toolbar>
-          <SearchInput
-            value={term}
-            onChange={setTerm}
-            placeholder="Buscar por usuário, computador, entidade, IP, detalhes..."
-          />
+        <div className="no-print print:hidden">
+          <Toolbar>
+            <SearchInput
+              value={term}
+              onChange={setTerm}
+              placeholder="Buscar por usuário, computador, entidade, IP, detalhes..."
+            />
 
-          <FilterSelect
-            value={acaoFiltro}
-            onChange={setAcaoFiltro}
-            options={ACOES_AUDITORIA}
-            placeholder="Todas as operações"
-          />
+            <FilterSelect
+              value={acaoFiltro}
+              onChange={setAcaoFiltro}
+              options={ACOES_AUDITORIA}
+              placeholder="Todas as operações"
+            />
 
-          <FilterSelect
-            value={periodoFiltro}
-            onChange={setPeriodoFiltro}
-            options={PERIODOS_AUDITORIA}
-            placeholder="Todos os períodos"
-          />
-        </Toolbar>
+            <FilterSelect
+              value={periodoFiltro}
+              onChange={setPeriodoFiltro}
+              options={PERIODOS_AUDITORIA}
+              placeholder="Todos os períodos"
+            />
+          </Toolbar>
+        </div>
 
         {/* Grid com a ordem exata das colunas: ID > USUÁRIO > COMPUTADOR > ENDEREÇO IP > DATA > HORA > ENTIDADE > DETALHES */}
         <DataTable

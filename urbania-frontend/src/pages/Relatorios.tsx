@@ -173,27 +173,29 @@ export default function Relatorios() {
 
       <Card>
         {/* Barra de Filtros Obrigatórios: Período e Responsável (RNF 1.2 - pág. 32) */}
-        <Toolbar>
-          <SearchInput
-            value={term}
-            onChange={setTerm}
-            placeholder="Busca por termo ou palavra-chave no relatório..."
-          />
+        <div className="no-print print:hidden">
+          <Toolbar>
+            <SearchInput
+              value={term}
+              onChange={setTerm}
+              placeholder="Busca por termo ou palavra-chave no relatório..."
+            />
 
-          <FilterSelect
-            value={responsavelFiltro}
-            onChange={setResponsavelFiltro}
-            options={corretores.map(c => ({ value: String(c.id), label: `Resp: ${c.nome}${c.status === 'Inativo' ? ' (Inativo)' : ''}` }))}
-            placeholder="Todos os responsáveis"
-          />
+            <FilterSelect
+              value={responsavelFiltro}
+              onChange={setResponsavelFiltro}
+              options={corretores.map(c => ({ value: String(c.id), label: `Resp: ${c.nome}${c.status === 'Inativo' ? ' (Inativo)' : ''}` }))}
+              placeholder="Todos os responsáveis"
+            />
 
-          <FilterSelect
-            value={periodoFiltro}
-            onChange={setPeriodoFiltro}
-            options={PERIODOS_RELATORIO}
-            placeholder="Todos os períodos"
-          />
-        </Toolbar>
+            <FilterSelect
+              value={periodoFiltro}
+              onChange={setPeriodoFiltro}
+              options={PERIODOS_RELATORIO}
+              placeholder="Todos os períodos"
+            />
+          </Toolbar>
+        </div>
 
         {/* 1. ABA PROPOSTAS E NEGOCIAÇÕES */}
         {tab === 'propostas' && (

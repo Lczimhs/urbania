@@ -263,10 +263,15 @@
     height: auto !important;
   }
 
-  /* 3. Zerar espaçamentos das bordas da tela */
-  .px-4, .md\:px-8, .pb-6, .pt-4, .space-y-6 {
+  /* 3. Zerar espaçamentos das bordas da tela e filhos de containers verticais */
+  .px-4, .md\:px-8, .pb-6, .pt-4, .space-y-6, [class*="space-y-"] {
     padding: 0 !important;
     margin: 0 !important;
+  }
+
+  [class*="space-y-"] > * {
+    margin-top: 0 !important;
+    margin-bottom: 2px !important;
   }
 
   /* 4. Títulos limpos e compactos no topo da página */
